@@ -1,6 +1,5 @@
 // Load environment variables
 require('dotenv').config();
-
 const http = require('http');
 const connectDB = require('./config/db');
 const mainRouter = require('./routes/index.routes');
@@ -11,7 +10,7 @@ const fs = require('fs');
 
 // Import middleware
 const { errorHandler } = require('./middlewares/error.middleware');
-const { logger } = require('./middlewares/logger.middleware');
+const loggerMiddleware = require('./middlewares/logger.middleware'); // Updated import
 const { corsConfig } = require('./middlewares/cors.middleware');
 const { notFound } = require('./middlewares/notFound.middleware');
 const { rateLimiter } = require('./middlewares/rateLimit.middleware');
@@ -26,22 +25,16 @@ if (!process.env.PORT || !process.env.FRONTEND_URL) {
 const app = express();
 const server = http.createServer(app); // Create HTTP server for Socket.IO
 
-// Configure Socket.IO
-const io = new Server(server, {
-  cors: {
-    origin: process.env.FRONTEND_URL || '*', // Allow specific frontend URL or all (*)
-    methods: ['GET', 'POST'],
-  },
-});
-
-// Attach Socket.IO instance to the app
-app.set('io', io);
-
 // Middleware setup
-app.use(logger); // Log HTTP requests
+app.use(loggerMiddleware); // Attach logger middleware using app.use()
 app.use(corsConfig); // Enable CORS
 app.use(express.json()); // Parse JSON requests
 app.use(rateLimiter); // Rate limiting
+
+// Test route
+app.get('/', (req, res) => {
+  res.send('API is running');
+});
 
 // Serve static files (e.g., uploaded images)
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -62,6 +55,17 @@ app.use(notFound);
 
 // Centralized error handling
 app.use(errorHandler);
+
+// Configure Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL || '*', // Allow specific frontend URL or all (*)
+    methods: ['GET', 'POST'],
+  },
+});
+
+// Attach Socket.IO instance to the app
+app.set('io', io);
 
 // Socket.IO logic
 io.on('connection', (socket) => {
@@ -118,7 +122,6 @@ const shutdown = () => {
     process.exit(0);
   });
 };
-
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
