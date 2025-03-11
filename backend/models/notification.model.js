@@ -1,42 +1,40 @@
 const mongoose = require('mongoose');
-const mongoosePaginate = require('mongoose-paginate-v2'); // Import pagination plugin
-
+const mongoosePaginate = require('mongoose-paginate-v2');
 const { Schema } = mongoose;
 
-const notificationSchema = new Schema(
-  {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // User receiving the notification
-      required: true,
-      index: true, // Add index for faster queries
-    },
-    message: {
-      type: String, // Notification message
-      required: true,
-      minlength: 5, // Minimum length for message
-    },
-    itemId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Item', // Item related to the notification
-      required: true,
-      index: true, // Add index for faster queries
-    },
-    isRead: {
-      type: Boolean,
-      default: false, // Indicates if the notification has been read
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
+const notificationSchema = new Schema({
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'User is required'],
+    index: true,
   },
-  {
-    timestamps: true, // Automatically adds `createdAt` and `updatedAt`
-  }
-);
+  message: {
+    type: String,
+    required: [true, 'Message is required'],
+    minlength: 5,
+    trim: true,
+  },
+  itemId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Item',
+    required: [true, 'Item is required'],
+    index: true,
+  },
+  type: {
+    type: String,
+    enum: ['item_claimed', 'item_returned', 'new_message', 'other'],
+    default: 'other',
+  },
+  isRead: {
+    type: Boolean,
+    default: false,
+  },
+}, {
+  timestamps: true,
+});
 
-// Apply the pagination plugin
+notificationSchema.index({ userId: 1, createdAt: -1 }); // Sort notifications by time descending
 notificationSchema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model('Notification', notificationSchema);

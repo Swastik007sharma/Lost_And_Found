@@ -45,36 +45,99 @@ exports.assignKeeper = async (req, res) => {
 exports.searchItems = async (req, res) => {
   try {
     const { page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search = '' } = req.query;
+    const skip = (page - 1) * limit;
 
-    // Build query for filtering items
-    const query = {};
+    // Build the aggregation pipeline
+    const pipeline = [];
+
+    // Lookup to join with Category collection
+    pipeline.push({
+      $lookup: {
+        from: 'categories', // Must match the collection name in MongoDB
+        localField: 'category',
+        foreignField: '_id',
+        as: 'categoryData',
+      },
+    });
+
+    // Unwind the categoryData array (since it’s a single reference)
+    pipeline.push({
+      $unwind: '$categoryData',
+    });
+
+    // Lookup to join with User collection for postedBy
+    pipeline.push({
+      $lookup: {
+        from: 'users',
+        localField: 'postedBy',
+        foreignField: '_id',
+        as: 'postedByData',
+      },
+    });
+
+    // Unwind postedByData
+    pipeline.push({
+      $unwind: '$postedByData',
+    });
+
+    // Match stage for search (single stage for all conditions)
     if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { tags: { $regex: search, $options: 'i' } },
-        { category: { $regex: search, $options: 'i' } },
-        { location: { $regex: search, $options: 'i' } },
-      ];
+      pipeline.push({
+        $match: {
+          $or: [
+            { title: { $regex: search, $options: 'i' } },
+            { description: { $regex: search, $options: 'i' } },
+            { tags: { $regex: search, $options: 'i' } },
+            { location: { $regex: search, $options: 'i' } },
+            { 'categoryData.name': { $regex: search, $options: 'i' } },
+          ],
+        },
+      });
     }
 
-    // Fetch paginated and sorted items
-    const options = {
-      page: parseInt(page, 10),
-      limit: parseInt(limit, 10),
-      populate: ['postedBy', 'category'], // Populate postedBy and category references
-      sort: { [sortBy]: order === 'asc' ? 1 : -1 }, // Sort by field and order
-    };
+    // Project to shape the output
+    pipeline.push({
+      $project: {
+        id: '$_id',
+        title: 1,
+        description: 1,
+        category: { id: '$categoryData._id', name: '$categoryData.name' },
+        tags: 1,
+        status: 1,
+        location: 1,
+        image: 1,
+        postedBy: { id: '$postedByData._id', name: '$postedByData.name', email: '$postedByData.email' },
+        isActive: 1,
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    });
 
-    const results = await Item.paginate(query, options); // Use mongoose-paginate-v2
+    // Sort stage
+    pipeline.push({
+      $sort: { [sortBy]: order === 'asc' ? 1 : -1 },
+    });
+
+    // Pagination stages
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: parseInt(limit, 10) });
+
+    // Execute the aggregation
+    const items = await Item.aggregate(pipeline);
+
+    // Get total count for pagination
+    const totalResultsPipeline = pipeline.slice(0, pipeline.length - 2); // Remove skip and limit
+    const totalResultsAgg = await Item.aggregate([...totalResultsPipeline, { $count: 'total' }]);
+    const totalResults = totalResultsAgg.length > 0 ? totalResultsAgg[0].total : 0;
+    const totalPages = Math.ceil(totalResults / limit);
 
     res.status(200).json({
       message: 'Items fetched successfully',
-      items: results.docs,
+      items,
       pagination: {
-        currentPage: results.page,
-        totalPages: results.totalPages,
-        totalResults: results.totalDocs,
+        currentPage: parseInt(page, 10),
+        totalPages,
+        totalResults,
       },
     });
   } catch (error) {

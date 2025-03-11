@@ -1,46 +1,44 @@
 const multer = require('multer');
 const path = require('path');
 
-// Configure storage for uploaded files
+// Configure multer storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Save files in the "uploads" folder
+    cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname); // Preserve the original file extension
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`); // Unique filename
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
   },
 });
 
-// Middleware to handle file uploads
+// File filter for image types
+const fileFilter = (req, file, cb) => {
+  const filetypes = /jpeg|jpg|png/;
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = filetypes.test(file.mimetype);
+  if (extname && mimetype) {
+    return cb(null, true);
+  }
+  cb(new Error('Only images (jpeg, jpg, png) are allowed'));
+};
+
+// Multer upload configuration
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter,
+});
+
+// Middleware to handle file upload (optional)
 exports.uploadFile = (req, res, next) => {
-  const upload = multer({
-    storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
-    fileFilter: (req, file, cb) => {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-      if (!allowedTypes.includes(file.mimetype)) {
-        return cb(new Error('Unsupported file type. Only JPEG, PNG, and JPG files are allowed.'));
-      }
-      cb(null, true);
-    },
-  }).single('image'); // Field name for the uploaded file
-
-  upload(req, res, (err) => {
+  upload.single('image')(req, res, (err) => {
     if (err instanceof multer.MulterError) {
-      // Handle Multer-specific errors (e.g., file size exceeded)
-      return res.status(400).json({ error: err.message });
+      return res.status(400).json({ error: 'File upload error: ' + err.message, code: 'MULTER_ERROR' });
     } else if (err) {
-      // Handle other errors (e.g., unsupported file type)
-      return res.status(400).json({ error: err.message });
+      return res.status(400).json({ error: err.message, code: 'INVALID_FILE_TYPE' });
     }
-
-    // Check if a file was uploaded
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded or file is invalid.' });
-    }
-
-    next(); // Proceed to the next middleware/controller
+    // File is optional; proceed even if no file is uploaded
+    next();
   });
 };
