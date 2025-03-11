@@ -5,11 +5,19 @@ const Category = require('../models/category.model');
 // Get a list of all users (admin-only)
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}, 'name email role createdAt'); // Select only necessary fields
-    res.status(200).json({ users });
+    const { page = 1, limit = 10 } = req.query; // Added pagination
+    const users = await User.find({ isActive: true }, 'name email role createdAt') // Select only necessary fields
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+    const total = await User.countDocuments({ isActive: true });
+    res.status(200).json({ 
+      message: 'Users fetched successfully',
+      users,
+      pagination: { currentPage: parseInt(page), totalPages: Math.ceil(total / limit), total } 
+    });
   } catch (error) {
     console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Failed to fetch users' });
+    res.status(500).json({ message: 'Failed to fetch users', code: 'SERVER_ERROR' });
   }
 };
 
@@ -17,28 +25,38 @@ exports.getAllUsers = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    // Find and delete the user
-    const user = await User.findByIdAndDelete(id);
+    // Find and update the user to inactive instead of deleting
+    const user = await User.findByIdAndUpdate(id, { isActive: false }, { new: true });
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ message: 'User not found', code: 'NOT_FOUND' });
     }
-    res.status(200).json({ message: 'User deleted successfully' });
+    // Optionally handle items posted by this user
+    await Item.updateMany({ postedBy: id }, { postedBy: null });
+    res.status(200).json({ message: 'User deactivated successfully' });
   } catch (error) {
     console.error('Error deleting user:', error);
-    res.status(500).json({ error: 'Failed to delete user' });
+    res.status(500).json({ message: 'Failed to deactivate user', code: 'SERVER_ERROR' });
   }
 };
 
 // Get a list of all items (admin-only)
 exports.getAllItems = async (req, res) => {
   try {
-    const items = await Item.find()
+    const { page = 1, limit = 10 } = req.query; // Added pagination
+    const items = await Item.find({ isActive: true })
       .populate('postedBy', 'name email') // Populate user details
-      .populate('category', 'name'); // Populate category details
-    res.status(200).json({ items });
+      .populate('category', 'name') // Populate category details
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+    const total = await Item.countDocuments({ isActive: true });
+    res.status(200).json({ 
+      message: 'Items fetched successfully',
+      items,
+      pagination: { currentPage: parseInt(page), totalPages: Math.ceil(total / limit), total } 
+    });
   } catch (error) {
     console.error('Error fetching items:', error);
-    res.status(500).json({ error: 'Failed to fetch items' });
+    res.status(500).json({ message: 'Failed to fetch items', code: 'SERVER_ERROR' });
   }
 };
 
@@ -46,15 +64,15 @@ exports.getAllItems = async (req, res) => {
 exports.deleteItem = async (req, res) => {
   try {
     const { id } = req.params;
-    // Find and delete the item
-    const item = await Item.findByIdAndDelete(id);
+    // Find and update the item to inactive instead of deleting
+    const item = await Item.findByIdAndUpdate(id, { isActive: false }, { new: true });
     if (!item) {
-      return res.status(404).json({ error: 'Item not found' });
+      return res.status(404).json({ message: 'Item not found', code: 'NOT_FOUND' });
     }
-    res.status(200).json({ message: 'Item deleted successfully' });
+    res.status(200).json({ message: 'Item deactivated successfully' });
   } catch (error) {
     console.error('Error deleting item:', error);
-    res.status(500).json({ error: 'Failed to delete item' });
+    res.status(500).json({ message: 'Failed to deactivate item', code: 'SERVER_ERROR' });
   }
 };
 
@@ -62,20 +80,21 @@ exports.deleteItem = async (req, res) => {
 exports.getAdminDashboardStats = async (req, res) => {
   try {
     // Total number of items posted
-    const totalItems = await Item.countDocuments();
+    const totalItems = await Item.countDocuments({ isActive: true });
 
     // Number of claimed vs. unclaimed items
-    const claimedItems = await Item.countDocuments({ status: 'Claimed' });
-    const unclaimedItems = await Item.countDocuments({ status: 'Unclaimed' });
+    const claimedItems = await Item.countDocuments({ isClaimed: true, isActive: true });
+    const unclaimedItems = await Item.countDocuments({ isClaimed: false, isActive: true });
 
     // Total number of users
-    const totalUsers = await User.countDocuments();
+    const totalUsers = await User.countDocuments({ isActive: true });
 
     // Total number of categories
     const totalCategories = await Category.countDocuments();
 
     // Most active users (top 5 users who have posted the most items)
     const mostActiveUsers = await Item.aggregate([
+      { $match: { isActive: true } }, // Filter active items
       { $group: { _id: '$postedBy', count: { $sum: 1 } } }, // Group by user ID and count items
       { $sort: { count: -1 } }, // Sort by count in descending order
       { $limit: 5 }, // Limit to top 5 users
@@ -101,6 +120,7 @@ exports.getAdminDashboardStats = async (req, res) => {
 
     // Return the statistics
     res.status(200).json({
+      message: 'Admin dashboard stats fetched successfully',
       stats: {
         totalItems,
         claimedItems,
@@ -112,6 +132,6 @@ exports.getAdminDashboardStats = async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching admin dashboard stats:', error.message);
-    res.status(500).json({ error: 'Failed to fetch admin dashboard stats' });
+    res.status(500).json({ message: 'Failed to fetch admin dashboard stats', code: 'SERVER_ERROR' });
   }
 };

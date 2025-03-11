@@ -12,26 +12,27 @@ exports.register = async (req, res) => {
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
+      return res.status(400).json({ message: 'User already exists', code: 'USER_EXISTS' });
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create the user
-    const user = new User({ name, email, password: hashedPassword });
+    // Create the user (password hashing handled by pre-save hook in user.model.js)
+    const user = new User({ name, email, password });
     await user.save();
+
+    // Generate JWT token immediately upon registration
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
 
     res.status(201).json({
       message: 'User registered successfully',
-      user: { name, email },
+      user: { id: user._id, name, email, role: user.role },
+      authorization: `Bearer ${token}`, // Updated to include "Bearer "
     });
   } catch (error) {
     console.error('Registration Error:', error.message);
     if (error.name === 'ZodError') {
-      return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      return res.status(400).json({ message: 'Validation failed', code: 'VALIDATION_ERROR', details: error.errors });
     }
-    res.status(500).json({ error: 'Failed to register user' });
+    res.status(500).json({ message: 'Failed to register user', code: 'SERVER_ERROR' });
   }
 };
 
@@ -42,29 +43,30 @@ exports.login = async (req, res) => {
     const { email, password } = loginSchema.parse(req.body);
 
     // Find the user by email
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email, isActive: true });
     if (!user) {
-      return res.status(400).json({ error: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid credentials or user inactive', code: 'INVALID_CREDENTIALS' });
     }
 
     // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid credentials', code: 'INVALID_CREDENTIALS' });
     }
 
     // Generate JWT token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
 
     res.status(200).json({
-      token,
-      user: { name: user.name, email: user.email },
+      message: 'Login successful',
+      authorization: `Bearer ${token}`, // Updated to include "Bearer "
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
     console.error('Login Error:', error.message);
     if (error.name === 'ZodError') {
-      return res.status(400).json({ error: 'Validation failed', details: error.errors });
+      return res.status(400).json({ message: 'Validation failed', code: 'VALIDATION_ERROR', details: error.errors });
     }
-    res.status(500).json({ error: 'Failed to login' });
+    res.status(500).json({ message: 'Failed to login', code: 'SERVER_ERROR' });
   }
 };

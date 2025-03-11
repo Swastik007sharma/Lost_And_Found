@@ -2,12 +2,12 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
 const { validate } = require('../middlewares/validate.middleware');
-const { registerUserSchema, loginSchema } = require('../schema/user.schema');
+const { registerSchema, loginSchema } = require('../schema/auth.schema');
 
 // Register a new user
 router.post(
   '/register',
-  validate(registerUserSchema), // Validate request body
+  validate(registerSchema), // Validate request body
   authController.register
 );
 

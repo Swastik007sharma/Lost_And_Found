@@ -1,14 +1,18 @@
-# **Backend API Documentation**
+### **API Documentation for Lost and Found Platform**
 
-This document provides a detailed overview of all API endpoints, including their purpose, request/response formats, and examples. Use this guide to test the API and develop the frontend.
-
----
-Certainly! Below is the complete documentation for all the APIs in your application. This will help you test them using Postman or any other API testing tool.
+This document provides a comprehensive guide to all API endpoints in the Lost and Found Platform for College. It includes details on how to use each endpoint, the required request formats, and the expected responses. Use this guide to test the API using tools like Postman and to integrate with the frontend.
 
 ---
 
 ### **Base URL**
-- `http://localhost:5000/api/v1` (or the appropriate base URL where your server is running)
+- `http://localhost:5000/api/v1` (or your deployed server's base URL)
+
+---
+
+### **Authentication**
+- Most endpoints require authentication via a JSON Web Token (JWT).
+- To authenticate, include the JWT token in the `Authorization` header as `Bearer <token>`.
+- Obtain the token by logging in via the `/auth/login` endpoint.
 
 ---
 
@@ -16,24 +20,31 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 
 ### **1. Register a User**
 - **Endpoint**: `POST /auth/register`
-- **Description**: Registers a new user.
+- **Description**: Registers a new user account.
 - **Request Body**:
   ```json
   {
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "password": "password123"
+    "name": "string",
+    "email": "string",
+    "password": "string"
   }
   ```
-- **Response**:
+- **Response (Success)**:
   ```json
   {
     "message": "User registered successfully",
     "user": {
-      "_id": "652f8e2b3d4c9d1a4c8b4567",
-      "name": "John Doe",
-      "email": "john.doe@example.com"
+      "_id": "string",
+      "name": "string",
+      "email": "string"
     }
+  }
+  ```
+- **Response (Error)**:
+  ```json
+  {
+    "message": "User already exists",
+    "code": "USER_EXISTS"
   }
   ```
 
@@ -41,19 +52,32 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 
 ### **2. Login a User**
 - **Endpoint**: `POST /auth/login`
-- **Description**: Logs in a user and returns a JWT token.
+- **Description**: Authenticates a user and returns a JWT token.
 - **Request Body**:
   ```json
   {
-    "email": "john.doe@example.com",
-    "password": "password123"
+    "email": "string",
+    "password": "string"
   }
   ```
-- **Response**:
+- **Response (Success)**:
   ```json
   {
     "message": "Login successful",
-    "token": "your-jwt-token"
+    "token": "string",
+    "user": {
+      "_id": "string",
+      "name": "string",
+      "email": "string",
+      "role": "string"
+    }
+  }
+  ```
+- **Response (Error)**:
+  ```json
+  {
+    "message": "Invalid credentials or user inactive",
+    "code": "INVALID_CREDENTIALS"
   }
   ```
 
@@ -63,34 +87,41 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 
 ### **1. Create an Item**
 - **Endpoint**: `POST /items`
-- **Description**: Creates a new lost/found item.
+- **Description**: Creates a new lost or found item.
 - **Headers**:
-  - `Authorization: Bearer <token>` (JWT token from login)
-- **Request Body**:
-  ```json
-  {
-    "title": "Lost Wallet",
-    "description": "Black leather wallet lost near the library.",
-    "category": "Accessories",
-    "tags": ["black", "leather"],
-    "status": "Unclaimed",
-    "location": "Library"
-  }
-  ```
-- **Response**:
+  - `Authorization: Bearer <token>`
+- **Request Body** (multipart/form-data for file uploads):
+  - `title`: string
+  - `description`: string
+  - `category`: string (category ID)
+  - `tags`: array of strings (optional)
+  - `status`: string (e.g., "Lost", "Found")
+  - `location`: string
+  - `image`: file (optional)
+- **Response (Success)**:
   ```json
   {
     "message": "Item created successfully",
     "item": {
-      "_id": "652f8e2b3d4c9d1a4c8b4568",
-      "title": "Lost Wallet",
-      "description": "Black leather wallet lost near the library.",
-      "category": "Accessories",
-      "tags": ["black", "leather"],
-      "status": "Unclaimed",
-      "location": "Library",
-      "postedBy": "652f8e2b3d4c9d1a4c8b4567"
+      "_id": "string",
+      "title": "string",
+      "description": "string",
+      "category": "string",
+      "tags": ["string"],
+      "status": "string",
+      "location": "string",
+      "image": "string",
+      "postedBy": "string",
+      "isActive": true
     }
+  }
+  ```
+- **Response (Error)**:
+  ```json
+  {
+    "message": "Validation failed",
+    "code": "VALIDATION_ERROR",
+    "details": [...]
   }
   ```
 
@@ -98,69 +129,82 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 
 ### **2. Get All Items**
 - **Endpoint**: `GET /items`
-- **Description**: Fetches all items with optional filters (pagination, sorting, search).
+- **Description**: Retrieves a list of items with optional filtering, sorting, and pagination.
 - **Query Parameters**:
-  - `page`: Page number (default: `1`)
-  - `limit`: Items per page (default: `10`)
-  - `sortBy`: Field to sort by (default: `createdAt`)
-  - `order`: Sort order (`asc` or `desc`, default: `desc`)
-  - `search`: Search term (optional)
-- **Example Request**:
-  ```
-  GET /items?page=1&limit=5&sortBy=title&order=asc&search=wallet
-  ```
-- **Response**:
+  - `page`: integer (default: 1)
+  - `limit`: integer (default: 10)
+  - `sortBy`: string (e.g., "createdAt", "title")
+  - `order`: string ("asc" or "desc")
+  - `search`: string (searches title, description, tags)
+- **Response (Success)**:
   ```json
   {
     "message": "Items fetched successfully",
     "items": [
       {
-        "_id": "652f8e2b3d4c9d1a4c8b4568",
-        "title": "Lost Wallet",
-        "description": "Black leather wallet lost near the library.",
-        "category": "Accessories",
-        "tags": ["black", "leather"],
-        "status": "Unclaimed",
-        "location": "Library",
+        "_id": "string",
+        "title": "string",
+        "description": "string",
+        "category": {
+          "_id": "string",
+          "name": "string"
+        },
+        "tags": ["string"],
+        "status": "string",
+        "location": "string",
+        "image": "string",
         "postedBy": {
-          "_id": "652f8e2b3d4c9d1a4c8b4567",
-          "name": "John Doe",
-          "email": "john.doe@example.com"
-        }
+          "_id": "string",
+          "name": "string",
+          "email": "string"
+        },
+        "isActive": true
       }
     ],
     "pagination": {
       "currentPage": 1,
       "totalPages": 2,
-      "totalResults": 10
+      "totalResults": 15
     }
   }
   ```
 
 ---
 
-### **3. Get Details of a Specific Item**
+### **3. Get a Specific Item**
 - **Endpoint**: `GET /items/:id`
-- **Description**: Fetches details of a specific item by its ID.
+- **Description**: Retrieves details of a specific item by ID.
 - **Path Parameter**:
-  - Replace `:id` with the `_id` of the item.
-- **Response**:
+  - `id`: string (item ID)
+- **Response (Success)**:
   ```json
   {
     "item": {
-      "_id": "652f8e2b3d4c9d1a4c8b4568",
-      "title": "Lost Wallet",
-      "description": "Black leather wallet lost near the library.",
-      "category": "Accessories",
-      "tags": ["black", "leather"],
-      "status": "Unclaimed",
-      "location": "Library",
+      "_id": "string",
+      "title": "string",
+      "description": "string",
+      "category": {
+        "_id": "string",
+        "name": "string"
+      },
+      "tags": ["string"],
+      "status": "string",
+      "location": "string",
+      "image": "string",
       "postedBy": {
-        "_id": "652f8e2b3d4c9d1a4c8b4567",
-        "name": "John Doe",
-        "email": "john.doe@example.com"
-      }
+        "_id": "string",
+        "name": "string",
+        "email": "string"
+      },
+      "isActive": true
     }
+  }
+  ```
+- **Response (Error)**:
+  ```json
+  {
+    "message": "Item not found",
+    "code": "NOT_FOUND"
   }
   ```
 
@@ -168,27 +212,29 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 
 ### **4. Update an Item**
 - **Endpoint**: `PUT /items/:id`
-- **Description**: Updates an existing item.
+- **Description**: Updates an existing item's details.
 - **Headers**:
-  - `Authorization: Bearer <token>` (JWT token from login)
+  - `Authorization: Bearer <token>`
 - **Path Parameter**:
-  - Replace `:id` with the `_id` of the item.
+  - `id`: string (item ID)
 - **Request Body**:
-  ```json
-  {
-    "title": "Updated Wallet Title",
-    "description": "Updated description."
-  }
-  ```
-- **Response**:
+  - Any fields to update (e.g., `title`, `description`, etc.)
+- **Response (Success)**:
   ```json
   {
     "message": "Item updated successfully",
     "item": {
-      "_id": "652f8e2b3d4c9d1a4c8b4568",
-      "title": "Updated Wallet Title",
-      "description": "Updated description."
+      "_id": "string",
+      "title": "string",
+      // updated fields
     }
+  }
+  ```
+- **Response (Error)**:
+  ```json
+  {
+    "message": "You are not authorized to update this item",
+    "code": "FORBIDDEN"
   }
   ```
 
@@ -196,15 +242,22 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 
 ### **5. Delete an Item**
 - **Endpoint**: `DELETE /items/:id`
-- **Description**: Deletes an item by its ID.
+- **Description**: Deletes an item by ID (soft delete).
 - **Headers**:
-  - `Authorization: Bearer <token>` (JWT token from login)
+  - `Authorization: Bearer <token>`
 - **Path Parameter**:
-  - Replace `:id` with the `_id` of the item.
-- **Response**:
+  - `id`: string (item ID)
+- **Response (Success)**:
   ```json
   {
     "message": "Item deleted successfully"
+  }
+  ```
+- **Response (Error)**:
+  ```json
+  {
+    "message": "Item not found",
+    "code": "NOT_FOUND"
   }
   ```
 
@@ -212,20 +265,28 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 
 ### **6. Claim an Item**
 - **Endpoint**: `POST /items/:id/claim`
-- **Description**: Marks an item as claimed.
+- **Description**: Marks an item as claimed by the authenticated user.
 - **Headers**:
-  - `Authorization: Bearer <token>` (JWT token from login)
+  - `Authorization: Bearer <token>`
 - **Path Parameter**:
-  - Replace `:id` with the `_id` of the item.
-- **Response**:
+  - `id`: string (item ID)
+- **Response (Success)**:
   ```json
   {
     "message": "Item claimed successfully",
     "item": {
-      "_id": "652f8e2b3d4c9d1a4c8b4568",
-      "title": "Lost Wallet",
-      "status": "Claimed"
+      "_id": "string",
+      "status": "Claimed",
+      "claimedBy": "string",
+      "isClaimed": true
     }
+  }
+  ```
+- **Response (Error)**:
+  ```json
+  {
+    "message": "This item has already been claimed",
+    "code": "ALREADY_CLAIMED"
   }
   ```
 
@@ -235,18 +296,24 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 - **Endpoint**: `POST /items/:id/return`
 - **Description**: Marks an item as returned.
 - **Headers**:
-  - `Authorization: Bearer <token>` (JWT token from login)
+  - `Authorization: Bearer <token>`
 - **Path Parameter**:
-  - Replace `:id` with the `_id` of the item.
-- **Response**:
+  - `id`: string (item ID)
+- **Response (Success)**:
   ```json
   {
     "message": "Item marked as returned successfully",
     "item": {
-      "_id": "652f8e2b3d4c9d1a4c8b4568",
-      "title": "Lost Wallet",
+      "_id": "string",
       "status": "Returned"
     }
+  }
+  ```
+- **Response (Error)**:
+  ```json
+  {
+    "message": "This item has already been marked as returned",
+    "code": "ALREADY_RETURNED"
   }
   ```
 
@@ -256,24 +323,132 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 - **Endpoint**: `POST /items/:id/assign-keeper`
 - **Description**: Assigns a keeper to an item.
 - **Headers**:
-  - `Authorization: Bearer <token>` (JWT token from login)
+  - `Authorization: Bearer <token>`
 - **Path Parameter**:
-  - Replace `:id` with the `_id` of the item.
+  - `id`: string (item ID)
 - **Request Body**:
   ```json
   {
-    "keeperId": "652f8e2b3d4c9d1a4c8b4567"
+    "keeperId": "string"
   }
   ```
-- **Response**:
+- **Response (Success)**:
   ```json
   {
     "message": "Item assigned to keeper successfully",
     "item": {
-      "_id": "652f8e2b3d4c9d1a4c8b4568",
-      "title": "Lost Wallet",
-      "keeper": "652f8e2b3d4c9d1a4c8b4567"
+      "_id": "string",
+      "keeper": "string"
     }
+  }
+  ```
+- **Response (Error)**:
+  ```json
+  {
+    "message": "This item already has a keeper assigned",
+    "code": "KEEPER_ALREADY_ASSIGNED"
+  }
+  ```
+
+---
+
+### **9. Generate QR Code for an Item**
+- **Endpoint**: `POST /items/:id/generate-qr`
+- **Description**: Generates a QR code for an item.
+- **Headers**:
+  - `Authorization: Bearer <token>`
+- **Path Parameter**:
+  - `id`: string (item ID)
+- **Response (Success)**:
+  ```json
+  {
+    "message": "QR code generated successfully",
+    "qrCode": "string" // base64 encoded image
+  }
+  ```
+
+---
+
+### **10. Scan QR Code for an Item**
+- **Endpoint**: `POST /items/:id/scan-qr`
+- **Description**: Verifies an item's QR code.
+- **Headers**:
+  - `Authorization: Bearer <token>`
+- **Path Parameter**:
+  - `id`: string (item ID)
+- **Request Body**:
+  ```json
+  {
+    "qrData": "string"
+  }
+  ```
+- **Response (Success)**:
+  ```json
+  {
+    "message": "QR code verified successfully",
+    "item": {
+      "_id": "string",
+      "status": "string"
+    }
+  }
+  ```
+- **Response (Error)**:
+  ```json
+  {
+    "message": "QR code data is invalid or outdated",
+    "code": "INVALID_QR_DATA"
+  }
+  ```
+
+---
+
+### **11. Generate OTP for Claiming an Item**
+- **Endpoint**: `POST /items/:id/generate-otp`
+- **Description**: Generates an OTP for claiming an item.
+- **Headers**:
+  - `Authorization: Bearer <token>`
+- **Path Parameter**:
+  - `id`: string (item ID)
+- **Response (Success)**:
+  ```json
+  {
+    "message": "OTP generated successfully",
+    "otp": "string"
+  }
+  ```
+
+---
+
+### **12. Verify OTP for Claiming an Item**
+- **Endpoint**: `POST /items/:id/verify-otp`
+- **Description**: Verifies the OTP to claim an item.
+- **Headers**:
+  - `Authorization: Bearer <token>`
+- **Path Parameter**:
+  - `id`: string (item ID)
+- **Request Body**:
+  ```json
+  {
+    "otp": "string"
+  }
+  ```
+- **Response (Success)**:
+  ```json
+  {
+    "message": "OTP verified successfully. Item claimed.",
+    "item": {
+      "_id": "string",
+      "status": "Claimed",
+      "claimedBy": "string",
+      "isClaimed": true
+    }
+  }
+  ```
+- **Response (Error)**:
+  ```json
+  {
+    "message": "Invalid or expired OTP",
+    "code": "INVALID_OTP"
   }
   ```
 
@@ -283,28 +458,28 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 
 ### **1. Get Messages in a Conversation**
 - **Endpoint**: `GET /conversations/:id/messages`
-- **Description**: Fetches all messages in a specific conversation.
+- **Description**: Retrieves messages in a specific conversation.
 - **Headers**:
-  - `Authorization: Bearer <token>` (JWT token from login)
+  - `Authorization: Bearer <token>`
 - **Path Parameter**:
-  - Replace `:id` with the `_id` of the conversation.
+  - `id`: string (conversation ID)
 - **Query Parameters**:
-  - `page`: Page number (default: `1`)
-  - `limit`: Messages per page (default: `10`)
-- **Response**:
+  - `page`: integer (default: 1)
+  - `limit`: integer (default: 10)
+- **Response (Success)**:
   ```json
   {
     "messages": [
       {
-        "_id": "652f8e2b3d4c9d1a4c8b4569",
-        "conversation": "652f8e2b3d4c9d1a4c8b4568",
+        "_id": "string",
+        "conversation": "string",
         "sender": {
-          "_id": "652f8e2b3d4c9d1a4c8b4567",
-          "name": "John Doe",
-          "email": "john.doe@example.com"
+          "_id": "string",
+          "name": "string",
+          "email": "string"
         },
-        "text": "Hello, how are you?",
-        "createdAt": "2023-10-15T12:34:56.789Z"
+        "text": "string",
+        "createdAt": "string"
       }
     ]
   }
@@ -312,33 +487,33 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 
 ---
 
-### **2. Send a Message**
+### **2. Send a Message in a Conversation**
 - **Endpoint**: `POST /conversations/:id/send-message`
-- **Description**: Sends a message in a specific conversation.
+- **Description**: Sends a new message in a conversation.
 - **Headers**:
-  - `Authorization: Bearer <token>` (JWT token from login)
+  - `Authorization: Bearer <token>`
 - **Path Parameter**:
-  - Replace `:id` with the `_id` of the conversation.
+  - `id`: string (conversation ID)
 - **Request Body**:
   ```json
   {
-    "text": "Hello, how are you?"
+    "text": "string"
   }
   ```
-- **Response**:
+- **Response (Success)**:
   ```json
   {
     "message": "Message sent successfully",
     "message": {
-      "_id": "652f8e2b3d4c9d1a4c8b4569",
-      "conversation": "652f8e2b3d4c9d1a4c8b4568",
-      "sender": {
-        "_id": "652f8e2b3d4c9d1a4c8b4567",
-        "name": "John Doe",
-        "email": "john.doe@example.com"
+      "_id": "string",
+      "conversation": "string",
+      "sndedBy": {
+        "_id": "string",
+        "name": "string",
+        "email": "string"
       },
-      "text": "Hello, how are you?",
-      "createdAt": "2023-10-15T12:34:56.789Z"
+      "text": "string",
+      "createdAt": "string"
     }
   }
   ```
@@ -349,49 +524,29 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 
 ### **1. Search for Items**
 - **Endpoint**: `GET /search/items/search`
-- **Description**: Searches for items based on title, description, tags, category, or location.
+- **Description**: Searches for items based on various criteria.
 - **Query Parameters**:
-  - `page`: Page number (default: `1`)
-  - `limit`: Items per page (default: `10`)
-  - `sortBy`: Field to sort by (default: `createdAt`)
-  - `order`: Sort order (`asc` or `desc`, default: `desc`)
-  - `search`: Search term (optional, case-insensitive)
-
-  ```plaintext
-  - `sortBy`: Field to sort by (default: `createdAt`)
-  - `order`: Sort order (`asc` or `desc`, default: `desc`)
-  - `search`: Search term (optional)
-```
-- **Example Request**:
-  ```
-  GET /search/items/search?page=1&limit=5&sortBy=title&order=asc&search=wallet
-  ```
-- **Response**:
+  - `page`: integer (default: 1)
+  - `limit`: integer (default: 10)
+  - `sortBy`: string (e.g., "createdAt", "title")
+  - `order`: string ("asc" or "desc")
+  - `search`: string (searches title, description, tags, category, location)
+- **Response (Success)**:
   ```json
   {
     "message": "Items fetched successfully",
     "items": [
       {
-        "_id": "652f8e2b3d4c9d1a4c8b4568",
-        "title": "Lost Wallet",
-        "description": "Black leather wallet lost near the library.",
-        "category": "Accessories",
-        "tags": ["black", "leather"],
-        "status": "Unclaimed",
-        "location": "Library",
-        "postedBy": {
-          "_id": "652f8e2b3d4c9d1a4c8b4567",
-          "name": "John Doe",
-          "email": "john.doe@example.com"
-        },
-        "createdAt": "2023-10-15T12:34:56.789Z",
-        "updatedAt": "2023-10-15T12:34:56.789Z"
+        "_id": "string",
+        "title": "string",
+        "description": "string",
+        // other item fields
       }
     ],
     "pagination": {
       "currentPage": 1,
       "totalPages": 2,
-      "totalResults": 10
+      "totalResults": 15
     }
   }
   ```
@@ -402,16 +557,16 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 
 ### **1. Get Available Keepers**
 - **Endpoint**: `GET /keepers`
-- **Description**: Fetches a list of available keepers.
-- **Response**:
+- **Description**: Retrieves a list of available keepers.
+- **Response (Success)**:
   ```json
   {
     "keepers": [
       {
-        "_id": "652f8e2b3d4c9d1a4c8b4567",
-        "name": "John Doe",
-        "email": "john.doe@example.com",
-        "createdAt": "2023-10-15T12:34:56.789Z"
+        "_id": "string",
+        "name": "string",
+        "email": "string",
+        "createdAt": "string"
       }
     ]
   }
@@ -422,25 +577,25 @@ Certainly! Below is the complete documentation for all the APIs in your applicat
 ## **Testing Tips for Postman**
 
 1. **Set Up Environment Variables**:
-   - Create an environment in Postman and store your JWT token as a variable (e.g., `{{token}}`).
-   - Use this variable in the `Authorization` header for authenticated requests.
+   - Create an environment in Postman and store your JWT token as `{{token}}`.
+   - Use this variable in the `Authorization` header for authenticated requests: `Bearer {{token}}`.
 
 2. **Authentication**:
-   - Use the `/auth/login` endpoint to get a JWT token.
-   - Copy the token from the response and set it in the `Authorization` header for subsequent requests.
+   - Use `/auth/login` to get a token and set it in your environment.
+   - Ensure the token is updated if it expires.
 
 3. **File Uploads**:
-   - For endpoints that require file uploads (e.g., creating an item with an image), use the `form-data` body type in Postman.
-   - Add a key named `file` and select the file you want to upload.
+   - For endpoints like `/items` (create item with image), use `form-data` in Postman.
+   - Add a key named `image` and select the file to upload.
 
-4. **Pagination and Sorting**:
-   - Use query parameters like `page`, `limit`, `sortBy`, and `order` to test pagination and sorting functionality.
+4. **Query Parameters**:
+   - Test pagination, sorting, and searching by adjusting query parameters (e.g., `?page=2&limit=5&sortBy=title&order=asc&search=wallet`).
 
 5. **Error Handling**:
-   - Test invalid inputs, missing fields, and unauthorized access to ensure proper error responses.
+   - Test invalid inputs, missing fields, and unauthorized access to verify error responses.
 
 ---
 
 ### **Conclusion**
 
-This documentation covers all the APIs in your application, including their endpoints, request/response formats, and query parameters. You can now use Postman to test these APIs effectively. If you need further clarification or additional details, feel free to ask! 🚀
+This documentation covers all endpoints in the Lost and Found Platform, providing a clear guide for testing and integration. Use Postman to verify each API's functionality, and refer to this document for request/response details. If you need further assistance or clarification, feel free to ask!

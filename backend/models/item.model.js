@@ -1,86 +1,82 @@
 const mongoose = require('mongoose');
+const mongoosePaginate = require('mongoose-paginate-v2'); // Import the plugin
 const { Schema } = mongoose;
 
 const itemSchema = new Schema({
   title: {
     type: String,
-    required: true,
-    minlength: 3, // Minimum length for title
+    required: [true, 'Title is required'],
+    minlength: 3,
+    trim: true,
   },
   description: {
     type: String,
-    required: true,
-    minlength: 10, // Minimum length for description
+    required: [true, 'Description is required'],
+    minlength: 10,
+    trim: true,
   },
   category: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category', // Reference to the Category model
-    required: true,
-    index: true, // Add index for faster queries
+    ref: 'Category',
+    required: [true, 'Category is required'],
+    index: true,
   },
   tags: [{
-    type: String, // Array of tags (keywords)
+    type: String,
     validate: {
-      validator: (tag) => typeof tag === 'string',
-      message: 'Tags must be strings.',
+      validator: (tag) => typeof tag === 'string' && tag.trim().length > 0,
+      message: 'Tags must be non-empty strings.',
     },
   }],
   status: {
     type: String,
-    enum: ['Lost', 'Found', 'Claimed', 'Returned'], // Lifecycle stages
-    required: true,
-    index: true, // Add index for faster queries
+    enum: ['Lost', 'Found', 'Claimed', 'Returned'],
+    required: [true, 'Status is required'],
+    index: true,
   },
   location: {
     type: String,
-    required: true,
-    minlength: 3, // Minimum length for location
+    required: [true, 'Location is required'],
+    minlength: 3,
+    trim: true,
   },
   image: {
-    type: String, // URL to the image (optional)
+    type: String,
+    default: null,
   },
   postedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Finder or original poster
-    required: true,
-    index: true, // Add index for faster queries
+    ref: 'User',
+    required: [true, 'Posted by user is required'],
+    index: true,
   },
   claimedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // User who claims the item (optional)
-    index: true, // Add index for faster queries
+    ref: 'User',
+    index: true,
+  },
+  returnedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    index: true,
   },
   keeper: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Keeper holding the item (optional)
-    index: true, // Add index for faster queries
+    ref: 'User',
+    index: true,
   },
-  qrCode: {
-    type: String, // Unique QR code for the item
-  },
-  qrCodeExpiresAt: {
-    type: Date, // Expiry time for the QR code
-  },
-  otp: {
-    type: String, // One-time password for verification
-  },
-  otpExpiresAt: {
-    type: Date, // Expiry time for the OTP
-  },
-  isClaimed: {
-    type: Boolean,
-    default: false, // Indicates if the item has been reserved
-  },
-  isReturned: {
-    type: Boolean,
-    default: false, // Indicates if the item has been returned to the owner
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  qrCode: { type: String },
+  qrCodeExpiresAt: { type: Date },
+  otp: { type: String },
+  otpExpiresAt: { type: Date },
+  isClaimed: { type: Boolean, default: false },
+  isReturned: { type: Boolean, default: false },
+  isActive: { type: Boolean, default: true }, // For soft deletion
 }, {
-  timestamps: true, // Automatically adds `createdAt` and `updatedAt`
+  timestamps: true,
 });
+
+// Apply the pagination plugin to the schema
+itemSchema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model('Item', itemSchema);

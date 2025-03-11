@@ -3,27 +3,41 @@ const { Schema } = mongoose;
 
 const conversationSchema = new Schema({
   item: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Item', // The item being discussed
-    required: true,
-    index: true, // Add index for faster queries
+    type: Schema.Types.ObjectId,
+    ref: 'Item',
+    required: [true, 'An item is required for the conversation'],
+    index: true,
   },
-  participants: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Users involved in the conversation
-    required: true,
-  }],
-  createdAt: {
-    type: Date,
-    default: Date.now,
+  participants: {
+    type: [{
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    }],
+    required: [true, 'Participants are required'],
+    validate: [
+      {
+        validator: (arr) => arr.length >= 2,
+        msg: 'A conversation must have at least two participants',
+      },
+      {
+        validator: (arr) => new Set(arr).size === arr.length,
+        msg: 'Participants must be unique',
+      },
+    ],
+    index: true,
+  },
+  lastMessage: {
+    type: Schema.Types.ObjectId,
+    ref: 'Message',
+  },
+  isActive: {
+    type: Boolean,
+    default: true,
   },
 }, {
-  timestamps: true, // Automatically adds `createdAt` and `updatedAt`
+  timestamps: true,
 });
 
-// Validate that there are at least two participants
-conversationSchema.path('participants').validate((participants) => {
-  return participants.length >= 2;
-}, 'A conversation must have at least two participants.');
+conversationSchema.index({ item: 1, participants: 1 }, { unique: true });
 
 module.exports = mongoose.model('Conversation', conversationSchema);

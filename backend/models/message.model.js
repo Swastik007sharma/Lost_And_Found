@@ -3,32 +3,35 @@ const { Schema } = mongoose;
 
 const messageSchema = new Schema({
   conversation: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Conversation', // The conversation this message belongs to
-    required: true,
-    index: true, // Add index for faster queries
+    type: Schema.Types.ObjectId,
+    ref: 'Conversation',
+    required: [true, 'Conversation is required'],
+    index: true,
   },
   sender: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // The user who sent the message
-    required: true,
-    index: true, // Add index for faster queries
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Sender is required'],
+    index: true,
   },
   content: {
-    type: String, // The message text
-    required: true,
-    minlength: 1, // Minimum length for content
+    type: String,
+    required: [true, 'Message content is required'],
+    minlength: 1,
+    trim: true,
   },
   isRead: {
     type: Boolean,
-    default: false, // Indicates if the message has been read
+    default: false,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
+  isActive: {
+    type: Boolean,
+    default: true, // For soft deletion
   },
 }, {
-  timestamps: true, // Automatically adds `createdAt` and `updatedAt`
+  timestamps: true,
 });
+
+messageSchema.index({ conversation: 1, createdAt: -1 }); // Sort messages by creation time descending
 
 module.exports = mongoose.model('Message', messageSchema);

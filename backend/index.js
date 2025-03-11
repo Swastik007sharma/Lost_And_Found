@@ -7,17 +7,20 @@ const express = require('express');
 const path = require('path');
 const { Server } = require('socket.io');
 const fs = require('fs');
+const Category = require('./models/category.model'); // Import Category model for seeding
 
 // Import middleware
 const { errorHandler } = require('./middlewares/error.middleware');
-const loggerMiddleware = require('./middlewares/logger.middleware'); // Updated import
+const loggerMiddleware = require('./middlewares/logger.middleware');
 const { corsConfig } = require('./middlewares/cors.middleware');
 const { notFound } = require('./middlewares/notFound.middleware');
 const { rateLimiter } = require('./middlewares/rateLimit.middleware');
 
 // Validate critical environment variables
-if (!process.env.PORT || !process.env.FRONTEND_URL) {
-  console.error('Missing required environment variables. Please check your .env file.');
+const requiredEnvVars = ['PORT', 'FRONTEND_URL', 'MONGODB_URI', 'JWT_SECRET'];
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+if (missingVars.length > 0) {
+  console.error(`Missing required environment variables: ${missingVars.join(', ')}. Please check your .env file.`);
   process.exit(1);
 }
 
@@ -30,11 +33,6 @@ app.use(loggerMiddleware); // Attach logger middleware using app.use()
 app.use(corsConfig); // Enable CORS
 app.use(express.json()); // Parse JSON requests
 app.use(rateLimiter); // Rate limiting
-
-// Test route
-app.get('/', (req, res) => {
-  res.send('API is running');
-});
 
 // Serve static files (e.g., uploaded images)
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -80,7 +78,7 @@ io.on('connection', (socket) => {
   // Send a message
   socket.on('sendMessage', async ({ conversationId, senderId, content }) => {
     try {
-      // Validate input
+      // Basic validation (Zod validation handled in schema directory)
       if (!conversationId || !senderId || !content) {
         return socket.emit('errorMessage', 'Invalid message data.');
       }
@@ -114,6 +112,32 @@ io.on('connection', (socket) => {
   });
 });
 
+// Seed categories after DB connection
+const seedCategories = async () => {
+  try {
+    const predefinedCategories = [
+      { name: 'Electronics', description: 'Devices and gadgets', isPredefined: true },
+      { name: 'Clothing', description: 'Apparel and accessories', isPredefined: true },
+      { name: 'Books', description: 'Textbooks and novels', isPredefined: true },
+      { name: 'Personal Items', description: 'Wallets, keys, etc.', isPredefined: true },
+      { name: 'Stationery', description: 'Pens, notebooks, etc.', isPredefined: true },
+    ];
+
+    const existingCategories = await Category.find({ name: { $in: predefinedCategories.map(c => c.name) } });
+    const existingNames = existingCategories.map(c => c.name);
+
+    const categoriesToInsert = predefinedCategories.filter(c => !existingNames.includes(c.name));
+    if (categoriesToInsert.length > 0) {
+      await Category.insertMany(categoriesToInsert);
+      console.log('Categories seeded successfully');
+    } else {
+      console.log('No new categories to seed');
+    }
+  } catch (error) {
+    console.error('Error seeding categories:', error);
+  }
+};
+
 // Graceful shutdown
 const shutdown = () => {
   console.log('Shutting down server...');
@@ -125,11 +149,21 @@ const shutdown = () => {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
-// Start server
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start server after connecting to the database
+const startServer = async () => {
+  try {
+    await connectDB(); // Ensure database is connected first
 
-// Connect to MongoDB
-connectDB();
+    // Seed categories after connection is established
+    await seedCategories();
+
+    server.listen(process.env.PORT || 5000, () => {
+      console.log(`Server running on port ${process.env.PORT || 5000}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();

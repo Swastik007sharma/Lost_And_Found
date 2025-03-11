@@ -1,35 +1,47 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
   name: {
     type: String,
-    required: true,
-    minlength: 3, // Minimum length for name
+    required: [true, 'Name is required'],
+    minlength: 3,
+    trim: true,
   },
   email: {
     type: String,
-    required: true,
+    required: [true, 'Email is required'],
     unique: true,
-    match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, // Validate email format
-    index: true, // Add index for faster queries
+    match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email format'],
+    lowercase: true,
+    trim: true,
+    index: true,
   },
   password: {
     type: String,
-    required: true,
-    minlength: 6, // Minimum length for password
+    required: [true, 'Password is required'],
+    minlength: 6,
   },
   role: {
     type: String,
-    enum: ['user', 'keeper', 'admin'], // User roles
+    enum: ['user', 'keeper', 'admin'],
     default: 'user',
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
+  isActive: {
+    type: Boolean,
+    default: true,
   },
 }, {
-  timestamps: true, // Automatically adds `createdAt` and `updatedAt`
+  timestamps: true,
+});
+
+// Hash password before saving
+userSchema.pre('save', async function (next) {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+  next();
 });
 
 module.exports = mongoose.model('User', userSchema);
