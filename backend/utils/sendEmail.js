@@ -1,16 +1,14 @@
 const nodemailer = require('nodemailer');
-const { otpTemplate, claimNotificationTemplate } = require('./emailTemplates');
+const { otpTemplate, claimNotificationTemplate, returnNotificationTemplate, keeperAssignedNotificationTemplate } = require('./emailTemplates');
 
-// Configure Nodemailer transporter
 const transporter = nodemailer.createTransport({
-  service: 'Gmail', // Replace with your email service (e.g., Gmail, SendGrid)
+  service: 'Gmail',
   auth: {
-    user: process.env.EMAIL_USER, // Your email address
-    pass: process.env.EMAIL_PASSWORD, // Your email password or app-specific password
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
   },
 });
 
-// Function to send an email
 const sendEmail = async (to, subject, templateName, templateData) => {
   try {
     let html;
@@ -20,6 +18,12 @@ const sendEmail = async (to, subject, templateName, templateData) => {
         break;
       case 'claimNotification':
         html = claimNotificationTemplate(templateData.name, templateData.itemTitle);
+        break;
+      case 'returnNotification':
+        html = returnNotificationTemplate(templateData.name, templateData.itemTitle);
+        break;
+      case 'keeperAssignedNotification':
+        html = keeperAssignedNotificationTemplate(templateData.name, templateData.itemTitle, templateData.keeperName);
         break;
       default:
         throw new Error('Invalid email template name');
