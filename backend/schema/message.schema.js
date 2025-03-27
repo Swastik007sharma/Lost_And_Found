@@ -1,12 +1,10 @@
 const { z } = require('zod');
+const { isValidObjectId } = require('mongoose');
 
-// Schema for sending a message
 const sendMessageSchema = z.object({
-  conversation: z.string().uuid('Invalid conversation ID'), // Reference to the Conversation model
-  sender: z.string().uuid('Invalid sender ID'), // Reference to the User model
+  conversation: z.string().refine(val => isValidObjectId(val), { message: 'Invalid conversation ID' }),
+  sender: z.string().refine(val => isValidObjectId(val), { message: 'Invalid sender ID' }),
   content: z.string().min(1, 'Message content cannot be empty'),
 });
 
-module.exports = {
-  sendMessageSchema,
-};
+module.exports = { sendMessageSchema };

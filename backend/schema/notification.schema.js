@@ -1,10 +1,8 @@
 const { z } = require('zod');
+const { isValidObjectId } = require('mongoose');
 
-// Schema for marking a notification as read
 const markAsReadSchema = z.object({
-  id: z.string().uuid('Invalid notification ID'), // Notification ID
+  id: z.string().refine(val => isValidObjectId(val), { message: 'Invalid notification ID' }),
 });
 
-module.exports = {
-  markAsReadSchema,
-};
+module.exports = { markAsReadSchema };
