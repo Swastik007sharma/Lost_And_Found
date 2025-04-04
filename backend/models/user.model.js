@@ -1,27 +1,22 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const { Schema } = mongoose;
 
-const userSchema = new Schema({
+const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Name is required'],
-    minlength: 3,
+    required: true,
     trim: true,
   },
   email: {
     type: String,
-    required: [true, 'Email is required'],
+    required: true,
     unique: true,
-    match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email format'],
-    lowercase: true,
     trim: true,
-    index: true,
+    lowercase: true,
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
-    minlength: 6,
+    required: true,
   },
   role: {
     type: String,
@@ -32,15 +27,30 @@ const userSchema = new Schema({
     type: Boolean,
     default: true,
   },
-}, {
-  timestamps: true,
+  resetPasswordOtp: {
+    type: String,
+    default: null, // Stores the OTP for password reset
+  },
+  resetPasswordOtpExpiresAt: {
+    type: Date,
+    default: null, // Stores the expiration time of the OTP
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-// Hash password before saving
+// Pre-save middleware to hash password
 userSchema.pre('save', async function (next) {
   if (this.isModified('password')) {
     this.password = await bcrypt.hash(this.password, 10);
   }
+  this.updatedAt = Date.now();
   next();
 });
 
