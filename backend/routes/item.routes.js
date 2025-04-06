@@ -22,6 +22,7 @@ router.post(
 router.put(
   '/:id',
   authMiddleware.authenticate,
+  fileUploadMiddleware.uploadFile,
   validate(updateItemSchema),
   checkOwnership,
   itemController.updateItem

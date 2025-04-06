@@ -1,27 +1,23 @@
 const Conversation = require('../models/conversation.model');
-const { createConversationSchema } = require('../schema/conversation.schema.js'); // Import Zod schema
+const Item = require('../models/item.model');
+const User = require('../models/user.model');
+const { createConversationSchema } = require('../schema/conversation.schema.js');
 
 // Create a new conversation about an item
 exports.createConversation = async (req, res) => {
   try {
-    // Validate request body using Zod schema
-    const { itemId, participants } = createConversationSchema.parse(req.body);
+    const { itemId, participants } = req.validatedBody;
 
-    // Check if the item exists
-    const Item = require('../models/item.model');
     const item = await Item.findOne({ _id: itemId, isActive: true });
     if (!item) {
       return res.status(404).json({ message: 'Item not found', code: 'NOT_FOUND' });
     }
 
-    // Check if all participants exist
-    const User = require('../models/user.model');
     const validParticipants = await User.find({ _id: { $in: participants }, isActive: true });
     if (validParticipants.length !== participants.length) {
       return res.status(400).json({ message: 'One or more participants are invalid or inactive', code: 'INVALID_PARTICIPANTS' });
     }
 
-    // Create the conversation
     const conversation = new Conversation({
       item: itemId,
       participants,
@@ -31,37 +27,55 @@ exports.createConversation = async (req, res) => {
     await conversation.save();
     res.status(201).json({ message: 'Conversation created successfully', conversation });
   } catch (error) {
-    if (error.name === 'ZodError') {
-      return res.status(400).json({ message: 'Validation failed', code: 'VALIDATION_ERROR', details: error.errors });
-    }
     console.error('Error creating conversation:', error);
     res.status(500).json({ message: 'Failed to create conversation', code: 'SERVER_ERROR' });
   }
 };
 
-// Get all conversations for a specific user
+// Get all conversations for the authenticated user
 exports.getConversations = async (req, res) => {
   try {
-    const { userId } = req.params;
     const { page = 1, limit = 10 } = req.query;
 
-    // Validate userId
-    const User = require('../models/user.model');
+    // Use the authenticated user's ID
+    const userId = req.user.id;
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is missing from authentication token', code: 'MISSING_USER_ID' });
+    }
+
+    // Validate user exists
     const user = await User.findOne({ _id: userId, isActive: true });
     if (!user) {
       return res.status(404).json({ message: 'User not found or inactive', code: 'NOT_FOUND' });
     }
 
-    // Fetch conversations with pagination
     const options = {
       page: parseInt(page, 10),
       limit: parseInt(limit, 10),
-      populate: ['item', 'participants', 'lastMessage'], // Added lastMessage
-      sort: { updatedAt: -1 }, // Sort by most recent update
+      populate: [
+        { path: 'item', select: 'title status' },
+        { path: 'participants', select: 'name email' },
+        { path: 'lastMessage', select: 'content createdAt isRead' },
+      ],
+      sort: { updatedAt: -1 },
     };
 
-    const conversations = await Conversation.paginate({ participants: userId, isActive: true }, options); // Use mongoose-paginate-v2
-    res.status(200).json({ message: 'Conversations fetched successfully', conversations });
+    const conversations = await Conversation.paginate({ participants: userId, isActive: true }, options);
+    res.status(200).json({
+      message: 'Conversations fetched successfully',
+      conversations: {
+        docs: conversations.docs,
+        totalDocs: conversations.totalDocs,
+        limit: conversations.limit,
+        page: conversations.page,
+        totalPages: conversations.totalPages,
+        pagingCounter: conversations.pagingCounter,
+        hasPrevPage: conversations.hasPrevPage,
+        hasNextPage: conversations.hasNextPage,
+        prevPage: conversations.prevPage,
+        nextPage: conversations.nextPage,
+      },
+    });
   } catch (error) {
     console.error('Error fetching conversations:', error);
     res.status(500).json({ message: 'Failed to fetch conversations', code: 'SERVER_ERROR' });

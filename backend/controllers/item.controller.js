@@ -33,21 +33,30 @@ const sendNotificationAndEmail = async (userId, emailSubject, emailTemplate, tem
 // Create a new item
 exports.createItem = async (req, res) => {
   try {
+    // Debug: Log the request body and file
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file);
+
     // Validate request body using Zod schema
-    const { title, description, category, tags, status, location } = createItemSchema.parse(req.body);
+    const { title, description, category, tags, status, location } = req.body;
     let imageUrl = null;
 
     // Handle file upload
     if (req.file) {
       const filePath = req.file.path;
+      console.log('Uploading file to Cloudinary:', filePath);
       try {
         const result = await cloudinary.uploader.upload(filePath, { folder: 'lost-and-found' });
         imageUrl = result.secure_url;
+        console.log('Cloudinary upload success:', imageUrl);
       } catch (cloudinaryError) {
-        return res.status(500).json({ message: 'Failed to upload image to Cloudinary', code: 'CLOUDINARY_ERROR' });
+        console.error('Cloudinary upload error:', cloudinaryError.message, cloudinaryError);
+        return res.status(500).json({ message: 'Failed to upload image to Cloudinary', code: 'CLOUDINARY_ERROR', details: cloudinaryError.message });
       } finally {
         await fs.unlink(filePath).catch((err) => console.error('Failed to delete temp file:', err));
       }
+    } else {
+      console.log('No file uploaded');
     }
 
     // Resolve category name to category ID
@@ -60,7 +69,7 @@ exports.createItem = async (req, res) => {
     const newItem = new Item({
       title,
       description,
-      category: categoryDoc._id, // Use category ID instead of name
+      category: categoryDoc._id,
       tags,
       status,
       location,
@@ -72,9 +81,6 @@ exports.createItem = async (req, res) => {
     await newItem.save();
     res.status(201).json({ message: 'Item created successfully', item: newItem });
   } catch (error) {
-    if (error.name === 'ZodError') {
-      return res.status(400).json({ message: 'Validation failed', code: 'VALIDATION_ERROR', details: error.errors });
-    }
     console.error('Error creating item:', error);
     res.status(500).json({ message: 'Failed to create item', code: 'SERVER_ERROR' });
   }
@@ -146,7 +152,9 @@ exports.getItemById = async (req, res) => {
 exports.updateItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, category, tags, status, location, image } = updateItemSchema.parse(req.body);
+
+    // Parse the body data (non-file fields)
+    const updateData = updateItemSchema.parse(req.body);
 
     // Find the item by ID
     const item = await Item.findOne({ _id: id, isActive: true });
@@ -159,16 +167,44 @@ exports.updateItem = async (req, res) => {
       return res.status(403).json({ message: 'You are not authorized to update this item', code: 'FORBIDDEN' });
     }
 
-    // Update the item fields
-    item.title = title || item.title;
-    item.description = description || item.description;
-    item.category = category || item.category;
-    item.tags = tags || item.tags;
-    item.status = status || item.status;
-    item.location = location || item.location;
-    item.image = image || item.image;
+    // Handle new image upload
+    let imageUrl = item.image; // Keep existing image URL by default
+    if (req.file) {
+      const filePath = req.file.path;
+      console.log('Uploading new image to Cloudinary:', filePath);
+      try {
+        // Delete old image from Cloudinary if it exists
+        if (item.image) {
+          const publicId = item.image.split('/').pop().split('.')[0]; // Extract public ID
+          await cloudinary.uploader.destroy(`lost-and-found/${publicId}`);
+          console.log('Old image deleted from Cloudinary:', publicId);
+        }
+        const result = await cloudinary.uploader.upload(filePath, { folder: 'lost-and-found' });
+        imageUrl = result.secure_url;
+        console.log('New image uploaded to Cloudinary:', imageUrl);
+      } catch (cloudinaryError) {
+        console.error('Cloudinary upload error:', cloudinaryError.message, cloudinaryError);
+        await fs.unlink(filePath).catch((err) => console.error('Failed to delete temp file:', err));
+        return res.status(500).json({ message: 'Failed to upload image to Cloudinary', code: 'CLOUDINARY_ERROR', details: cloudinaryError.message });
+      } finally {
+        await fs.unlink(filePath).catch((err) => console.error('Failed to delete temp file:', err));
+      }
+    } else if (updateData.image) {
+      // Handle manual URL update (optional, if you allow this)
+      imageUrl = updateData.image;
+    }
+
+    // Update item with new data and image URL
+    item.title = updateData.title || item.title;
+    item.description = updateData.description || item.description;
+    item.category = updateData.category ? (await Category.findOne({ name: updateData.category, isActive: true }))?._id : item.category;
+    item.tags = updateData.tags || item.tags;
+    item.status = updateData.status || item.status;
+    item.location = updateData.location || item.location;
+    item.image = imageUrl;
 
     await item.save();
+
     res.status(200).json({ message: 'Item updated successfully', item });
   } catch (error) {
     if (error.name === 'ZodError') {

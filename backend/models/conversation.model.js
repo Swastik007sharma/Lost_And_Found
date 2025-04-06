@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
+const mongoosePaginate = require('mongoose-paginate-v2'); // Import the plugin
 
 const conversationSchema = new Schema({
   item: {
@@ -38,6 +39,10 @@ const conversationSchema = new Schema({
   timestamps: true,
 });
 
+// Apply the mongoose-paginate-v2 plugin
+conversationSchema.plugin(mongoosePaginate);
+
+// Maintain the unique index on item and participants
 conversationSchema.index({ item: 1, participants: 1 }, { unique: true });
 
 module.exports = mongoose.model('Conversation', conversationSchema);

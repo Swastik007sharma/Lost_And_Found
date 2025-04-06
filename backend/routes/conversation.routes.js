@@ -9,13 +9,13 @@ const { createConversationSchema } = require('../schema/conversation.schema');
 router.post(
   '/',
   authMiddleware.authenticate,
-  validate(createConversationSchema), // Validate request body
+  validate(createConversationSchema),
   conversationController.createConversation
 );
 
-// Get all conversations for a specific user
+// Get all conversations for the authenticated user
 router.get(
-  '/:userId',
+  '/',
   authMiddleware.authenticate,
   conversationController.getConversations
 );
