@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongoosePaginate = require('mongoose-paginate-v2'); // Import the plugin
 const { Schema } = mongoose;
 
 const messageSchema = new Schema({
@@ -32,6 +33,7 @@ const messageSchema = new Schema({
   timestamps: true,
 });
 
+messageSchema.plugin(mongoosePaginate); // Apply the pagination plugin to the schema
 messageSchema.index({ conversation: 1, createdAt: -1 }); // Sort messages by creation time descending
 
 module.exports = mongoose.model('Message', messageSchema);

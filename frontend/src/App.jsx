@@ -1,5 +1,5 @@
-// src/App.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import './index.css';
 import { AuthProvider } from "./context/AuthContext";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -11,10 +11,11 @@ import ItemDetails from "./pages/ItemDetails";
 import ItemCreate from "./pages/ItemCreate";
 import Profile from "./pages/Profile";
 import Conversations from "./pages/Conversations";
-import Chat from "./pages/Chat";
+import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
 import AdminDashboard from "./pages/AdminDashboard";
-import UserDetail from "./pages/UserDetail"; // Import the new UserDetail component
+import UserDetail from "./pages/UserDetail";
+import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -28,8 +29,16 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/items/:id" element={<ItemDetails />} />
             <Route path="/conversations" element={<Conversations />} />
-            <Route path="/chat/:conversationId" element={<Chat />} />
+            <Route path="/messages/:conversationId" element={<Messages />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <UserDashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/profile"
               element={

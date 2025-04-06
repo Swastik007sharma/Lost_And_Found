@@ -1,15 +1,151 @@
 import { Link } from 'react-router-dom';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 
-function ItemCard({ item }) {
+const ItemCard = ({
+  item,
+  onEdit,
+  onDelete,
+  showActions = true,
+  isEditing = false,
+  editFormData,
+  onEditChange,
+  onEditSubmit,
+  onCancelEdit,
+}) => {
   return (
-    <div className="p-4 bg-white rounded shadow hover:shadow-lg transition">
-      <img src={item.image || '/assets/images/placeholder.png'} alt={item.title} className="w-full h-32 object-cover rounded" />
-      <h3 className="text-lg font-semibold mt-2">{item.title}</h3>
-      <p className="text-sm text-gray-600">{item.description.substring(0, 50)}...</p>
-      <p className="text-sm">Status: <span className="font-medium">{item.status}</span></p>
-      <Link to={`/items/${item._id}`} className="text-blue-500 mt-2 inline-block">View Details</Link>
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden w-full relative">
+      <div className="relative w-full h-48 sm:h-56 md:h-64 bg-gray-100 rounded-t-xl overflow-hidden">
+        {item.image ? (
+          <img
+            src={item.image}
+            alt={item.title}
+            className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => window.open(item.image, '_blank')}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm sm:text-base">
+            No Image Available
+          </div>
+        )}
+        {showActions && (
+          <div className="absolute top-2 right-2 flex gap-2">
+            <button
+              onClick={onEdit}
+              className="text-blue-600 hover:text-blue-800 p-2 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 transition-colors"
+              aria-label="Edit item"
+            >
+              <FaEdit size={16} />
+            </button>
+            <button
+              onClick={onDelete}
+              className="text-red-600 hover:text-red-800 p-2 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 transition-colors"
+              aria-label="Delete item"
+            >
+              <FaTrash size={16} />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {isEditing ? (
+        <div className="p-4 sm:p-5">
+          <div className="space-y-4">
+            <input
+              type="text"
+              name="title"
+              value={editFormData.title}
+              onChange={onEditChange}
+              className="w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base"
+              required
+            />
+            <textarea
+              name="description"
+              value={editFormData.description}
+              onChange={onEditChange}
+              className="w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base h-20"
+              required
+            />
+            <select
+              name="status"
+              value={editFormData.status}
+              onChange={onEditChange}
+              className="w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base"
+              required
+            >
+              <option value="Lost">Lost</option>
+              <option value="Found">Found</option>
+              <option value="Claimed">Claimed</option>
+              <option value="Returned">Returned</option>
+            </select>
+            <input
+              type="text"
+              name="category"
+              value={editFormData.category}
+              onChange={onEditChange}
+              className="w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base"
+              required
+            />
+            <input
+              type="text"
+              name="location"
+              value={editFormData.location}
+              onChange={onEditChange}
+              className="w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base"
+              required
+            />
+            <input
+              type="file"
+              name="image"
+              onChange={onEditChange}
+              className="w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base"
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={onEditSubmit}
+                className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition-colors text-sm"
+              >
+                Save
+              </button>
+              <button
+                onClick={onCancelEdit}
+                className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600 transition-colors text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="p-4 sm:p-5">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+            {item.title}
+          </h3>
+          <div className="text-sm sm:text-base text-gray-600 space-y-2 mb-4">
+            <p>
+              <span className="font-medium text-gray-800">Status:</span>{' '}
+              <span className="capitalize">{item.status}</span>
+            </p>
+            <p>
+              <span className="font-medium text-gray-800">Category:</span>{' '}
+              {item.category?.name || 'N/A'}
+            </p>
+            <p>
+              <span className="font-medium text-gray-800">Posted On:</span>{' '}
+              {new Date(item.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="mt-4 text-right">
+            <Link
+              to={`/items/${item._id}`}
+              className="text-sm sm:text-base text-blue-600 hover:text-blue-800 font-medium underline underline-offset-2 transition-colors"
+            >
+              View Details
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+};
 
 export default ItemCard;
