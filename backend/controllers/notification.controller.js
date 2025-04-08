@@ -5,7 +5,7 @@ exports.getNotifications = async (req, res) => {
   try {
     console.log(req.user); // Debug log to check user object
     
-    const { _id: userId } = req.user;
+    const { id: userId } = req.user;
     const { page = 1, limit = 10 } = req.query; // Default to page 1 and limit 10
 
     // Validate page and limit
