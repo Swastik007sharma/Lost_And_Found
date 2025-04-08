@@ -73,7 +73,7 @@ function Navbar() {
                   label="Admin Dashboard"
                   icon={<FaShieldAlt className="text-white" />}
                   active={location.pathname === '/admin'}
-                  className="bg-green-700 hover:bg-green-800 hover:text-blue-200 py-2 px-4 rounded-md"
+                  className="bg-green-700 hover:bg-green-800 hover:text-blue-200 px-1 rounded-md"
                   activeClassName="bg-green-800"
                 />
               )}

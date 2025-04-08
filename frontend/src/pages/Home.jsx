@@ -26,6 +26,7 @@ function Home() {
           limit,
           search: searchTerm.trim() || undefined, // Ensure empty search is undefined
           status: statusFilter !== 'All' ? statusFilter : undefined, // Only include status if not 'All'
+          isActive: true,
         };
         const response = await searchItems(params); // Use searchItems endpoint
         if (response && Array.isArray(response.data.items)) {

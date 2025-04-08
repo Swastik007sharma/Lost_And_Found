@@ -92,7 +92,7 @@ exports.getItems = async (req, res) => {
     const { page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search = '' } = req.query;
 
     // Build query for filtering items
-    const query = { isActive: true };
+    const query = { };
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },

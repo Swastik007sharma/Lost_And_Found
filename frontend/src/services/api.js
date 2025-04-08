@@ -25,6 +25,7 @@ export const getUsers = (params) => api.get('/admin/users', { params });
 export const getUserById = (userId) => api.get(`/admin/users/${userId}`);
 export const getUserItems = (userId, params = {}) => api.get(`/admin/users/${userId}/items`, { params });
 export const deleteUser = (userId) => api.delete(`/admin/users/${userId}`);
+export const toggleUserActivation = (userId) => api.put(`/admin/users/${userId}/activate`);
 export const getConversations = (params) => api.get('/admin/conversations', { params });
 
 // Item Endpoints
@@ -53,6 +54,7 @@ export const updateItem = (itemId, data) => {
   return api.put(`/items/${itemId}`, data, config);
 };
 export const deleteUserItem = (itemId) => api.delete(`/items/${itemId}`);
+export const toggleItemActivation = (itemId) => api.put(`/admin/items/${itemId}/activate`);
 
 // Keeper Endpoints
 export const getKeepers = () => api.get('/keepers');
@@ -78,14 +80,14 @@ export const verifyOTPForItem = (itemId, data) => api.post(`/items/${itemId}/ver
 
 // New User Management Endpoints
 export const getUserProfile = () => api.get('/users/me');
-export const updateUserProfile = (data) => { // Removed userId parameter
+export const updateUserProfile = (data) => {
   const config = {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `${localStorage.getItem('token')}`,
     },
   };
-  return api.put('/users/me', data, config); // Use /me endpoint
+  return api.put('/users/me', data, config);
 };
 export const updateUserPassword = (data) => {
   const config = {
@@ -94,7 +96,7 @@ export const updateUserPassword = (data) => {
       Authorization: `${localStorage.getItem('token')}`,
     },
   };
-  return api.put('/users/me/password', data, config); // Use /me/password endpoint
+  return api.put('/users/me/password', data, config);
 };
 export const deleteUserAccount = () => api.delete('/users/me');
 
