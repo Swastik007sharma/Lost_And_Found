@@ -1,4 +1,4 @@
-# Lost & Found - College Cornerstone Project
+# 🧳 Lost & Found - College Cornerstone Project
 
 A full-stack MERN-based Lost and Found management system built for college campuses. Users can report lost or found items, communicate with finders/owners, and manage item data with admin support.
 
@@ -9,7 +9,8 @@ A full-stack MERN-based Lost and Found management system built for college campu
 ```
 📦Lost_And_Found
  ┣ 📂backend      ← Node.js Express API
- ┗ 📂frontend     ← React Vite frontend
+ ┣ 📂frontend     ← React Vite frontend
+ ┗ 📄docker-compose.yml
 ```
 
 ---
@@ -29,15 +30,16 @@ A full-stack MERN-based Lost and Found management system built for college campu
 ## ⚙️ Prerequisites
 
 - Node.js (v18+)
-- MongoDB (Atlas/local)
+- MongoDB Atlas (no local DB required)
 - Cloudinary Account (for image uploads)
+- Docker (for containerized setup)
 - Git
 
 ---
 
-## 🛠️ Setup Instructions
+## 🛠️ Local Setup Instructions (Without Docker)
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Swastik007sharma/Lost_And_Found.git
@@ -46,30 +48,51 @@ cd Lost_And_Found
 
 ---
 
-### 2. Set up the Backend
+### 2. Backend Setup
 
 ```bash
 cd backend
 npm install
 ```
 
-#### ✅ Configure Environment Variables
+#### ✅ Backend `.env` Example
 
-Create a `.env` file in `/backend` with the following:
+Create a `.env` file inside `/backend`:
 
 ```env
 PORT=5000
-MONGO_URI=your_mongodb_uri
-CLOUDINARY_CLOUD_NAME=your_cloudinary_name
-CLOUDINARY_API_KEY=your_cloudinary_key
-CLOUDINARY_API_SECRET=your_cloudinary_secret
+
+# Database
+MONGODB_URI=your_mongodb_uri
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# JWT
 JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=1d
+
+# Email (Optional for production)
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASSWORD=your_app_password
+
+# Frontend URL & CORS
 FRONTEND_URL=http://localhost:5173
+ALLOWED_ORIGINS=http://localhost:5173
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+
+# Other Configs
+UPLOADS_FOLDER=./uploads
+LOG_FILE_PATH=./logs/access.log
+NODE_ENV=development
 ```
 
-> 🔒 *Never commit your actual credentials.*
-
-#### 🚀 Run the Backend Server
+#### 🚀 Run Backend
 
 ```bash
 npm run dev
@@ -77,26 +100,50 @@ npm run dev
 
 ---
 
-### 3. Set up the Frontend
+### 3. Frontend Setup
 
 ```bash
 cd ../frontend
 npm install
 ```
 
-#### ✅ Configure Environment Variables
+#### ✅ Frontend `.env` Example
 
-Create a `.env` file in `/frontend` with the following:
+Create a `.env` file inside `/frontend`:
 
 ```env
 VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
-#### 🚀 Run the Frontend App
+#### 🚀 Run Frontend
 
 ```bash
 npm run dev
 ```
+
+---
+
+## 🐳 Docker Setup (Recommended)
+
+### 1. Add Environment Files
+
+- Copy your backend `.env` to `/backend/.env`
+- Frontend uses environment variables at build time, so `VITE_API_BASE_URL` must be defined during `docker build`.
+
+### 2. Build & Start the App
+
+From root:
+
+```bash
+docker-compose up --build
+```
+
+The services will be available at:
+
+- 🔙 Backend → http://localhost:5000
+- 🔜 Frontend → http://localhost:3000
+
+> No local MongoDB setup needed. Uses MongoDB Atlas.
 
 ---
 
@@ -123,4 +170,3 @@ Made with ❤️ by [Swastik Sharma](https://github.com/Swastik007sharma)
 ## 📝 License
 
 MIT License
-

@@ -24,10 +24,21 @@
   }
 }
 
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-10px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
 .animate-fade-in-down {
   animation: fadeInDown 0.3s ease-in-out;
 }
 
 .animate-fade-in-left {
   animation: fadeInLeft 0.3s ease-in-out;
+}
+
+.animate-fade-in-out {
+  animation: fadeInOut 3s ease-out forwards;
 }

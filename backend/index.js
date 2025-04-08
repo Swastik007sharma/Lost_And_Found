@@ -32,7 +32,7 @@ const server = http.createServer(app); // Create HTTP server for Socket.IO
 app.use(loggerMiddleware); // Attach logger middleware using app.use()
 app.use(corsConfig); // Enable CORS
 app.use(express.json()); // Parse JSON requests
-app.use(rateLimiter); // Rate limiting
+// app.use(rateLimiter); // Rate limiting
 
 // Serve static files (e.g., uploaded images)
 const uploadsDir = path.join(__dirname, 'uploads');

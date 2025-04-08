@@ -44,7 +44,7 @@ exports.assignKeeper = async (req, res) => {
 // Search for items with optional filters
 exports.searchItems = async (req, res) => {
   try {
-    const { page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search = '' } = req.query;
+    const { page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search = '', status } = req.query;
     const skip = (page - 1) * limit;
 
     // Build the aggregation pipeline
@@ -80,20 +80,23 @@ exports.searchItems = async (req, res) => {
       $unwind: '$postedByData',
     });
 
-    // Match stage for search (single stage for all conditions)
-    if (search) {
-      pipeline.push({
-        $match: {
-          $or: [
-            { title: { $regex: search, $options: 'i' } },
-            { description: { $regex: search, $options: 'i' } },
-            { tags: { $regex: search, $options: 'i' } },
-            { location: { $regex: search, $options: 'i' } },
-            { 'categoryData.name': { $regex: search, $options: 'i' } },
-          ],
-        },
-      });
+    // Match stage for all conditions, including isActive: true and status
+    const matchConditions = { isActive: true };
+    if (status && status !== 'All' && ['Lost', 'Found', 'Claimed', 'Returned'].includes(status)) {
+      matchConditions.status = status;
     }
+    if (search) {
+      matchConditions.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { tags: { $regex: search, $options: 'i' } },
+        { location: { $regex: search, $options: 'i' } },
+        { 'categoryData.name': { $regex: search, $options: 'i' } },
+      ];
+    }
+    pipeline.push({
+      $match: matchConditions,
+    });
 
     // Project to shape the output
     pipeline.push({

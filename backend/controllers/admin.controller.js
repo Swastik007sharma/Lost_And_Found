@@ -7,15 +7,34 @@ const Message = require('../models/message.model');
 // Get a list of all users (admin-only)
 exports.getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query; // Added pagination
-    const users = await User.find({ isActive: true }, 'name email role createdAt') // Select only necessary fields
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit));
-    const total = await User.countDocuments({ isActive: true });
-    res.status(200).json({ 
+    const { page = 1, limit = 10, search = '', sortBy = 'createdAt', order = 'desc' } = req.query;
+    const skip = (page - 1) * limit;
+
+    // Build the aggregation pipeline
+    const pipeline = [];
+    const matchConditions = { }; // Default to active users
+
+    if (search) {
+      matchConditions.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { role: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    pipeline.push({ $match: matchConditions });
+    pipeline.push({ $project: { name: 1, email: 1, role: 1, createdAt: 1, isActive: 1 } });
+    pipeline.push({ $sort: { [sortBy]: order === 'asc' ? 1 : -1 } });
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: parseInt(limit, 10) });
+
+    const users = await User.aggregate(pipeline);
+    const total = await User.countDocuments(matchConditions);
+
+    res.status(200).json({
       message: 'Users fetched successfully',
       users,
-      pagination: { currentPage: parseInt(page), totalPages: Math.ceil(total / limit), total } 
+      pagination: { currentPage: parseInt(page), totalPages: Math.ceil(total / limit), total }
     });
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -23,18 +42,30 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+// Toggle user activation status (admin-only)
+exports.toggleUserActivation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByIdAndUpdate(id, [{ $set: { isActive: { $eq: [false, '$isActive'] } } }], { new: true });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found', code: 'NOT_FOUND' });
+    }
+    res.status(200).json({ message: `User ${user.isActive ? 'activated' : 'deactivated'} successfully`, user });
+  } catch (error) {
+    console.error('Error toggling user activation:', error);
+    res.status(500).json({ message: 'Failed to toggle user activation', code: 'SERVER_ERROR' });
+  }
+};
+
 // Get a single user by ID (admin-only)
 exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id, 'name email role createdAt').lean(); // Select only necessary fields
+    const user = await User.findById(id, 'name email role createdAt isActive').lean();
     if (!user) {
       return res.status(404).json({ message: 'User not found', code: 'NOT_FOUND' });
     }
-    res.status(200).json({ 
-      message: 'User fetched successfully',
-      user 
-    });
+    res.status(200).json({ message: 'User fetched successfully', user });
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ message: 'Failed to fetch user', code: 'SERVER_ERROR' });
@@ -45,33 +76,25 @@ exports.getUserById = async (req, res) => {
 exports.getUserItems = async (req, res) => {
   try {
     const { id } = req.params;
-    const { page = 1, limit = 10 } = req.query; // Added pagination
+    const { page = 1, limit = 10 } = req.query;
 
-    // Check if the user exists and is active
     const user = await User.findOne({ _id: id, isActive: true });
     if (!user) {
       return res.status(404).json({ message: 'User not found or inactive', code: 'NOT_FOUND' });
     }
 
-    // Fetch items where the user is either the poster (postedBy) or the claimer (claimedBy)
     const items = await Item.find({
-      $or: [
-        { postedBy: id },
-        { claimedBy: id }
-      ],
+      $or: [{ postedBy: id }, { claimedBy: id }],
       isActive: true
     })
-      .populate('postedBy', 'name email') // Populate user details for postedBy
-      .populate('claimedBy', 'name email') // Populate user details for claimedBy
-      .populate('category', 'name') // Populate category details
+      .populate('postedBy', 'name email')
+      .populate('claimedBy', 'name email')
+      .populate('category', 'name')
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
     const total = await Item.countDocuments({
-      $or: [
-        { postedBy: id },
-        { claimedBy: id }
-      ],
+      $or: [{ postedBy: id }, { claimedBy: id }],
       isActive: true
     });
 
@@ -86,16 +109,14 @@ exports.getUserItems = async (req, res) => {
   }
 };
 
-// Delete a user (admin-only)
+// Delete a user (admin-only) - Kept as is for now
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    // Find and update the user to inactive instead of deleting
     const user = await User.findByIdAndUpdate(id, { isActive: false }, { new: true });
     if (!user) {
       return res.status(404).json({ message: 'User not found', code: 'NOT_FOUND' });
     }
-    // Optionally handle items posted by this user
     await Item.updateMany({ postedBy: id }, { postedBy: null });
     res.status(200).json({ message: 'User deactivated successfully' });
   } catch (error) {
@@ -107,21 +128,82 @@ exports.deleteUser = async (req, res) => {
 // Get a list of all items (admin-only)
 exports.getAllItems = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query; // Added pagination
-    const items = await Item.find({ isActive: true })
-      .populate('postedBy', 'name email') // Populate user details
-      .populate('category', 'name') // Populate category details
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit));
-    const total = await Item.countDocuments({ isActive: true });
-    res.status(200).json({ 
+    const { page = 1, limit = 10, search = '', sortBy = 'createdAt', order = 'desc' } = req.query;
+    const skip = (page - 1) * limit;
+
+    const pipeline = [];
+    const matchConditions = { isActive: true };
+
+    if (search) {
+      matchConditions.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { status: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    pipeline.push({ $match: matchConditions });
+    pipeline.push({
+      $lookup: {
+        from: 'users',
+        localField: 'postedBy',
+        foreignField: '_id',
+        as: 'postedByData',
+      },
+    });
+    pipeline.push({ $unwind: '$postedByData' });
+    pipeline.push({
+      $lookup: {
+        from: 'categories',
+        localField: 'category',
+        foreignField: '_id',
+        as: 'categoryData',
+      },
+    });
+    pipeline.push({ $unwind: '$categoryData' });
+    pipeline.push({
+      $project: {
+        id: '$_id',
+        title: 1,
+        description: 1,
+        status: 1,
+        postedBy: { id: '$postedByData._id', name: '$postedByData.name', email: '$postedByData.email' },
+        category: { id: '$categoryData._id', name: '$categoryData.name' },
+        isActive: 1,
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    });
+    pipeline.push({ $sort: { [sortBy]: order === 'asc' ? 1 : -1 } });
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: parseInt(limit, 10) });
+
+    const items = await Item.aggregate(pipeline);
+    const total = await Item.countDocuments(matchConditions);
+
+    res.status(200).json({
       message: 'Items fetched successfully',
       items,
-      pagination: { currentPage: parseInt(page), totalPages: Math.ceil(total / limit), total } 
+      pagination: { currentPage: parseInt(page), totalPages: Math.ceil(total / limit), total }
     });
   } catch (error) {
     console.error('Error fetching items:', error);
     res.status(500).json({ message: 'Failed to fetch items', code: 'SERVER_ERROR' });
+  }
+};
+
+// Toggle item activation status (admin-only)
+exports.toggleItemActivation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const item = await Item.findByIdAndUpdate(id, [{ $set: { isActive: { $eq: [false, '$isActive'] } } }], { new: true });
+    if (!item) {
+      return res.status(404).json({ message: 'Item not found', code: 'NOT_FOUND' });
+    }
+    res.status(200).json({ message: `Item ${item.isActive ? 'activated' : 'deactivated'} successfully`, item });
+  } catch (error) {
+    console.error('Error toggling item activation:', error);
+    res.status(500).json({ message: 'Failed to toggle item activation', code: 'SERVER_ERROR' });
   }
 };
 
@@ -130,27 +212,23 @@ exports.getItemById = async (req, res) => {
   try {
     const { id } = req.params;
     const item = await Item.findOne({ _id: id, isActive: true })
-      .populate('postedBy', 'name email') // Populate user details
-      .populate('category', 'name') // Populate category details
-      .lean(); // Convert to plain JavaScript object
+      .populate('postedBy', 'name email')
+      .populate('category', 'name')
+      .lean();
     if (!item) {
       return res.status(404).json({ message: 'Item not found', code: 'NOT_FOUND' });
     }
-    res.status(200).json({ 
-      message: 'Item fetched successfully',
-      item 
-    });
+    res.status(200).json({ message: 'Item fetched successfully', item });
   } catch (error) {
     console.error('Error fetching item:', error);
     res.status(500).json({ message: 'Failed to fetch item', code: 'SERVER_ERROR' });
   }
 };
 
-// Delete an item (admin-only)
+// Delete an item (admin-only) - Kept as is for now
 exports.deleteItem = async (req, res) => {
   try {
     const { id } = req.params;
-    // Find and update the item to inactive instead of deleting
     const item = await Item.findByIdAndUpdate(id, { isActive: false }, { new: true });
     if (!item) {
       return res.status(404).json({ message: 'Item not found', code: 'NOT_FOUND' });
@@ -165,34 +243,26 @@ exports.deleteItem = async (req, res) => {
 // Get admin dashboard statistics
 exports.getAdminDashboardStats = async (req, res) => {
   try {
-    // Total number of items posted
     const totalItems = await Item.countDocuments({ isActive: true });
-
-    // Number of claimed vs. unclaimed items
     const claimedItems = await Item.countDocuments({ isClaimed: true, isActive: true });
     const unclaimedItems = await Item.countDocuments({ isClaimed: false, isActive: true });
-
-    // Total number of users
     const totalUsers = await User.countDocuments({ isActive: true });
-
-    // Total number of categories
     const totalCategories = await Category.countDocuments();
 
-    // Most active users (top 5 users who have posted the most items)
     const mostActiveUsers = await Item.aggregate([
-      { $match: { isActive: true } }, // Filter active items
-      { $group: { _id: '$postedBy', count: { $sum: 1 } } }, // Group by user ID and count items
-      { $sort: { count: -1 } }, // Sort by count in descending order
-      { $limit: 5 }, // Limit to top 5 users
+      { $match: { isActive: true } },
+      { $group: { _id: '$postedBy', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 },
       {
         $lookup: {
-          from: 'users', // Join with the User collection
+          from: 'users',
           localField: '_id',
           foreignField: '_id',
           as: 'userDetails',
         },
       },
-      { $unwind: '$userDetails' }, // Flatten the userDetails array
+      { $unwind: '$userDetails' },
       {
         $project: {
           _id: 0,
@@ -204,7 +274,6 @@ exports.getAdminDashboardStats = async (req, res) => {
       },
     ]);
 
-    // Return the statistics
     res.status(200).json({
       message: 'Admin dashboard stats fetched successfully',
       stats: {
@@ -225,23 +294,20 @@ exports.getAdminDashboardStats = async (req, res) => {
 // Get conversations and messages (admin-only)
 exports.getConversationsAndMessages = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query; // Added pagination
+    const { page = 1, limit = 10 } = req.query;
 
-    // Fetch all active conversations with populated participants, item, and lastMessage details
     const conversations = await Conversation.find({ isActive: true })
-      .populate('participants', 'name email') // Populate user details for participants
-      .populate('item', 'title status') // Populate item details
-      .populate('lastMessage', 'content sender createdAt isRead') // Populate last message details
+      .populate('participants', 'name email')
+      .populate('item', 'title status')
+      .populate('lastMessage', 'content sender createdAt isRead')
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
-    // Fetch all active messages for the retrieved conversation IDs, sorted by creation time
     const conversationIds = conversations.map(conv => conv._id);
     const messages = await Message.find({ conversation: { $in: conversationIds }, isActive: true })
-      .populate('sender', 'name email') // Populate sender details
-      .sort({ createdAt: -1 }); // Sort by creation time descending (matches index)
+      .populate('sender', 'name email')
+      .sort({ createdAt: -1 });
 
-    // Group messages by conversation
     const conversationsWithMessages = conversations.map(conv => ({
       ...conv.toObject(),
       messages: messages.filter(msg => msg.conversation.toString() === conv._id.toString()),
