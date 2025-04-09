@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { register } from '../../services/authService';
+import { register, forgotPassword } from '../../services/api.js';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // React Icons for eye button
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 function Register() {
   const [name, setName] = useState('');
@@ -41,8 +41,16 @@ function Register() {
     }
 
     try {
-      await register({ name, email, password });
-      setTimeout(() => navigate('/login'), 300);
+      const response = await register({ name, email, password, role: 'user' });
+      console.log('Registration response:', response.data);
+
+      // Store token and user data temporarily for verification
+      localStorage.setItem('tempRegistrationToken', response.data.authorization);
+      localStorage.setItem('tempRegistrationUser', JSON.stringify(response.data.user));
+
+      // Send OTP for verification
+      await forgotPassword({ email });
+      navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
