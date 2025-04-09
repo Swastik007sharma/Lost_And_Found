@@ -17,6 +17,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import UserDetail from "./pages/UserDetail";
 import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
+import VerifyOtp from "./pages/Auth/VerifyOtp"; // Import the VerifyOtp component
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} /> {/* Add this route */}
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/items/:id" element={<ItemDetails />} />

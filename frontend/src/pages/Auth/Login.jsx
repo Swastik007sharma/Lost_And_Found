@@ -1,21 +1,24 @@
 import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
-import { login } from '../../services/authService';
+import { login, forgotPassword } from '../../services/api';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Importing React Icons
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import Modal from '../../components/common/Modal';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotError, setForgotError] = useState('');
   const { login: setAuth } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Clear error after 5 seconds
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(''), 5000);
@@ -36,11 +39,9 @@ function Login() {
 
     try {
       const response = await login({ email, password });
-      setAuth(response.authorization, response.user || null);
-      localStorage.setItem('token', response.authorization);
-      console.log('Login successful, token:', response.authorization);
-      
-      // Redirect with a slight delay for a smoother transition
+      setAuth(response.data.authorization, response.data.user || null);
+      localStorage.setItem('token', response.data.authorization);
+      console.log('Login successful, token:', response.data.authorization);
       setTimeout(() => navigate('/'), 300);
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
@@ -53,19 +54,34 @@ function Login() {
     setShowPassword(!showPassword);
   };
 
+  const handleForgotPassword = () => {
+    setIsForgotModalOpen(true);
+  };
+
+  const handleForgotSubmit = (e) => {
+    e.preventDefault();
+    setForgotError('');
+    if (!forgotEmail) {
+      setForgotError('Please enter your email');
+      return;
+    }
+    forgotPassword({ email: forgotEmail })
+      .then(() => {
+        setForgotError('OTP sent to your email. Please verify it.');
+        setTimeout(() => navigate(`/verify-otp?email=${encodeURIComponent(forgotEmail)}&forgot=true`), 2000);
+      })
+      .catch((err) => setForgotError(err.response?.data?.message || 'Failed to send OTP. Try again.'));
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 py-12 px-4 sm:px-6 lg:px-8 animate-fade-in-down">
       <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg transform transition-all duration-500 hover:shadow-xl">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6 animate-fade-in-down">Login</h2>
 
-        {/* Error Message with Dismiss Button */}
         {error && (
           <div className="mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-md animate-fade-in-out flex items-center justify-between">
             <p className="text-sm font-medium">{error}</p>
-            <button
-              onClick={() => setError('')}
-              className="text-red-700 hover:text-red-900 focus:outline-none"
-            >
+            <button onClick={() => setError('')} className="text-red-700 hover:text-red-900 focus:outline-none">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
@@ -128,13 +144,51 @@ function Login() {
             </Button>
           </div>
         </form>
-        <p className="mt-4 text-sm text-center text-gray-600 animate-fade-in-left" style={{ animationDelay: '0.4s' }}>
-          Don’t have an account?{' '}
-          <a href="/register" className="text-blue-600 hover:underline hover:text-blue-800 transition-colors duration-200">
-            Register here
-          </a>
-        </p>
+        <div className="mt-4 text-sm text-center text-gray-600 animate-fade-in-left" style={{ animationDelay: '0.4s' }}>
+          <p>
+            Don’t have an account?{' '}
+            <a href="/register" className="text-blue-600 hover:underline hover:text-blue-800 transition-colors duration-200">
+              Register here
+            </a>
+          </p>
+          <button
+            onClick={handleForgotPassword}
+            className="mt-2 text-blue-600 hover:underline hover:text-blue-800 transition-colors duration-200"
+            disabled={loading}
+          >
+            Forgot Password?
+          </button>
+        </div>
       </div>
+
+      <Modal isOpen={isForgotModalOpen} onClose={() => setIsForgotModalOpen(false)}>
+        <h3 className="text-xl font-bold mb-4">Forgot Password</h3>
+        {forgotError && (
+          <div className="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-2 rounded-lg">
+            <p className="text-sm">{forgotError}</p>
+          </div>
+        )}
+        <form onSubmit={handleForgotSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="forgot-email" className="block text-sm font-medium text-gray-700">Email</label>
+            <Input
+              id="forgot-email"
+              type="email"
+              value={forgotEmail}
+              onChange={(e) => setForgotEmail(e.target.value)}
+              placeholder="Enter your email"
+              className="mt-1 w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <Button
+            type="submit"
+            className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            disabled={loading}
+          >
+            Send OTP
+          </Button>
+        </form>
+      </Modal>
     </div>
   );
 }

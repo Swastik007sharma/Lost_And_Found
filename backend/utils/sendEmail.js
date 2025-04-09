@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const { otpTemplate, claimNotificationTemplate, returnNotificationTemplate, keeperAssignedNotificationTemplate } = require('./emailTemplates');
+const { otpTemplate, claimNotificationTemplate, returnNotificationTemplate, keeperAssignedNotificationTemplate, passwordResetOtpTemplate } = require('./emailTemplates');
 
 const transporter = nodemailer.createTransport({
   service: 'Gmail',
@@ -24,6 +24,9 @@ const sendEmail = async (to, subject, templateName, templateData) => {
         break;
       case 'keeperAssignedNotification':
         html = keeperAssignedNotificationTemplate(templateData.name, templateData.itemTitle, templateData.keeperName);
+        break;
+      case 'passwordResetOtp':
+        html = passwordResetOtpTemplate(templateData.name, templateData.otp);
         break;
       default:
         throw new Error('Invalid email template name');

@@ -3,8 +3,9 @@ import { AuthContext } from '../context/AuthContext';
 import { getDashboardStats, getUsers, toggleUserActivation, getItems, toggleItemActivation, getKeepers, getConversations, register, getAllCategoriesForAdmin, addCategory, updateCategory, deleteCategory } from '../services/api';
 import { Link } from 'react-router-dom';
 import useClickOutside from '../hooks/useClickOutside';
+import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Importing React Icons
 
-// Users Tab Component
+// UsersTab Component (unchanged)
 function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
   const [users, setUsers] = useState([]);
   const [userSearch, setUserSearch] = useState('');
@@ -210,7 +211,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
   );
 }
 
-// Items Tab Component
+// ItemsTab Component (unchanged)
 function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
   const [items, setItems] = useState([]);
   const [itemSearch, setItemSearch] = useState('');
@@ -408,9 +409,17 @@ function AdminDashboard() {
 
   const selectedCategory = useRef(null);
   const categoryCardRef = useRef(null);
-  const [accountForm, setAccountForm] = useState({ name: '', email: '', password: '', role: 'admin' });
+  const [accountForm, setAccountForm] = useState({ 
+    name: '', 
+    email: '', 
+    password: '', 
+    confirmPassword: '', // Added confirmPassword field
+    role: 'admin' 
+  });
   const [categoryForm, setCategoryForm] = useState({ name: '', description: '' });
   const [editCategoryForm, setEditCategoryForm] = useState({ name: '', description: '', isActive: true });
+  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // State for confirm password visibility
 
   const alertTimeout = useRef(null);
   const messagesRef = useRef(null);
@@ -458,10 +467,30 @@ function AdminDashboard() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // Validation for empty fields
+    if (!accountForm.name || !accountForm.email || !accountForm.password || !accountForm.confirmPassword) {
+      setError('Please fill in all fields');
+      setLoading(false);
+      return;
+    }
+
+    // Validation for password match
+    if (accountForm.password !== accountForm.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await register(accountForm);
+      const response = await register({
+        name: accountForm.name,
+        email: accountForm.email,
+        password: accountForm.password,
+        role: accountForm.role,
+      });
       setSuccess(`Account created successfully for ${response.data.user.email}`);
-      setAccountForm({ name: '', email: '', password: '', role: 'admin' });
+      setAccountForm({ name: '', email: '', password: '', confirmPassword: '', role: 'admin' });
       const statsResponse = await getDashboardStats();
       setStats(statsResponse.data.stats || {});
     } catch (err) {
@@ -534,6 +563,9 @@ function AdminDashboard() {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
   }, [selectedConversation, selectedConversation?.messages]);
+
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
 
   return (
     <div className="container mx-auto p-6 bg-gray-100 min-h-screen transition-all duration-300">
@@ -876,7 +908,7 @@ function AdminDashboard() {
           {activeTab === 'create-account' && (
             <div className="bg-white p-6 rounded-xl shadow-lg transition-all duration-300 max-w-lg mx-auto">
               <h2 className="text-2xl font-semibold text-gray-800 mb-6">Create Admin/Keeper Account</h2>
-              <form onSubmit={handleCreateAccount} className="space-y-4">
+              <form onSubmit={handleCreateAccount} className="space-y-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
                   <input
@@ -884,8 +916,9 @@ function AdminDashboard() {
                     type="text"
                     value={accountForm.name}
                     onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })}
-                    className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+                    className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div>
@@ -895,20 +928,50 @@ function AdminDashboard() {
                     type="email"
                     value={accountForm.email}
                     onChange={(e) => setAccountForm({ ...accountForm, email: e.target.value })}
-                    className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+                    className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50"
                     required
+                    disabled={loading}
                   />
                 </div>
-                <div>
+                <div className="relative">
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
                   <input
                     id="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={accountForm.password}
                     onChange={(e) => setAccountForm({ ...accountForm, password: e.target.value })}
-                    className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+                    className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50 pr-12"
                     required
+                    disabled={loading}
                   />
+                  <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-full text-gray-500 hover:text-gray-700 focus:outline-none mt-4"
+                    disabled={loading}
+                  >
+                    {showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                  </button>
+                </div>
+                <div className="relative">
+                  <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                  <input
+                    id="confirm-password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={accountForm.confirmPassword}
+                    onChange={(e) => setAccountForm({ ...accountForm, confirmPassword: e.target.value })}
+                    className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50 pr-12"
+                    required
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={toggleConfirmPasswordVisibility}
+                    className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-full text-gray-500 hover:text-gray-700 focus:outline-none mt-4"
+                    disabled={loading}
+                  >
+                    {showConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
+                  </button>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
@@ -920,7 +983,8 @@ function AdminDashboard() {
                         value="admin"
                         checked={accountForm.role === 'admin'}
                         onChange={(e) => setAccountForm({ ...accountForm, role: e.target.value })}
-                        className="mr-2 text-blue-600 focus:ring-blue-400"
+                        className="mr-2 text-blue-600 focus:ring-blue-400 disabled:opacity-50"
+                        disabled={loading}
                       />
                       <span className="text-sm text-gray-700">Admin</span>
                     </label>
@@ -931,7 +995,8 @@ function AdminDashboard() {
                         value="keeper"
                         checked={accountForm.role === 'keeper'}
                         onChange={(e) => setAccountForm({ ...accountForm, role: e.target.value })}
-                        className="mr-2 text-blue-600 focus:ring-blue-400"
+                        className="mr-2 text-blue-600 focus:ring-blue-400 disabled:opacity-50"
+                        disabled={loading}
                       />
                       <span className="text-sm text-gray-700">Keeper</span>
                     </label>
@@ -939,10 +1004,22 @@ function AdminDashboard() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm disabled:opacity-50"
+                  className={`w-full py-3 rounded-lg text-sm font-semibold text-white transition-all duration-200 shadow-md ${
+                    loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 hover:shadow-lg'
+                  }`}
                   disabled={loading}
                 >
-                  {loading ? 'Creating...' : 'Create Account'}
+                  {loading ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Creating...
+                    </span>
+                  ) : (
+                    'Create Account'
+                  )}
                 </button>
               </form>
             </div>

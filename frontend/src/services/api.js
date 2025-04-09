@@ -18,6 +18,9 @@ api.interceptors.request.use((config) => {
 // Authentication Endpoints
 export const register = (data) => api.post('/auth/register', data);
 export const login = (data) => api.post('/auth/login', data);
+export const forgotPassword = (data) => api.post('/auth/forgot-password', data); // Added
+export const verifyOtp = (data) => api.post('/auth/verify-otp', data); // Added
+export const resetPassword = (data) => api.post('/auth/reset-password', data); // Added
 
 // Admin Endpoints
 export const getDashboardStats = () => api.get('/admin/dashboard-stats');
@@ -108,8 +111,8 @@ export const sendMessageInConversation = (conversationId, data) =>
 
 // New Notification Endpoints
 export const getNotifications = (params = {}) => api.get('/notifications', { params });
-export const markNotificationAsRead = (notificationId) =>
-  api.put(`/notifications/${notificationId}/read`, { read: true });
+export const markNotificationAsRead = (notificationId, data) =>
+  api.put(`/notifications/${notificationId}/read`, data);
 
 // New Search Endpoints
 export const searchItems = (params) => api.get('/search/items/search', { params });

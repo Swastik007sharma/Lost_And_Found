@@ -43,8 +43,10 @@ exports.getNotifications = async (req, res) => {
 exports.markAsRead = async (req, res) => {
   try {
     const { id } = req.params; // Notification ID
-    const { _id: userId } = req.user;
+    const { id: userId } = req.user;
 
+    console.log(req);
+    
     // Find the notification
     const notification = await Notification.findById(id);
     if (!notification) {
