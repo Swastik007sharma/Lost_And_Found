@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getMessagesInConversation, sendMessageInConversation } from '../services/api';
+import { getMessagesInConversation, sendMessageInConversation } from '../services/messageService';
 import Loader from '../components/common/Loader';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';

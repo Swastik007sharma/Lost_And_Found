@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getNotifications, markNotificationAsRead } from '../services/api';
+import { getNotifications, markNotificationAsRead } from '../services/notificationService';
 import Loader from '../components/common/Loader';
 
 function Notifications() {

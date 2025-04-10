@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
-import { login, forgotPassword } from '../../services/api';
+import { login, forgotPassword } from '../../services/authService';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';

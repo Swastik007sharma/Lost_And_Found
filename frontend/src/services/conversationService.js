@@ -1,6 +1,4 @@
 import api from './api';
 
-export const getConversations = async (userId) => {
-  const response = await api.get(`/conversations/${userId}`);
-  return response.data;
-};
+export const getMyConversations = (params = {}) => api.get('/conversations', { params });
+export const startConversation = (data) => api.post('/conversations', data);

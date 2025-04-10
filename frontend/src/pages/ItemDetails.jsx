@@ -1,7 +1,8 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { getItemDetails, claimItem, startConversation, updateItem } from '../services/api';
+import { getItemDetails, claimItem, updateItem } from '../services/itemService';
+import { startConversation } from '../services/conversationService';
 
 function ItemDetails() {
   const { user } = useContext(AuthContext);

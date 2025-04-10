@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
-import { verifyOtp, resetPassword, forgotPassword } from '../../services/api';
+import { verifyOtp, resetPassword, forgotPassword } from '../../services/authService';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Loader from '../../components/common/Loader';

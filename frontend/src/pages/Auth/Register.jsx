@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { register, forgotPassword } from '../../services/api.js';
+import { register, forgotPassword } from '../../services/authService';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
