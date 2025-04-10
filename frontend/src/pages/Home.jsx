@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { searchItems } from '../services/api'; // Updated to use searchItems endpoint
+import { searchItems } from '../services/searchService'; // Updated to use searchItems endpoint
 import ItemCard from '../components/ItemCard';
 
 function Home() {

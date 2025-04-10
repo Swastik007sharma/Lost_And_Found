@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCategories, createItem } from '../services/api';
+import { createItem } from '../services/itemService';
+import { getCategories } from '../services/categoryService'; 
 
 function ItemCreate() {
   const navigate = useNavigate();

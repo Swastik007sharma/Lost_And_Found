@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { updateUserProfile, updateUserPassword, deleteUserAccount } from '../services/api';
+import { updateUserProfile, updateUserPassword, deleteUserAccount } from '../services/userService';
 import Loader from '../components/common/Loader';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';

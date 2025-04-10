@@ -1,7 +1,8 @@
 // src/pages/UserDetail.jsx
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getUserById, getUserItems } from '../services/api';
+import { getUserItems } from '../services/adminService';
+import { getUserById } from '../services/adminService'; 
 
 function UserDetail() {
   const { id } = useParams(); // Get the user ID from the URL

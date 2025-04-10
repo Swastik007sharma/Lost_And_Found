@@ -1,8 +1,11 @@
 import { useState, useEffect, useContext, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { getCategories, getMyItems, updateItem, deleteUserItem } from '../services/api';
+import { getMyItems } from '../services/userService';
+import { updateItem, deleteUserItem } from '../services/itemService';
+import { getCategories } from '../services/categoryService'
 import { Link } from 'react-router-dom';
 import ItemCard from '../components/ItemCard';
+import Pagination from '../components/common/Pagination';
 
 function UserDashboard() {
   const { user } = useContext(AuthContext);
@@ -352,23 +355,11 @@ function UserDashboard() {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex justify-between items-center mt-4 sm:mt-6">
-                  <button
-                    onClick={() => setItemsPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={itemsPage === 1}
-                    className="px-2 sm:px-3 py-1 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-300 transition-colors duration-200 text-xs sm:text-sm"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-xs sm:text-sm text-gray-600">Page {itemsPage} of {itemsTotalPages}</span>
-                  <button
-                    onClick={() => setItemsPage((prev) => Math.min(prev + 1, itemsTotalPages))}
-                    disabled={itemsPage === itemsTotalPages}
-                    className="px-2 sm:px-3 py-1 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-300 transition-colors duration-200 text-xs sm:text-sm"
-                  >
-                    Next
-                  </button>
-                </div>
+                <Pagination
+                  currentPage={itemsPage}
+                  totalPages={itemsTotalPages}
+                  onPageChange={(page) => setItemsPage(page)}
+                />
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">

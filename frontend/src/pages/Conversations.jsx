@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getMyConversations } from '../services/api';
+import { getMyConversations } from '../services/conversationService';
 import Loader from '../components/common/Loader';
 import { Link } from 'react-router-dom';
 

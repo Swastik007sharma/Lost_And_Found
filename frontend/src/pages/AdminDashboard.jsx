@@ -1,6 +1,11 @@
 import { useState, useEffect, useContext, useRef, useCallback, useMemo } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { getDashboardStats, getUsers, toggleUserActivation, getItems, toggleItemActivation, getKeepers, getConversations, register, getAllCategoriesForAdmin, addCategory, updateCategory, deleteCategory } from '../services/api';
+import { getDashboardStats, getUsers, toggleUserActivation, getConversations } from '../services/adminService';
+import { addCategory, deleteCategory, updateCategory, getAllCategoriesForAdmin } from '../services/categoryService';
+import { getKeepers } from '../services/keeperService';
+import { getItems } from '../services/itemService';
+import { toggleItemActivation } from '../services/itemService';
+import { register } from '../services/authService';
 import { Link } from 'react-router-dom';
 import useClickOutside from '../hooks/useClickOutside';
 import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Importing React Icons
