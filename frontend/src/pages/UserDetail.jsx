@@ -1,8 +1,8 @@
-// src/pages/UserDetail.jsx
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getUserItems } from '../services/adminService';
 import { getUserById } from '../services/adminService'; 
+import { toast } from 'react-toastify';
 
 function UserDetail() {
   const { id } = useParams(); // Get the user ID from the URL
@@ -11,7 +11,6 @@ function UserDetail() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const limit = 5; // Number of items per page
 
   useEffect(() => {
@@ -27,7 +26,7 @@ function UserDetail() {
         setItems(itemsResponse.data.items || []);
         setTotalPages(itemsResponse.data.pagination?.totalPages || 1);
       } catch (err) {
-        setError('Failed to fetch data: ' + (err.response?.data?.message || err.message));
+        toast.error('Failed to fetch data: ' + (err.response?.data?.message || err.message));
       } finally {
         setLoading(false);
       }
@@ -37,10 +36,6 @@ function UserDetail() {
 
   if (loading) {
     return <p className="text-gray-600 text-center mt-6">Loading...</p>;
-  }
-
-  if (error) {
-    return <p className="text-red-500 text-center mt-6">{error}</p>;
   }
 
   if (!user) {

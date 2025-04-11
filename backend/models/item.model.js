@@ -67,7 +67,7 @@ const itemSchema = new Schema({
   },
   qrCode: { type: String },
   qrCodeExpiresAt: { type: Date },
-  otp: { type: String },
+  claimOTP: { type: String },
   otpExpiresAt: { type: Date },
   isClaimed: { type: Boolean, default: false },
   isReturned: { type: Boolean, default: false },

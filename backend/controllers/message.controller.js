@@ -5,21 +5,20 @@ const { idSchema } = require('../schema/common.schema');
 exports.getMessages = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('Raw params id:', id, typeof id); // Debug log
+    console.log('Raw params id:', id, typeof id);
 
-    // Validate the id string directly using the inner schema
     const validatedId = idSchema.shape.id.parse(id);
-    console.log('Validated id:', validatedId, typeof validatedId); // Debug log
+    console.log('Validated id:', validatedId, typeof validatedId);
 
-    const { page, limit } = req.validatedQuery; // Access validated query params
+    const { page, limit } = req.validatedQuery;
 
     const conversation = await Conversation.findById(validatedId);
     if (!conversation) {
       return res.status(404).json({ error: 'Conversation not found' });
     }
 
-    console.log('Current user ID:', req.user.id, typeof req.user.id); // Debug log
-    console.log('Conversation participants:', conversation.participants); // Debug log
+    console.log('Current user ID:', req.user.id, typeof req.user.id);
+    console.log('Conversation participants:', conversation.participants);
 
     if (!conversation.participants.includes(req.user.id)) {
       return res.status(403).json({ error: 'You are not authorized to access this conversation' });
@@ -50,7 +49,6 @@ exports.sendMessage = async (req, res) => {
 
     const { content } = req.validatedBody;
 
-    // Validate the id string directly using the inner schema
     const validatedId = idSchema.shape.id.parse(id);
     console.log('Validated id:', validatedId, typeof validatedId);
 
@@ -63,8 +61,8 @@ exports.sendMessage = async (req, res) => {
       return res.status(404).json({ error: 'Conversation not found' });
     }
 
-    console.log('Current user ID:', req.user.id, typeof req.user.id); // Debug log
-    console.log('Conversation participants:', conversation.participants); // Debug log
+    console.log('Current user ID:', req.user.id, typeof req.user.id);
+    console.log('Conversation participants:', conversation.participants);
 
     if (!conversation.participants.includes(req.user.id)) {
       return res.status(403).json({ error: 'You are not authorized to send messages in this conversation' });
@@ -74,6 +72,8 @@ exports.sendMessage = async (req, res) => {
       conversation: validatedId,
       sender: req.user.id,
       content,
+      isRead: false,
+      isActive: true,
     });
 
     await newMessage.save();
@@ -82,13 +82,27 @@ exports.sendMessage = async (req, res) => {
     conversation.lastMessage = newMessage._id;
     await conversation.save();
 
-    const populatedMessage = await Message.findById(newMessage._id).populate('sender', 'name email');
+    const populatedMessage = await Message.findById(newMessage._id)
+      .populate('sender', 'name email')
+      .lean();
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(validatedId).emit('receiveMessage', populatedMessage);
+      console.log('Message broadcasted to room:', validatedId);
+    } else {
+      console.warn('Socket.IO instance not found');
+    }
 
     res.status(201).json({ message: 'Message sent successfully', message: populatedMessage });
   } catch (error) {
-    console.error('Error sending message:', error.message);
+    console.error('Error sending message:', error.message, error.stack);
     if (error.name === 'ZodError') {
       return res.status(400).json({ error: 'Validation failed', details: error.errors });
+    }
+    const io = req.app.get('io');
+    if (io) {
+      io.to(req.params.id).emit('errorMessage', 'Failed to send message');
     }
     res.status(500).json({ error: 'Failed to send message', details: error.message });
   }

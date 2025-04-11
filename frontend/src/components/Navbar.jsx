@@ -44,7 +44,7 @@ function Navbar() {
   }
 
   return (
-    <nav className="bg-blue-600 text-white p-4 sm:p-6 shadow-lg sticky top-0 z-30">
+    <nav className="bg-blue-600 text-white p-4 sm:p-4 shadow-lg sticky top-0 z-30">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <Link
           to="/"

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createItem } from '../services/itemService';
 import { getCategories } from '../services/categoryService'; 
+import { toast } from 'react-toastify';
 
 function ItemCreate() {
   const navigate = useNavigate();
@@ -14,13 +15,8 @@ function ItemCreate() {
   });
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(''); // For success alerts
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null); // For image preview
-
-  // Alert timeout ref
-  const alertTimeout = useRef(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -28,22 +24,11 @@ function ItemCreate() {
         const response = await getCategories();
         setCategories(response.data.categories || []);
       } catch (err) {
-        setError('Failed to load categories: ' + (err.response?.data?.message || err.message));
+        toast.error('Failed to load categories: ' + (err.response?.data?.message || err.message));
       }
     };
     fetchCategories();
   }, []);
-
-  useEffect(() => {
-    // Clear alerts on unmount or change
-    if (success || error) {
-      alertTimeout.current = setTimeout(() => {
-        setSuccess('');
-        setError('');
-      }, 3000); // Auto-clear after 3 seconds
-    }
-    return () => clearTimeout(alertTimeout.current);
-  }, [success, error]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -69,8 +54,7 @@ function ItemCreate() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-  
+
     const data = new FormData();
     data.append('title', formData.title);
     data.append('description', formData.description);
@@ -83,16 +67,16 @@ function ItemCreate() {
     } else {
       console.log('No valid image file to append');
     }
-  
+
     // Debug: Log FormData entries
     for (let [key, value] of data.entries()) {
       console.log(`${key}:`, value);
     }
-  
+
     try {
       const response = await createItem(data);
       console.log('Response:', response.data);
-      setSuccess('Item created successfully!');
+      toast.success('Item created successfully!');
       // Reset form
       setFormData({
         title: '',
@@ -109,9 +93,9 @@ function ItemCreate() {
       console.error('Error:', err.response?.data);
       if (err.response?.data?.code === 'VALIDATION_ERROR') {
         const errorDetails = err.response.data.details.map(detail => `${detail.field}: ${detail.message}`).join(', ');
-        setError(`Failed to create item: ${errorDetails}`);
+        toast.error(`Failed to create item: ${errorDetails}`);
       } else {
-        setError('Failed to create item: ' + (err.response?.data?.message || err.message));
+        toast.error('Failed to create item: ' + (err.response?.data?.message || err.message));
       }
     } finally {
       setLoading(false);
@@ -122,22 +106,6 @@ function ItemCreate() {
     <div className="container mx-auto p-4 sm:p-6 lg:p-8 xl:p-10 bg-gray-50 min-h-screen">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-gray-800 text-center">Add New Item</h1>
-
-        {/* Success and Error Alerts */}
-        {(success || error) && (
-          <div className="fixed top-4 right-4 z-50 w-full max-w-xs">
-            {success && (
-              <div className="bg-green-50 border-l-4 border-green-400 text-green-700 p-4 rounded-md shadow-md mb-2 animate-fade-in-out" role="alert">
-                <p className="text-sm font-medium">{success}</p>
-              </div>
-            )}
-            {error && (
-              <div className="bg-red-50 border-l-4 border-red-400 text-red-700 p-4 rounded-md shadow-md animate-fade-in-out" role="alert">
-                <p className="text-sm font-medium">{error}</p>
-              </div>
-            )}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="bg-white p-4 sm:p-6 md:p-8 rounded-lg shadow-md" encType="multipart/form-data">
           <div className="mb-4">
@@ -265,22 +233,5 @@ function ItemCreate() {
     </div>
   );
 }
-
-// Animation for alerts
-const styles = `
-  @keyframes fadeInOut {
-    0% { opacity: 0; transform: translateY(-10px); }
-    10% { opacity: 1; transform: translateY(0); }
-    90% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-10px); }
-  }
-  .animate-fade-in-out {
-    animation: fadeInOut 3s ease-out forwards;
-  }
-`;
-
-const styleSheet = document.createElement('style');
-styleSheet.textContent = styles;
-document.head.appendChild(styleSheet);
 
 export default ItemCreate;

@@ -18,12 +18,12 @@ const notificationSchema = new Schema({
   itemId: {
     type: Schema.Types.ObjectId,
     ref: 'Item',
-    required: [true, 'Item is required'],
+    required: false, // Updated to false
     index: true,
   },
   type: {
     type: String,
-    enum: ['item_claimed', 'item_returned', 'new_message', 'other'],
+    enum: ['item_claimed', 'item_returned', 'new_message', 'conversation', 'other'], // Added 'conversation'
     default: 'other',
   },
   isRead: {

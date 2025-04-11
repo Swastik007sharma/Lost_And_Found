@@ -1,15 +1,18 @@
 const cors = require('cors');
 
-// Middleware to configure CORS
-const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['*'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:5173', 'http://localhost:5000', 'http://localhost:3000'];
 
-exports.corsConfig = cors({
+const corsOptions = {
   origin: (origin, callback) => {
-    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true, // Allow cookies and credentials
-});
+  credentials: true,
+};
+
+module.exports = { corsConfig: cors( corsOptions ) };

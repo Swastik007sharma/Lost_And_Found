@@ -10,18 +10,14 @@ const extractToken = (req) => {
     return null;
   }
 
-  // Clean the header: remove quotes and trim
   const cleanedHeader = authHeader.replace(/"/g, '').trim();
 
-  // Check for "Bearer " prefix (case-insensitive)
   if (!cleanedHeader.toLowerCase().startsWith('bearer ')) {
     console.log('No valid Bearer prefix found');
     return null;
   }
 
-  // Extract token after "Bearer "
-  const token = cleanedHeader.split(/\s+/)[1]; // Use regex to handle multiple spaces
-
+  const token = cleanedHeader.split(/\s+/)[1];
   if (!token || token.trim() === '' || token.split('.').length !== 3) {
     console.log(`Invalid token format: "${token}"`);
     return null;
@@ -43,12 +39,24 @@ exports.authenticate = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Decoded token payload:', decoded); // Log the decoded token
+
     const user = await User.findOne({ _id: decoded.id, isActive: true });
     if (!user) {
+      console.log('User not found for ID:', decoded.id);
       return res.status(401).json({ message: 'User not found or inactive', code: 'INVALID_USER' });
     }
 
-    req.user = { id: user._id.toString(), role: user.role };
+    // Set req.user with detailed info for debugging
+    req.user = {
+      id: user._id.toString(),
+      originalIdFromToken: decoded.id, // Log the token's ID for comparison
+      role: user.role,
+      name: user.name,
+      email: user.email,
+    };
+    console.log('Set req.user:', req.user); // Log the assigned user object
+
     next();
   } catch (error) {
     console.error('JWT Verification Error:', error.message);

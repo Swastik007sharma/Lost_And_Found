@@ -18,11 +18,24 @@ import UserDetail from "./pages/UserDetail";
 import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
 import VerifyOtp from "./pages/Auth/VerifyOtp"; // Import the VerifyOtp component
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
