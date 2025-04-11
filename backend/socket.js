@@ -27,7 +27,7 @@ module.exports = (server) => {
       credentials: true,
       allowedHeaders: ['Content-Type', 'Authorization', 'Upgrade', 'Connection'],
     },
-    transports: ['websocket'],
+    transports: ['websocket', 'polling'],
     upgradeTimeout: 15000,
     pingTimeout: 30000,
     pingInterval: 30000,
