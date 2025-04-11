@@ -6,12 +6,12 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Loader from '../../components/common/Loader';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 function VerifyOtp() {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -29,7 +29,7 @@ function VerifyOtp() {
 
   useEffect(() => {
     if (!email) {
-      setError('No email provided for verification');
+      toast.error('No email provided for verification');
     }
     // Clean up temp storage on unmount if not used
     return () => {
@@ -42,23 +42,22 @@ function VerifyOtp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     if (!otp) {
-      setError('Please enter the OTP');
+      toast.error('Please enter the OTP');
       setLoading(false);
       return;
     }
 
     if (isForgot) {
       if (!newPassword || !confirmPassword) {
-        setError('Please enter both new password and confirm password');
+        toast.error('Please enter both new password and confirm password');
         setLoading(false);
         return;
       }
       if (newPassword !== confirmPassword) {
-        setError('Passwords do not match');
+        toast.error('Passwords do not match');
         setLoading(false);
         return;
       }
@@ -69,7 +68,7 @@ function VerifyOtp() {
       if (response.status === 200) {
         if (isForgot) {
           await resetPassword({ email, newPassword });
-          setError('Password reset successfully. Redirecting to login...');
+          toast.success('Password reset successfully. Redirecting to login...');
           setTimeout(() => navigate('/login'), 2000);
         } else if (registrationToken && registrationUser) {
           setAuth(registrationToken, registrationUser);
@@ -91,20 +90,19 @@ function VerifyOtp() {
           : err.response?.status === 500
           ? 'Server error, please try again later'
           : 'An unexpected error occurred';
-      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleResendOtp = async () => {
-    setError('');
     setLoading(true);
     try {
       await forgotPassword({ email });
-      setError('New OTP sent to your email.');
+      toast.success('New OTP sent to your email.');
     } catch (err) {
-      setError('Failed to resend OTP. Please try again.');
+      toast.error('Failed to resend OTP. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -117,21 +115,10 @@ function VerifyOtp() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 py-12 px-4 sm:px-6 lg:px-8 animate-fade-in-down">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg transform transition-all duration-500 hover:shadow-xl">
+      <div className="w-full max-w-md bg-white/90 backdrop-blur-md p-8 rounded-xl shadow-lg border border-gray-100 transform transition-all duration-500 hover:shadow-2xl">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6 animate-fade-in-down">
           {isForgot ? 'Verify OTP & Reset Password' : 'Verify OTP'}
         </h2>
-
-        {error && (
-          <div className="mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-md animate-fade-in-out flex items-center justify-between">
-            <p className="text-sm font-medium">{error}</p>
-            <button onClick={() => setError('')} className="text-red-700 hover:text-red-900 focus:outline-none">
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="animate-fade-in-left" style={{ animationDelay: '0.1s' }}>
@@ -144,6 +131,7 @@ function VerifyOtp() {
               placeholder="Enter 6-digit OTP"
               className="mt-2 w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50"
               disabled={loading}
+              aria-label="Enter OTP"
             />
           </div>
           {isForgot && (
@@ -158,12 +146,14 @@ function VerifyOtp() {
                   placeholder="Enter new password"
                   className="mt-2 w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50 pr-12"
                   disabled={loading}
+                  aria-label="Enter new password"
                 />
                 <button
                   type="button"
                   onClick={toggleNewPasswordVisibility}
                   className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-full text-gray-500 hover:text-gray-700 focus:outline-none mt-4"
                   disabled={loading}
+                  aria-label="Toggle new password visibility"
                 >
                   {showNewPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
                 </button>
@@ -178,12 +168,14 @@ function VerifyOtp() {
                   placeholder="Confirm new password"
                   className="mt-2 w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50 pr-12"
                   disabled={loading}
+                  aria-label="Confirm new password"
                 />
                 <button
                   type="button"
                   onClick={toggleConfirmPasswordVisibility}
                   className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-full text-gray-500 hover:text-gray-700 focus:outline-none mt-4"
                   disabled={loading}
+                  aria-label="Toggle confirm password visibility"
                 >
                   {showConfirmPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
                 </button>
@@ -200,7 +192,7 @@ function VerifyOtp() {
             >
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-5 w-5 mr-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -216,8 +208,9 @@ function VerifyOtp() {
           Didn’t receive an OTP?{' '}
           <button
             onClick={handleResendOtp}
-            className="text-blue-600 hover:underline hover:text-blue-800 transition-colors duration-200"
+            className="text-blue-600 hover:text-blue-800 font-medium underline transition-colors duration-200"
             disabled={loading}
+            aria-label="Resend OTP"
           >
             Resend OTP
           </button>

@@ -18,7 +18,19 @@ router.post(
   '/:id/messages',
   authMiddleware.authenticate,
   validate(sendMessageSchema, 'body'), // Validate request body
-  messageController.sendMessage
+  async (req, res, next) => {
+    try {
+      const io = req.app.get('io'); // Access Socket.IO instance from app
+      const message = await messageController.sendMessage(req, res); // Call controller and assume it returns the message
+
+      // Emit the message to the conversation room
+      if (message) {
+        io.to(req.params.id).emit('receiveMessage', message);
+      }
+    } catch (err) {
+      next(err); // Pass errors to the error handler
+    }
+  }
 );
 
 module.exports = router;

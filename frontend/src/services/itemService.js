@@ -14,7 +14,6 @@ export const createItem = (data) => {
 };
 export const getItemDetails = (itemId) => api.get(`/items/${itemId}`);
 export const claimItem = (itemId) => api.post(`/items/${itemId}/claim`);
-export const startConversation = (data) => api.post('/conversations', data);
 export const updateItem = (itemId, data) => {
   const config = {
     headers: {

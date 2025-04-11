@@ -3,31 +3,53 @@ const Item = require('../models/item.model');
 const User = require('../models/user.model');
 const { createConversationSchema } = require('../schema/conversation.schema.js');
 
-// Create a new conversation about an item
 exports.createConversation = async (req, res) => {
   try {
     const { itemId, participants } = req.validatedBody;
+    console.log('Received request with itemId:', itemId, 'and participants:', participants); // Debug log
 
+    // Validate item
     const item = await Item.findOne({ _id: itemId, isActive: true });
     if (!item) {
       return res.status(404).json({ message: 'Item not found', code: 'NOT_FOUND' });
     }
 
+    // Validate participants
     const validParticipants = await User.find({ _id: { $in: participants }, isActive: true });
     if (validParticipants.length !== participants.length) {
       return res.status(400).json({ message: 'One or more participants are invalid or inactive', code: 'INVALID_PARTICIPANTS' });
     }
 
+    // Check for existing conversation
+    const existingConversation = await Conversation.findOne({
+      item: itemId,
+      participants: { $all: participants.sort() }, // Sort participants to handle order consistency
+      isActive: true,
+    });
+    console.log('Existing conversation check result:', existingConversation); // Debug log
+
+    if (existingConversation) {
+      return res.status(200).json({
+        message: 'Conversation already exists',
+        conversation: existingConversation,
+      });
+    }
+
+    // Create new conversation
     const conversation = new Conversation({
       item: itemId,
-      participants,
+      participants: participants.sort(), // Sort to ensure consistency with index
       isActive: true,
     });
 
     await conversation.save();
+    console.log('Conversation saved successfully:', conversation._id); // Debug log
     res.status(201).json({ message: 'Conversation created successfully', conversation });
   } catch (error) {
-    console.error('Error creating conversation:', error);
+    console.error('Error creating conversation:', error.message, error.stack); // Detailed error logging
+    if (error.code === 11000) {
+      return res.status(409).json({ message: 'A conversation with this item and participants already exists', code: 'DUPLICATE_CONVERSATION' });
+    }
     res.status(500).json({ message: 'Failed to create conversation', code: 'SERVER_ERROR' });
   }
 };

@@ -11,6 +11,11 @@ const ItemCard = ({
   onEditChange,
   onEditSubmit,
   onCancelEdit,
+  onMarkAsReturned, // New prop for marking item as returned
+  onGenerateOTP,    // New prop for generating OTP
+  onVerifyOTP,      // New prop for verifying OTP
+  otp,              // OTP value
+  setOtp,           // Function to update OTP
 }) => {
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden w-full relative">
@@ -134,13 +139,40 @@ const ItemCard = ({
               {new Date(item.createdAt).toLocaleDateString()}
             </p>
           </div>
-          <div className="mt-4 text-right">
+          <div className="mt-4 flex flex-col gap-2">
             <Link
               to={`/items/${item._id}`}
-              className="text-sm sm:text-base text-blue-600 hover:text-blue-800 font-medium underline underline-offset-2 transition-colors"
+              className="text-sm sm:text-base text-blue-600 hover:text-blue-800 font-medium underline underline-offset-2 transition-colors text-right"
             >
               View Details
             </Link>
+            {item.status === 'Claimed' && showActions && (
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={onGenerateOTP}
+                  className="bg-indigo-500 text-white px-3 py-1 rounded-md hover:bg-indigo-600 transition-colors text-sm w-full"
+                >
+                  Generate OTP
+                </button>
+                {onVerifyOTP && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      placeholder="Enter OTP"
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                    />
+                    <button
+                      onClick={onVerifyOTP}
+                      className="bg-purple-500 text-white px-3 py-1 rounded-md hover:bg-purple-600 transition-colors text-sm"
+                    >
+                      Verify
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

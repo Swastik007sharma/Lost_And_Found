@@ -6,33 +6,29 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import Modal from '../../components/common/Modal';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotError, setForgotError] = useState('');
   const { login: setAuth } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => setError(''), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     if (!email || !password) {
-      setError('Please fill in all fields');
+      toast.error('Please fill in all fields');
       setLoading(false);
       return;
     }
@@ -42,16 +38,13 @@ function Login() {
       setAuth(response.data.authorization, response.data.user || null);
       localStorage.setItem('token', response.data.authorization);
       console.log('Login successful, token:', response.data.authorization);
+      toast.success('Login successful!');
       setTimeout(() => navigate('/'), 300);
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      toast.error(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
   };
 
   const handleForgotPassword = () => {
@@ -60,34 +53,33 @@ function Login() {
 
   const handleForgotSubmit = (e) => {
     e.preventDefault();
-    setForgotError('');
     if (!forgotEmail) {
-      setForgotError('Please enter your email');
+      toast.error('Please enter your email');
       return;
     }
     forgotPassword({ email: forgotEmail })
       .then(() => {
-        setForgotError('OTP sent to your email. Please verify it.');
+        toast.success('OTP sent to your email. Please verify it.');
         setTimeout(() => navigate(`/verify-otp?email=${encodeURIComponent(forgotEmail)}&forgot=true`), 2000);
       })
-      .catch((err) => setForgotError(err.response?.data?.message || 'Failed to send OTP. Try again.'));
+      .catch((err) => toast.error(err.response?.data?.message || 'Failed to send OTP. Try again.'));
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 py-12 px-4 sm:px-6 lg:px-8 animate-fade-in-down">
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg transform transition-all duration-500 hover:shadow-xl">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6 animate-fade-in-down">Login</h2>
-
-        {error && (
-          <div className="mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-md animate-fade-in-out flex items-center justify-between">
-            <p className="text-sm font-medium">{error}</p>
-            <button onClick={() => setError('')} className="text-red-700 hover:text-red-900 focus:outline-none">
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="animate-fade-in-left" style={{ animationDelay: '0.1s' }}>
@@ -163,11 +155,6 @@ function Login() {
 
       <Modal isOpen={isForgotModalOpen} onClose={() => setIsForgotModalOpen(false)}>
         <h3 className="text-xl font-bold mb-4">Forgot Password</h3>
-        {forgotError && (
-          <div className="mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-2 rounded-lg">
-            <p className="text-sm">{forgotError}</p>
-          </div>
-        )}
         <form onSubmit={handleForgotSubmit} className="space-y-4">
           <div>
             <label htmlFor="forgot-email" className="block text-sm font-medium text-gray-700">Email</label>

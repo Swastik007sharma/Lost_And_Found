@@ -126,68 +126,106 @@ exports.deleteUser = async (req, res) => {
 };
 
 // Get a list of all items (admin-only)
-exports.getAllItems = async (req, res) => {
+// Get all items (with optional filters) - Updated to include extra details
+exports.getItems = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '', sortBy = 'createdAt', order = 'desc' } = req.query;
-    const skip = (page - 1) * limit;
+    const { page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search = '' } = req.query;
 
-    const pipeline = [];
-    const matchConditions = { isActive: true };
-
+    // Build query for filtering items
+    const query = { isActive: true }; // Only active items (adjust based on admin needs)
     if (search) {
-      matchConditions.$or = [
+      query.$or = [
         { title: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } },
-        { status: { $regex: search, $options: 'i' } },
+        { tags: { $regex: search, $options: 'i' } },
       ];
     }
 
-    pipeline.push({ $match: matchConditions });
-    pipeline.push({
-      $lookup: {
-        from: 'users',
-        localField: 'postedBy',
-        foreignField: '_id',
-        as: 'postedByData',
-      },
-    });
-    pipeline.push({ $unwind: '$postedByData' });
-    pipeline.push({
-      $lookup: {
-        from: 'categories',
-        localField: 'category',
-        foreignField: '_id',
-        as: 'categoryData',
-      },
-    });
-    pipeline.push({ $unwind: '$categoryData' });
-    pipeline.push({
-      $project: {
-        id: '$_id',
-        title: 1,
-        description: 1,
-        status: 1,
-        postedBy: { id: '$postedByData._id', name: '$postedByData.name', email: '$postedByData.email' },
-        category: { id: '$categoryData._id', name: '$categoryData.name' },
-        isActive: 1,
-        createdAt: 1,
-        updatedAt: 1,
-      },
-    });
-    pipeline.push({ $sort: { [sortBy]: order === 'asc' ? 1 : -1 } });
-    pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: parseInt(limit, 10) });
+    // Fetch paginated and sorted items
+    const items = await Item.find(query)
+      .populate('postedBy', 'name email') // Populate poster details
+      .populate('category', 'name') // Populate category details
+      .populate('keeper', 'name') // Populate keeper details
+      .populate('claimedBy', 'name') // Populate claimant details
+      .sort({ [sortBy]: order === 'asc' ? 1 : -1 }) // Sort by field and order
+      .limit(parseInt(limit)) // Limit results per page
+      .skip((parseInt(page) - 1) * parseInt(limit)); // Skip items for pagination
 
-    const items = await Item.aggregate(pipeline);
-    const total = await Item.countDocuments(matchConditions);
+    // Count total items for pagination metadata
+    const totalItems = await Item.countDocuments(query);
+
+    // Transform items to include keeperId, keeperName, claimedById, and claimedByName
+    const transformedItems = items.map(item => ({
+      ...item.toObject(),
+      keeperId: item.keeper ? item.keeper._id : null,
+      keeperName: item.keeper ? item.keeper.name : null,
+      claimedById: item.claimedBy ? item.claimedBy._id : null,
+      claimedByName: item.claimedBy ? item.claimedBy.name : null,
+    }));
 
     res.status(200).json({
       message: 'Items fetched successfully',
-      items,
-      pagination: { currentPage: parseInt(page), totalPages: Math.ceil(total / limit), total }
+      items: transformedItems,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalItems / parseInt(limit)),
+        totalResults: totalItems,
+      },
     });
   } catch (error) {
     console.error('Error fetching items:', error);
+    res.status(500).json({ message: 'Failed to fetch items', code: 'SERVER_ERROR' });
+  }
+};
+
+// New route handler for /admin/items (can reuse getItems logic or add admin-specific filters)
+exports.getAllItems = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search = '' } = req.query;
+
+    // Build query for filtering items (admin might see all items, including inactive)
+    const query = {}; // No isActive filter for admin (adjust based on requirements)
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { tags: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    // Fetch paginated and sorted items
+    const items = await Item.find(query)
+      .populate('postedBy', 'name email') // Populate poster details
+      .populate('category', 'name') // Populate category details
+      .populate('keeper', 'name') // Populate keeper details
+      .populate('claimedBy', 'name') // Populate claimant details
+      .sort({ [sortBy]: order === 'asc' ? 1 : -1 }) // Sort by field and order
+      .limit(parseInt(limit)) // Limit results per page
+      .skip((parseInt(page) - 1) * parseInt(limit)); // Skip items for pagination
+
+    // Count total items for pagination metadata
+    const totalItems = await Item.countDocuments(query);
+
+    // Transform items to include keeperId, keeperName, claimedById, and claimedByName
+    const transformedItems = items.map(item => ({
+      ...item.toObject(),
+      keeperId: item.keeper ? item.keeper._id : null,
+      keeperName: item.keeper ? item.keeper.name : null,
+      claimedById: item.claimedBy ? item.claimedBy._id : null,
+      claimedByName: item.claimedBy ? item.claimedBy.name : null,
+    }));
+
+    res.status(200).json({
+      message: 'Items fetched successfully',
+      items: transformedItems,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalItems / parseInt(limit)),
+        totalResults: totalItems,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching all items:', error);
     res.status(500).json({ message: 'Failed to fetch items', code: 'SERVER_ERROR' });
   }
 };

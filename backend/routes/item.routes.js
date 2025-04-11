@@ -41,7 +41,7 @@ router.delete('/:id', authMiddleware.authenticate, validate(idSchema, 'params'),
 router.post('/:id/claim', authMiddleware.authenticate, validate(idSchema, 'params'), rateLimiter, itemController.claimItem);
 
 // Mark an item as returned
-router.post('/:id/return', authMiddleware.authenticate, validate(idSchema, 'params'), itemController.returnItem);
+// router.post('/:id/return', authMiddleware.authenticate, validate(idSchema, 'params'), itemController.returnItem);
 
 // Generate a QR code for the claimant
 router.post('/:id/generate-qr', authMiddleware.authenticate, validate(idSchema, 'params'), itemController.generateQRCode);

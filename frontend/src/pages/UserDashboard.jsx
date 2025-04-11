@@ -1,20 +1,21 @@
-import { useState, useEffect, useContext, useRef } from 'react';
+import { useState, useEffect, useContext, useRef, useCallback, useMemo } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { getMyItems } from '../services/userService';
-import { updateItem, deleteUserItem } from '../services/itemService';
-import { getCategories } from '../services/categoryService'
-import { Link } from 'react-router-dom';
+import { updateItem, deleteUserItem, generateOTPForItem, verifyOTPForItem } from '../services/itemService';
+import { getCategories } from '../services/categoryService';
+import { Link, useOutletContext } from 'react-router-dom';
 import ItemCard from '../components/ItemCard';
 import Pagination from '../components/common/Pagination';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function UserDashboard() {
-  const { user } = useContext(AuthContext);
-  const [viewType, setViewType] = useState(() => localStorage.getItem('userDashboardViewType') || 'list'); // 'list' or 'card'
+  const { user, addNotification } = useContext(AuthContext);
+  const { socket } = useOutletContext();
+  const [viewType, setViewType] = useState(() => localStorage.getItem('userDashboardViewType') || 'list');
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(''); // For success alerts
   const [editingItemId, setEditingItemId] = useState(null);
   const [editFormData, setEditFormData] = useState({
     title: '',
@@ -24,63 +25,94 @@ function UserDashboard() {
     location: '',
     image: null,
   });
-  const [currentImage, setCurrentImage] = useState(''); // For image preview
+  const [currentImage, setCurrentImage] = useState('');
+  const [otpItemId, setOtpItemId] = useState(null);
+  const [otp, setOtp] = useState('');
+  const [showOtpVerification, setShowOtpVerification] = useState(false);
 
-  // Pagination states
   const [itemsPage, setItemsPage] = useState(1);
   const [itemsTotalPages, setItemsTotalPages] = useState(1);
   const limit = 10;
 
-  // Alert timeout ref
-  const alertTimeout = useRef(null);
+  // Ref to track shown toasts
+  const shownToasts = useRef(new Set());
+  const fetchTimeoutRef = useRef(null);
 
+  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await getCategories();
         setCategories(response.data.categories || []);
       } catch (err) {
-        setError('Failed to load categories: ' + (err.response?.data?.message || err.message));
+        addNotification(`Failed to load categories: ${err.response?.data?.message || err.message}`, 'error');
       }
     };
     fetchCategories();
-  }, []);
+  }, [addNotification]);
 
+  // Fetch items with debounce
   useEffect(() => {
-    const fetchData = async () => {
+    if (!user) return;
+
+    // Clear previous timeout
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+
+    fetchTimeoutRef.current = setTimeout(async () => {
       setLoading(true);
       try {
         const itemsResponse = await getMyItems({ page: itemsPage, limit });
         setItems(itemsResponse.data.items || []);
         setItemsTotalPages(itemsResponse.data.pagination?.totalPages || 1);
       } catch (err) {
-        setError('Failed to load data: ' + (err.response?.data?.message || err.message));
+        addNotification(`Failed to load data: ${err.response?.data?.message || err.message}`, 'error');
       } finally {
         setLoading(false);
       }
-    };
-    if (user) {
-      fetchData();
-    }
-  }, [itemsPage, user]);
+    }, 300); // Debounce by 300ms
 
-  // Save viewType to localStorage
+    // Socket listener
+    if (socket) {
+      const handleNewNotification = (notification) => {
+        if (notification.type === 'item' && user.id === notification.userId) {
+          addNotification(notification.message, 'info');
+          // Trigger fetch after notification
+          clearTimeout(fetchTimeoutRef.current);
+          fetchTimeoutRef.current = setTimeout(async () => {
+            setLoading(true);
+            try {
+              const itemsResponse = await getMyItems({ page: itemsPage, limit });
+              setItems(itemsResponse.data.items || []);
+              setItemsTotalPages(itemsResponse.data.pagination?.totalPages || 1);
+            } catch (err) {
+              addNotification(`Failed to load data: ${err.response?.data?.message || err.message}`, 'error');
+            } finally {
+              setLoading(false);
+            }
+          }, 300);
+        }
+      };
+
+      socket.on('newNotification', handleNewNotification);
+
+      return () => {
+        socket.off('newNotification', handleNewNotification);
+      };
+    }
+
+    return () => {
+      if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
+    };
+  }, [itemsPage, user, socket, addNotification]);
+
   useEffect(() => {
     localStorage.setItem('userDashboardViewType', viewType);
   }, [viewType]);
 
-  // Clear alerts on unmount or change
-  useEffect(() => {
-    if (success || error) {
-      alertTimeout.current = setTimeout(() => {
-        setSuccess('');
-        setError('');
-      }, 3000); // Auto-clear after 3 seconds
-    }
-    return () => clearTimeout(alertTimeout.current);
-  }, [success, error]);
-
-  const handleEdit = (item) => {
+  // Memoized handlers
+  const handleEdit = useCallback((item) => {
     setEditingItemId(item._id);
     setEditFormData({
       title: item.title,
@@ -90,24 +122,23 @@ function UserDashboard() {
       location: item.location || '',
       image: null,
     });
-    setCurrentImage(item.image || ''); // Set current image for preview
-  };
+    setCurrentImage(item.image || '');
+  }, []);
 
-  const handleEditChange = (e) => {
+  const handleEditChange = useCallback((e) => {
     const { name, value, files } = e.target;
     if (name === 'image' && files && files[0]) {
       const file = files[0];
       setEditFormData((prev) => ({ ...prev, image: file }));
-      // Preview new image
       const reader = new FileReader();
       reader.onloadend = () => setCurrentImage(reader.result);
       reader.readAsDataURL(file);
     } else {
       setEditFormData((prev) => ({ ...prev, [name]: value }));
     }
-  };
+  }, []);
 
-  const handleEditSubmit = async (itemId) => {
+  const handleEditSubmit = useCallback(async (itemId) => {
     const data = new FormData();
     data.append('title', editFormData.title);
     data.append('description', editFormData.description);
@@ -120,126 +151,163 @@ function UserDashboard() {
 
     try {
       await updateItem(itemId, data);
-      const itemsResponse = await getMyItems({ page: itemsPage, limit }); // Refetch to update pagination
+      const itemsResponse = await getMyItems({ page: itemsPage, limit });
       setItems(itemsResponse.data.items || []);
       setItemsTotalPages(itemsResponse.data.pagination?.totalPages || 1);
-      setSuccess('Item updated successfully!');
+      addNotification('Item updated successfully!', 'success', { toastId: `update-${itemId}` });
       setEditingItemId(null);
-      setEditFormData({
-        title: '',
-        description: '',
-        category: '',
-        status: '',
-        location: '',
-        image: null,
-      }); // Reset form
-      setCurrentImage(''); // Clear image preview
+      setEditFormData({ title: '', description: '', category: '', status: '', location: '', image: null });
+      setCurrentImage('');
     } catch (err) {
-      setError('Failed to update item: ' + (err.response?.data?.message || err.message));
+      addNotification(`Failed to update item: ${err.response?.data?.message || err.message}`, 'error', { toastId: `update-error-${itemId}` });
     }
-  };
+  }, [editFormData, itemsPage, addNotification]);
 
-  const handleDelete = async (itemId) => {
+  const handleDelete = useCallback(async (itemId) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
         await deleteUserItem(itemId);
         setItems((prev) => prev.filter((item) => item._id !== itemId));
-        // Adjust pagination if on the last page and item count drops
         if (items.length === 1 && itemsPage > 1) {
           setItemsPage((prev) => prev - 1);
         } else {
-          const itemsResponse = await getMyItems({ page: itemsPage, limit }); // Refetch to update pagination
+          const itemsResponse = await getMyItems({ page: itemsPage, limit });
           setItems(itemsResponse.data.items || []);
           setItemsTotalPages(itemsResponse.data.pagination?.totalPages || 1);
         }
-        setSuccess('Item deleted successfully!');
+        addNotification('Item deleted successfully!', 'success', { toastId: `delete-${itemId}` });
       } catch (err) {
-        setError('Failed to delete item: ' + (err.response?.data?.message || err.message));
+        addNotification(`Failed to delete item: ${err.response?.data?.message || err.message}`, 'error', { toastId: `delete-error-${itemId}` });
       }
     }
-  };
+  }, [items, itemsPage, addNotification]);
+
+  const handleGenerateOTP = useCallback(async (itemId) => {
+    const item = items.find((i) => i._id === itemId);
+    if (!item) return;
+
+    if (user.id !== item.postedBy._id && user.id !== item.keeperId) {
+      addNotification('Only the poster or keeper can generate OTP.', 'error', { toastId: `otp-auth-${itemId}` });
+      return;
+    }
+
+    try {
+      const response = await generateOTPForItem(itemId);
+      setOtpItemId(itemId);
+      setShowOtpVerification(true);
+      setOtp('');
+      addNotification(`OTP generated: ${response.data.otp}. Share this with the claimant to verify return.`, 'info', { toastId: `otp-gen-${itemId}` });
+    } catch (err) {
+      addNotification(`Failed to generate OTP: ${err.response?.data?.message || err.message}`, 'error', { toastId: `otp-error-${itemId}` });
+    }
+  }, [items, user.id, addNotification]);
+
+  const handleVerifyOTP = useCallback(async (itemId) => {
+    if (!otp.trim()) {
+      addNotification('Please enter the OTP.', 'error', { toastId: `otp-input-${itemId}` });
+      return;
+    }
+    try {
+      await verifyOTPForItem(itemId, { otp });
+      setItems((prev) =>
+        prev.map((item) => (item._id === itemId ? { ...item, status: 'Returned' } : item))
+      );
+      addNotification('OTP verified successfully! Item marked as returned.', 'success', { toastId: `otp-verify-${itemId}` });
+      setShowOtpVerification(false);
+      setOtpItemId(null);
+      setOtp('');
+    } catch (err) {
+      addNotification(`Failed to verify OTP: ${err.response?.data?.message || err.message}`, 'error', { toastId: `otp-verify-error-${itemId}` });
+    }
+  }, [otp, addNotification]);
+
+  const handleCancelOTP = useCallback(() => {
+    setShowOtpVerification(false);
+    setOtpItemId(null);
+    setOtp('');
+  }, []);
+
+  // Memoized derived states
+  const isClaimant = useMemo(() => user.id === items.find((item) => item._id === editingItemId)?.claimedById, [user.id, items, editingItemId]);
+  const isPosterOrKeeper = useMemo(() => user.id === items.find((item) => item._id === editingItemId)?.postedBy._id || user.id === items.find((item) => item._id === editingItemId)?.keeperId, [user.id, items, editingItemId]);
 
   if (!user) {
     return (
-      <div className="container mx-auto p-4 sm:p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <p className="text-gray-600 text-lg font-medium">Please log in to view your dashboard.</p>
+      <div className="container mx-auto p-2 sm:p-4 md:p-6 bg-gray-50 min-h-screen flex items-center justify-center">
+        <p className="text-gray-600 text-sm sm:text-lg md:text-xl font-medium">Please log in to view your dashboard.</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 md:p-8 lg:p-10 bg-gray-50 min-h-screen">
+    <div className="container mx-auto p-2 sm:p-4 md:p-6 lg:p-10 bg-gray-50 min-h-screen">
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        limit={1} // Limit to 3 toasts at a time
+      />
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-0">User Dashboard</h1>
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 md:mb-8">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-0">User Dashboard</h1>
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 md:space-x-4">
             <Link
               to="/items/create"
-              className="bg-blue-600 text-white py-2 px-3 sm:px-4 rounded-md hover:bg-blue-700 transition-colors duration-200 text-sm sm:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
+              className="bg-blue-600 text-white py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md hover:bg-blue-700 transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
             >
               Add New Item
             </Link>
             <Link
               to="/profile"
-              className="bg-green-600 text-white py-2 px-3 sm:px-4 rounded-md hover:bg-green-700 transition-colors duration-200 text-sm sm:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
+              className="bg-green-600 text-white py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md hover:bg-green-700 transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
             >
               Profile
             </Link>
             <Link
               to="/messages"
-              className="bg-purple-600 text-white py-2 px-3 sm:px-4 rounded-md hover:bg-purple-700 transition-colors duration-200 text-sm sm:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
+              className="bg-purple-600 text-white py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md hover:bg-purple-700 transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
             >
               Messages
             </Link>
             <Link
               to="/notifications"
-              className="bg-yellow-600 text-white py-2 px-3 sm:px-4 rounded-md hover:bg-yellow-700 transition-colors duration-200 text-sm sm:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
+              className="bg-yellow-600 text-white py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md hover:bg-yellow-700 transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
             >
               Notifications
             </Link>
             <button
               onClick={() => setViewType(viewType === 'list' ? 'card' : 'list')}
-              className="bg-gray-200 text-gray-800 py-2 px-3 sm:px-4 rounded-md hover:bg-gray-300 transition-colors duration-200 text-sm sm:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
+              className="bg-gray-200 text-gray-800 py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md hover:bg-gray-300 transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
             >
               Switch to {viewType === 'list' ? 'Card' : 'List'} View
             </button>
           </div>
         </div>
 
-        {/* Success and Error Alerts */}
-        {(success || error) && (
-          <div className="fixed top-4 right-4 z-50">
-            {success && (
-              <div className="bg-green-50 border-l-4 border-green-400 text-green-700 p-4 rounded-md shadow-md mb-2 animate-fade-in-out" role="alert">
-                <p className="text-sm font-medium">{success}</p>
-              </div>
-            )}
-            {error && (
-              <div className="bg-red-50 border-l-4 border-red-400 text-red-700 p-4 rounded-md shadow-md animate-fade-in-out" role="alert">
-                <p className="text-sm font-medium">{error}</p>
-              </div>
-            )}
-          </div>
-        )}
-
         {loading ? (
-          <div className="flex justify-center">
-            <p className="text-gray-600 text-lg animate-pulse">Loading...</p>
+          <div className="flex justify-center items-center h-32 sm:h-48 md:h-64">
+            <p className="text-gray-600 text-sm sm:text-lg md:text-xl animate-pulse">Loading...</p>
           </div>
         ) : (
           <div>
             {viewType === 'list' ? (
-              <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+              <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Image</th>
-                        <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Title</th>
-                        <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Status</th>
-                        <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Category</th>
-                        <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Posted On</th>
-                        <th className="px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Actions</th>
+                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Image</th>
+                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Title</th>
+                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Status</th>
+                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Category</th>
+                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Posted On</th>
+                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -247,35 +315,35 @@ function UserDashboard() {
                         <tr key={item._id} className="hover:bg-gray-50 transition-colors">
                           {editingItemId === item._id ? (
                             <>
-                              <td className="px-2 sm:px-4 py-2">
+                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2">
                                 <div className="flex flex-col items-center">
                                   {currentImage && (
-                                    <img src={currentImage} alt={item.title} className="w-12 sm:w-16 h-12 sm:h-16 object-cover rounded-md mb-2" />
+                                    <img src={currentImage} alt={item.title} className="w-8 sm:w-12 md:w-16 h-8 sm:h-12 md:h-16 object-cover rounded-md mb-1 sm:mb-2" />
                                   )}
                                   <input
                                     type="file"
                                     name="image"
                                     onChange={handleEditChange}
-                                    className="w-full p-1 border border-gray-300 rounded-md text-xs sm:text-sm"
+                                    className="w-full p-1 sm:p-2 border border-gray-300 rounded-md text-xs sm:text-sm"
                                   />
                                 </div>
                               </td>
-                              <td className="px-2 sm:px-4 py-2">
+                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2">
                                 <input
                                   type="text"
                                   name="title"
                                   value={editFormData.title}
                                   onChange={handleEditChange}
-                                  className="w-full p-1 border border-gray-300 rounded-md text-xs sm:text-sm"
+                                  className="w-full p-1 sm:p-2 border border-gray-300 rounded-md text-xs sm:text-sm"
                                   required
                                 />
                               </td>
-                              <td className="px-2 sm:px-4 py-2">
+                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2">
                                 <select
                                   name="status"
                                   value={editFormData.status}
                                   onChange={handleEditChange}
-                                  className="w-full p-1 border border-gray-300 rounded-md text-xs sm:text-sm"
+                                  className="w-full p-1 sm:p-2 border border-gray-300 rounded-md text-xs sm:text-sm"
                                   required
                                 >
                                   <option value="Lost">Lost</option>
@@ -284,12 +352,12 @@ function UserDashboard() {
                                   <option value="Returned">Returned</option>
                                 </select>
                               </td>
-                              <td className="px-2 sm:px-4 py-2">
+                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2">
                                 <select
                                   name="category"
                                   value={editFormData.category}
                                   onChange={handleEditChange}
-                                  className="w-full p-1 border border-gray-300 rounded-md text-xs sm:text-sm"
+                                  className="w-full p-1 sm:p-2 border border-gray-300 rounded-md text-xs sm:text-sm"
                                   required
                                 >
                                   <option value="">Select a category</option>
@@ -300,20 +368,20 @@ function UserDashboard() {
                                   ))}
                                 </select>
                               </td>
-                              <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm">{new Date(item.createdAt).toLocaleDateString()}</td>
-                              <td className="px-2 sm:px-4 py-2 flex flex-col sm:flex-row gap-1 sm:gap-2">
+                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm">{new Date(item.createdAt).toLocaleDateString()}</td>
+                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 flex flex-col sm:flex-row gap-1 sm:gap-2">
                                 <button
                                   onClick={() => handleEditSubmit(item._id)}
-                                  className="bg-green-500 text-white px-2 py-1 rounded-md text-xs sm:text-sm hover:bg-green-600 transition-colors"
+                                  className="bg-green-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-green-600 transition-colors w-full sm:w-auto"
                                 >
                                   Save
                                 </button>
                                 <button
                                   onClick={() => {
                                     setEditingItemId(null);
-                                    setCurrentImage(''); // Clear preview on cancel
+                                    setCurrentImage('');
                                   }}
-                                  className="bg-gray-500 text-white px-2 py-1 rounded-md text-xs sm:text-sm hover:bg-gray-600 transition-colors"
+                                  className="bg-gray-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-gray-600 transition-colors w-full sm:w-auto mt-1 sm:mt-0"
                                 >
                                   Cancel
                                 </button>
@@ -321,32 +389,67 @@ function UserDashboard() {
                             </>
                           ) : (
                             <>
-                              <td className="px-2 sm:px-4 py-2">
-                                {item.image && <img src={item.image} alt={item.title} className="w-12 sm:w-16 h-12 sm:h-16 object-cover rounded-md" />}
+                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2">
+                                {item.image && <img src={item.image} alt={item.title} className="w-8 sm:w-12 md:w-16 h-8 sm:h-12 md:h-16 object-cover rounded-md" />}
                               </td>
-                              <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium">{item.title}</td>
-                              <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm capitalize">{item.status}</td>
-                              <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm">{item.category?.name || 'N/A'}</td>
-                              <td className="px-2 sm:px-4 py-2 text-xs sm:text-sm">{new Date(item.createdAt).toLocaleDateString()}</td>
-                              <td className="px-2 sm:px-4 py-2 flex flex-col sm:flex-row gap-1 sm:gap-2">
+                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium">{item.title}</td>
+                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm capitalize">{item.status}</td>
+                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm">{item.category?.name || 'N/A'}</td>
+                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm">{new Date(item.createdAt).toLocaleDateString()}</td>
+                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 flex flex-col sm:flex-row gap-1 sm:gap-2 flex-wrap">
                                 <Link
                                   to={`/items/${item._id}`}
-                                  className="bg-blue-500 text-white px-2 py-1 rounded-md text-xs sm:text-sm hover:bg-blue-600 transition-colors"
+                                  className="bg-blue-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-blue-600 transition-colors w-full sm:w-auto"
                                 >
                                   View
                                 </Link>
                                 <button
                                   onClick={() => handleEdit(item)}
-                                  className="bg-yellow-500 text-white px-2 py-1 rounded-md text-xs sm:text-sm hover:bg-yellow-600 transition-colors"
+                                  className="bg-yellow-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-yellow-600 transition-colors w-full sm:w-auto mt-1 sm:mt-0"
                                 >
                                   Edit
                                 </button>
                                 <button
                                   onClick={() => handleDelete(item._id)}
-                                  className="bg-red-500 text-white px-2 py-1 rounded-md text-xs sm:text-sm hover:bg-red-600 transition-colors"
+                                  className="bg-red-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-red-600 transition-colors w-full sm:w-auto mt-1 sm:mt-0"
                                 >
                                   Delete
                                 </button>
+                                {item.status === 'Claimed' && !isClaimant && (
+                                  <>
+                                    {isPosterOrKeeper && (
+                                      <button
+                                        onClick={() => handleGenerateOTP(item._id)}
+                                        className="bg-indigo-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-indigo-600 transition-colors w-full sm:w-auto mt-1 sm:mt-0"
+                                      >
+                                        Generate OTP
+                                      </button>
+                                    )}
+                                    {showOtpVerification && otpItemId === item._id && (
+                                      <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2 w-full">
+                                        <input
+                                          type="text"
+                                          value={otp}
+                                          onChange={(e) => setOtp(e.target.value)}
+                                          placeholder="Enter OTP"
+                                          className="p-1 sm:p-2 border border-gray-300 rounded-md text-xs sm:text-sm w-full sm:w-20 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        />
+                                        <button
+                                          onClick={() => handleVerifyOTP(item._id)}
+                                          className="bg-purple-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-purple-600 transition-colors w-full sm:w-auto mt-1 sm:mt-0"
+                                        >
+                                          Verify
+                                        </button>
+                                        <button
+                                          onClick={handleCancelOTP}
+                                          className="bg-gray-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-gray-600 transition-colors w-full sm:w-auto mt-1 sm:mt-0"
+                                        >
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
                               </td>
                             </>
                           )}
@@ -355,36 +458,57 @@ function UserDashboard() {
                     </tbody>
                   </table>
                 </div>
-                <Pagination
-                  currentPage={itemsPage}
-                  totalPages={itemsTotalPages}
-                  onPageChange={(page) => setItemsPage(page)}
-                />
+                {items.length > 0 && (
+                  <div className="mt-2 sm:mt-4 md:mt-6">
+                    <Pagination
+                      currentPage={itemsPage}
+                      totalPages={itemsTotalPages}
+                      onPageChange={(page) => setItemsPage(page)}
+                    />
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-                {items.map((item) => (
-                  <ItemCard
-                    key={item._id}
-                    item={item}
-                    onEdit={() => handleEdit(item)}
-                    onDelete={() => handleDelete(item._id)}
-                    showActions={editingItemId !== item._id}
-                    isEditing={editingItemId === item._id}
-                    editFormData={editingItemId === item._id ? editFormData : null}
-                    onEditChange={handleEditChange}
-                    onEditSubmit={() => handleEditSubmit(item._id)}
-                    onCancelEdit={() => {
-                      setEditingItemId(null);
-                      setCurrentImage(''); // Clear preview on cancel
-                    }}
-                  />
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
+                {items.map((item) => {
+                  const isClaimant = user.id === item.claimedById;
+                  const isPosterOrKeeper = user.id === item.postedBy._id || user.id === item.keeperId;
+
+                  return (
+                    <ItemCard
+                      key={item._id}
+                      item={item}
+                      onEdit={() => handleEdit(item)}
+                      onDelete={() => handleDelete(item._id)}
+                      showActions={editingItemId !== item._id}
+                      isEditing={editingItemId === item._id}
+                      editFormData={editingItemId === item._id ? editFormData : null}
+                      onEditChange={handleEditChange}
+                      onEditSubmit={() => handleEditSubmit(item._id)}
+                      onCancelEdit={() => {
+                        setEditingItemId(null);
+                        setCurrentImage('');
+                      }}
+                      // Hide Generate OTP and Verify OTP for claimant
+                      onGenerateOTP={item.status === 'Claimed' && !isClaimant && isPosterOrKeeper ? () => handleGenerateOTP(item._id) : null}
+                      onVerifyOTP={item.status === 'Claimed' && showOtpVerification && otpItemId === item._id && !isClaimant ? () => handleVerifyOTP(item._id) : null}
+                      otp={showOtpVerification && otpItemId === item._id && !isClaimant ? otp : ''}
+                      setOtp={showOtpVerification && otpItemId === item._id && !isClaimant ? setOtp : null}
+                      onCancelOTP={showOtpVerification && otpItemId === item._id && !isClaimant ? handleCancelOTP : null}
+                    />
+                  );
+                })}
               </div>
             )}
             {items.length === 0 && (
-              <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 text-center">
-                <p className="text-gray-600 text-lg">No items found.</p>
+              <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4 text-center">
+                <p className="text-gray-600 text-sm sm:text-lg md:text-xl">No items found. Start by adding a new item!</p>
+                <Link
+                  to="/items/create"
+                  className="mt-2 sm:mt-4 inline-block bg-blue-600 text-white py-1 sm:py-2 px-2 sm:px-4 rounded-md hover:bg-blue-700 transition-colors duration-200 text-sm sm:text-base font-medium shadow-md hover:shadow-lg"
+                >
+                  Add New Item
+                </Link>
               </div>
             )}
           </div>
@@ -393,22 +517,5 @@ function UserDashboard() {
     </div>
   );
 }
-
-// Animation for alerts
-const styles = `
-  @keyframes fadeInOut {
-    0% { opacity: 0; transform: translateY(-10px); }
-    10% { opacity: 1; transform: translateY(0); }
-    90% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-10px); }
-  }
-  .animate-fade-in-out {
-    animation: fadeInOut 3s ease-out forwards;
-  }
-`;
-
-const styleSheet = document.createElement('style');
-styleSheet.textContent = styles;
-document.head.appendChild(styleSheet);
 
 export default UserDashboard;

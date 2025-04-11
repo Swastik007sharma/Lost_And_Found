@@ -7,7 +7,7 @@ import Input from '../components/common/Input';
 import Button from '../components/common/Button';
 
 function Messages() {
-  const { user } = useContext(AuthContext);
+  const { user, socket } = useContext(AuthContext);
   const navigate = useNavigate();
   const { conversationId } = useParams();
   const [messages, setMessages] = useState([]);
@@ -29,7 +29,7 @@ function Messages() {
     }
     setLoading(true);
     try {
-      const response = await getMessagesInConversation(conversationId, { page: 1, limit: 10 });
+      const response = await getMessagesInConversation(conversationId, { page: 1, limit: 50 });
       setMessages(response.data.messages || []);
       setError('');
     } catch (err) {
@@ -39,6 +39,41 @@ function Messages() {
     }
   };
 
+  // Handle incoming messages via the shared socket
+  useEffect(() => {
+    if (!socket || !conversationId) return;
+  
+    const handleReceiveMessage = (message) => {
+      if (message.conversation === conversationId) {
+        setMessages((prev) => {
+          if (prev.some((msg) => msg._id === message._id)) return prev;
+          return [message, ...prev];
+        });
+        setError(''); // Clear error on successful receive
+      }
+    };
+  
+    const handleErrorMessage = (errorMsg) => {
+      console.error('Message error:', errorMsg);
+      // Only set error if the last sent message isn’t received
+      const lastSent = messages.find((msg) => msg._id === socket.lastMessageId);
+      if (!lastSent) {
+        setError(errorMsg || 'Failed to send message');
+      }
+    };
+  
+    socket.on('receiveMessage', handleReceiveMessage);
+    socket.on('errorMessage', handleErrorMessage);
+  
+    socket.emit('joinConversation', conversationId);
+  
+    return () => {
+      socket.off('receiveMessage', handleReceiveMessage);
+      socket.off('errorMessage', handleErrorMessage);
+    };
+  }, [socket, conversationId]);
+
+  // Initial fetch and navigation logic
   useEffect(() => {
     if (!user) {
       navigate('/login');
@@ -51,6 +86,7 @@ function Messages() {
     fetchMessages();
   }, [user, conversationId, navigate]);
 
+  // Scroll to bottom when messages update
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -62,13 +98,14 @@ function Messages() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newMessage.content.trim() || !conversationId || !user?.id) return;
-
+    if (!newMessage.content.trim() || !conversationId || !user?.id || !socket) return;
+  
     setLoading(true);
     setError('');
-
+  
+    const tempMessageId = Date.now().toString();
     const tempMessage = {
-      _id: Date.now().toString(),
+      _id: tempMessageId,
       conversation: conversationId,
       sender: { _id: user.id, name: user.name || 'You' },
       content: newMessage.content,
@@ -76,27 +113,35 @@ function Messages() {
       isRead: false,
       isActive: true,
     };
-
-    // Optimistic UI update
+  
     setMessages((prev) => [tempMessage, ...prev]);
     setNewMessage({ content: '' });
-
+    socket.lastMessageId = tempMessageId; // Track last sent message
+  
     try {
-      await sendMessageInConversation(conversationId, {
+      const response = await sendMessageInConversation(conversationId, {
         sender: user.id,
         content: tempMessage.content,
       });
-      // Fetch updated messages after sending
+  
+      socket.emit('sendMessage', {
+        conversationId,
+        senderId: user.id,
+        content: tempMessage.content,
+        _id: response.data.message._id,
+        createdAt: response.data.message.createdAt,
+      });
+  
       await fetchMessages();
     } catch (err) {
       setError('Failed to send message: ' + err.message);
-      setMessages((prev) => prev.filter((msg) => msg._id !== tempMessage._id));
+      setMessages((prev) => prev.filter((msg) => msg._id !== tempMessageId));
     } finally {
       setLoading(false);
     }
   };
 
-  const getSenderInitial = (sender) => 
+  const getSenderInitial = (sender) =>
     sender?.name?.charAt(0).toUpperCase() || '?';
 
   if (!user) return <Loader />;

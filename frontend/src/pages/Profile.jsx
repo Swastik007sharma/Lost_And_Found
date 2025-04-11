@@ -6,13 +6,12 @@ import Loader from '../components/common/Loader';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
 import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Ensure react-icons is installed
+import { toast } from 'react-toastify';
 
 function Profile() {
   const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   // State for read-only display
   const [displayData] = useState({
@@ -68,12 +67,10 @@ function Profile() {
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSuccess('');
 
     // Frontend validation
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setError('New password and confirm password do not match');
+      toast.error('New password and confirm password do not match');
       setLoading(false);
       return;
     }
@@ -83,11 +80,11 @@ function Profile() {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
       });
-      setSuccess('Password updated successfully!');
+      toast.success('Password updated successfully!');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setIsFormOpen(null);
     } catch (err) {
-      setError('Failed to update password: ' + err.message);
+      toast.error('Failed to update password: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -96,18 +93,16 @@ function Profile() {
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSuccess('');
     try {
       const response = await updateUserProfile({
         name: profileForm.name,
         email: profileForm.email,
       });
-      setSuccess('Profile updated successfully!');
+      toast.success('Profile updated successfully!');
       setUser({ ...user, ...response.data.user });
       setIsFormOpen(null);
     } catch (err) {
-      setError('Failed to update profile: ' + err.message);
+      toast.error('Failed to update profile: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -116,15 +111,13 @@ function Profile() {
   const handleDeleteAccount = async () => {
     if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
       setLoading(true);
-      setError('');
-      setSuccess('');
       try {
         await deleteUserAccount();
-        setSuccess('Account deactivated successfully!');
+        toast.success('Account deactivated successfully!');
         setUser(null); // Clear user context
         navigate('/login'); // Redirect to login page
       } catch (err) {
-        setError('Failed to delete account: ' + err.message);
+        toast.error('Failed to delete account: ' + err.message);
       } finally {
         setLoading(false);
       }
@@ -141,14 +134,6 @@ function Profile() {
     <div className="container mx-auto p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6 text-center">User Profile</h1>
-
-        {/* Success and Error Alerts */}
-        {(error || success) && (
-          <div className="mb-6 p-4 rounded-md shadow-md mx-auto max-w-md">
-            {error && <div className="bg-red-50 text-red-600 p-3 rounded-md">{error}</div>}
-            {success && <div className="bg-green-50 text-green-600 p-3 rounded-md">{success}</div>}
-          </div>
-        )}
 
         {/* Read-Only User Details */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">

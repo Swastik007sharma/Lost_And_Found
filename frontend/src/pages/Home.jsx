@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { searchItems } from '../services/searchService'; // Updated to use searchItems endpoint
 import ItemCard from '../components/ItemCard';
+import { toast } from 'react-toastify';
 
 function Home() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [page, setPage] = useState(1);
@@ -19,7 +19,6 @@ function Home() {
   useEffect(() => {
     const fetchItems = async () => {
       setLoading(true);
-      setError('');
       try {
         const params = {
           page,
@@ -37,7 +36,7 @@ function Home() {
           setTotalPages(1);
         }
       } catch (err) {
-        setError('Failed to load items. Please try again later.');
+        toast.error('Failed to load items. Please try again later.');
         setItems([]);
         setTotalPages(1);
       } finally {
@@ -98,13 +97,6 @@ function Home() {
             <option value="Returned">Returned</option>
           </select>
         </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-lg shadow-md text-center text-sm sm:text-base">
-            {error}
-          </div>
-        )}
 
         {/* Items Grid */}
         {loading ? (
