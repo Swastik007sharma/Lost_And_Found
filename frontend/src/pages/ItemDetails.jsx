@@ -47,7 +47,8 @@ function ItemDetails() {
   const location = useLocation();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [claimLoading, setClaimLoading] = useState(false); // Separate loading for claim
+  const [conversationLoading, setConversationLoading] = useState(false); // Separate loading for conversation
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     title: "",
@@ -140,7 +141,7 @@ function ItemDetails() {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    setActionLoading(true);
+    setClaimLoading(true); // Use claimLoading for edit action
     const data = new FormData();
     data.append("title", editFormData.title);
     data.append("description", editFormData.description);
@@ -163,7 +164,7 @@ function ItemDetails() {
         "Failed to update item: " + (err.response?.data?.message || err.message)
       );
     } finally {
-      setActionLoading(false);
+      setClaimLoading(false);
     }
   };
 
@@ -172,7 +173,7 @@ function ItemDetails() {
       navigate("/login");
       return;
     }
-    setActionLoading(true);
+    setClaimLoading(true);
     try {
       await claimItem(id);
       await fetchItem();
@@ -183,7 +184,7 @@ function ItemDetails() {
         "Failed to claim item: " + (err.response?.data?.message || err.message)
       );
     } finally {
-      setActionLoading(false);
+      setClaimLoading(false);
     }
   };
 
@@ -192,7 +193,7 @@ function ItemDetails() {
       navigate("/login");
       return;
     }
-    setActionLoading(true);
+    setConversationLoading(true);
     try {
       const participants = [user.id, item?.postedBy?._id];
       console.log(
@@ -229,7 +230,7 @@ function ItemDetails() {
             "Unknown server error. Please try again later.")
       );
     } finally {
-      setActionLoading(false);
+      setConversationLoading(false);
     }
   };
 
@@ -245,7 +246,7 @@ function ItemDetails() {
 
   const handleAssignKeeper = async () => {
     if (!user || user.role !== "keeper") return;
-    setActionLoading(true);
+    setClaimLoading(true);
     try {
       const payload = { keeperId: user.id, keeperName: user.name };
       await assignKeeperToItem(id, payload);
@@ -257,7 +258,7 @@ function ItemDetails() {
           (err.response?.data?.message || err.message)
       );
     } finally {
-      setActionLoading(false);
+      setClaimLoading(false);
     }
   };
 
@@ -269,7 +270,7 @@ function ItemDetails() {
       toast.error("Only the poster or assigned keeper can generate OTP.");
       return;
     }
-    setActionLoading(true);
+    setClaimLoading(true);
     try {
       const response = await generateOTPForItem(id);
       setOtpItemId(id);
@@ -283,7 +284,7 @@ function ItemDetails() {
           (err.response?.data?.message || err.message)
       );
     } finally {
-      setActionLoading(false);
+      setClaimLoading(false);
     }
   };
 
@@ -292,7 +293,7 @@ function ItemDetails() {
       toast.error("Please enter the OTP.");
       return;
     }
-    setActionLoading(true);
+    setClaimLoading(true);
     try {
       await verifyOTPForItem(id, { otp });
       await fetchItem();
@@ -304,7 +305,7 @@ function ItemDetails() {
         "Failed to verify OTP: " + (err.response?.data?.message || err.message)
       );
     } finally {
-      setActionLoading(false);
+      setClaimLoading(false);
     }
   };
 
@@ -436,14 +437,14 @@ function ItemDetails() {
                         {!isOwner && !isKeeper && (
                           <button
                             onClick={handleClaim}
-                            disabled={actionLoading || item.status === "Claimed"}
+                            disabled={claimLoading || item.status === "Claimed"}
                             className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                              actionLoading || item.status === "Claimed"
+                              claimLoading || item.status === "Claimed"
                                 ? "bg-gray-400 cursor-not-allowed"
                                 : "bg-green-600 hover:bg-green-700"
                             }`}
                           >
-                            {actionLoading
+                            {claimLoading
                               ? "Processing..."
                               : item.status === "Claimed"
                               ? "Already Claimed"
@@ -452,14 +453,14 @@ function ItemDetails() {
                         )}
                         <button
                           onClick={handleStartConversation}
-                          disabled={actionLoading} // Removed item.status === "Claimed" condition
+                          disabled={conversationLoading}
                           className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                            actionLoading
+                            conversationLoading
                               ? "bg-gray-400 cursor-not-allowed"
                               : "bg-blue-600 hover:bg-blue-700"
                           }`}
                         >
-                          {actionLoading ? "Processing..." : "Message Owner"}
+                          {conversationLoading ? "Processing..." : "Message Owner"}
                         </button>
                       </div>
                     )}
@@ -467,14 +468,14 @@ function ItemDetails() {
                       <div className="space-y-3">
                         <button
                           onClick={handleAssignKeeper}
-                          disabled={actionLoading}
+                          disabled={claimLoading}
                           className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                            actionLoading
+                            claimLoading
                               ? "bg-gray-400 cursor-not-allowed"
                               : "bg-purple-600 hover:bg-purple-700"
                           }`}
                         >
-                          {actionLoading
+                          {claimLoading
                             ? "Processing..."
                             : "Assign Myself as Keeper"}
                         </button>
@@ -484,14 +485,14 @@ function ItemDetails() {
                       <div className="space-y-3">
                         <button
                           onClick={handleGenerateOTP}
-                          disabled={actionLoading}
+                          disabled={claimLoading}
                           className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                            actionLoading
+                            claimLoading
                               ? "bg-gray-400 cursor-not-allowed"
                               : "bg-orange-600 hover:bg-orange-700"
                           }`}
                         >
-                          {actionLoading ? "Processing..." : "Generate OTP"}
+                          {claimLoading ? "Processing..." : "Generate OTP"}
                         </button>
                       </div>
                     )}
@@ -506,14 +507,14 @@ function ItemDetails() {
                         />
                         <button
                           onClick={handleVerifyOTP}
-                          disabled={actionLoading}
+                          disabled={claimLoading}
                           className={`py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                            actionLoading
+                            claimLoading
                               ? "bg-gray-400 cursor-not-allowed"
                               : "bg-purple-600 hover:bg-purple-700"
                           }`}
                         >
-                          {actionLoading ? "Verifying..." : "Verify OTP"}
+                          {claimLoading ? "Verifying..." : "Verify OTP"}
                         </button>
                       </div>
                     )}
@@ -682,14 +683,14 @@ function ItemDetails() {
                 </button>
                 <button
                   type="submit"
-                  disabled={actionLoading}
+                  disabled={claimLoading}
                   className={`py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                    actionLoading
+                    claimLoading
                       ? "bg-blue-400 cursor-not-allowed"
                       : "bg-blue-600 hover:bg-blue-700"
                   }`}
                 >
-                  {actionLoading ? "Saving..." : "Save Changes"}
+                  {claimLoading ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </form>
