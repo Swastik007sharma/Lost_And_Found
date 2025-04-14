@@ -1,24 +1,18 @@
 const Conversation = require('../models/conversation.model');
 const Item = require('../models/item.model');
 const User = require('../models/user.model');
-const { createConversationSchema } = require('../schema/conversation.schema.js');
 
 exports.createConversation = async (req, res) => {
   try {
     const { itemId, participants } = req.validatedBody;
-    console.log('Received request with itemId:', itemId, 'and participants:', participants); // Debug log
+    console.log('Received request with itemId:', itemId, 'and participants:', participants);
 
-    // Validate item
+    // Validate item (since route validation ensures itemId format, we only check existence)
     const item = await Item.findOne({ _id: itemId, isActive: true });
     if (!item) {
       return res.status(404).json({ message: 'Item not found', code: 'NOT_FOUND' });
     }
-
-    // Validate participants
-    const validParticipants = await User.find({ _id: { $in: participants }, isActive: true });
-    if (validParticipants.length !== participants.length) {
-      return res.status(400).json({ message: 'One or more participants are invalid or inactive', code: 'INVALID_PARTICIPANTS' });
-    }
+    console.log('Item status before conversation:', item.status); // Debug log
 
     // Check for existing conversation
     const existingConversation = await Conversation.findOne({
@@ -26,7 +20,7 @@ exports.createConversation = async (req, res) => {
       participants: { $all: participants.sort() }, // Sort participants to handle order consistency
       isActive: true,
     });
-    console.log('Existing conversation check result:', existingConversation); // Debug log
+    console.log('Existing conversation check result:', existingConversation);
 
     if (existingConversation) {
       return res.status(200).json({
@@ -43,7 +37,12 @@ exports.createConversation = async (req, res) => {
     });
 
     await conversation.save();
-    console.log('Conversation saved successfully:', conversation._id); // Debug log
+    console.log('Conversation saved successfully:', conversation._id);
+
+    // Verify item status after save
+    const updatedItem = await Item.findById(itemId);
+    console.log('Item status after conversation:', updatedItem.status); // Debug log
+
     res.status(201).json({ message: 'Conversation created successfully', conversation });
   } catch (error) {
     console.error('Error creating conversation:', error.message, error.stack); // Detailed error logging

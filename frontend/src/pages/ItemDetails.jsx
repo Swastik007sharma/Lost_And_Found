@@ -1,9 +1,16 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { getItemDetails, claimItem, updateItem, assignKeeperToItem, generateOTPForItem, verifyOTPForItem } from '../services/itemService';
-import { startConversation } from '../services/conversationService';
-import { toast } from 'react-toastify';
+import React, { useState, useEffect, useContext } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import {
+  getItemDetails,
+  claimItem,
+  updateItem,
+  assignKeeperToItem,
+  generateOTPForItem,
+  verifyOTPForItem,
+} from "../services/itemService";
+import { startConversation } from "../services/conversationService";
+import { toast } from "react-toastify";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -17,7 +24,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('ErrorBoundary caught error:', error, errorInfo);
+    console.error("ErrorBoundary caught error:", error, errorInfo);
   }
 
   render() {
@@ -43,42 +50,49 @@ function ItemDetails() {
   const [actionLoading, setActionLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    status: '',
-    location: '',
+    title: "",
+    description: "",
+    category: "",
+    status: "",
+    location: "",
     image: null,
   });
   const [removeImage, setRemoveImage] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [otp, setOtp] = useState('');
+  const [otp, setOtp] = useState("");
   const [otpItemId, setOtpItemId] = useState(null);
 
   const fetchItem = async () => {
-    console.log('Fetching item - id:', id, 'user:', user);
+    console.log("Fetching item - id:", id, "user:", user);
     if (!id) {
-      console.warn('No id provided for fetch');
+      console.warn("No id provided for fetch");
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      console.log('Sending request to getItemDetails with id:', id);
+      console.log("Sending request to getItemDetails with id:", id);
       const response = await getItemDetails(id);
-      console.log('Received response from getItemDetails:', response.data);
+      console.log("Received response from getItemDetails:", response.data);
       setItem(response.data.item || {});
       setEditFormData({
-        title: response.data.item?.title || '',
-        description: response.data.item?.description || '',
-        category: response.data.item?.category?.name || '',
-        status: response.data.item?.status || '',
-        location: response.data.item?.location || '',
+        title: response.data.item?.title || "",
+        description: response.data.item?.description || "",
+        category: response.data.item?.category?.name || "",
+        status: response.data.item?.status || "",
+        location: response.data.item?.location || "",
         image: null,
       });
     } catch (err) {
-      console.error('Fetch error:', err.message, 'Response:', err.response?.data);
-      toast.error('Failed to load item: ' + (err.response?.data?.message || err.message));
+      console.error(
+        "Fetch error:",
+        err.message,
+        "Response:",
+        err.response?.data
+      );
+      toast.error(
+        "Failed to load item: " + (err.response?.data?.message || err.message)
+      );
       setItem({});
     } finally {
       setLoading(false);
@@ -86,19 +100,26 @@ function ItemDetails() {
   };
 
   useEffect(() => {
-    console.log('Initial useEffect running - id:', id, 'user:', user);
+    console.log("Initial useEffect running - id:", id, "user:", user);
     fetchItem();
   }, [id]);
 
   useEffect(() => {
-    console.log('Secondary useEffect running - id:', id, 'loading:', loading, 'item:', item);
+    console.log(
+      "Secondary useEffect running - id:",
+      id,
+      "loading:",
+      loading,
+      "item:",
+      item
+    );
     if (!loading && !item) {
       fetchItem();
     }
   }, [loading, item]);
 
   const handleManualFetch = () => {
-    console.log('Manual fetch triggered with id:', id);
+    console.log("Manual fetch triggered with id:", id);
     fetchItem();
   };
 
@@ -108,9 +129,9 @@ function ItemDetails() {
 
   const handleEditChange = (e) => {
     const { name, value, files, type } = e.target;
-    if (name === 'image' && type === 'file') {
+    if (name === "image" && type === "file") {
       setEditFormData((prev) => ({ ...prev, image: files[0] }));
-    } else if (name === 'removeImage') {
+    } else if (name === "removeImage") {
       setRemoveImage(e.target.checked);
     } else {
       setEditFormData((prev) => ({ ...prev, [name]: value }));
@@ -121,24 +142,26 @@ function ItemDetails() {
     e.preventDefault();
     setActionLoading(true);
     const data = new FormData();
-    data.append('title', editFormData.title);
-    data.append('description', editFormData.description);
-    data.append('category', editFormData.category);
-    data.append('status', editFormData.status);
-    data.append('location', editFormData.location);
+    data.append("title", editFormData.title);
+    data.append("description", editFormData.description);
+    data.append("category", editFormData.category);
+    data.append("status", editFormData.status);
+    data.append("location", editFormData.location);
     if (editFormData.image) {
-      data.append('image', editFormData.image);
+      data.append("image", editFormData.image);
     } else if (removeImage) {
-      data.append('image', '');
+      data.append("image", "");
     }
 
     try {
       await updateItem(id, data);
       setIsEditing(false);
       await fetchItem();
-      toast.success('Item updated successfully');
+      toast.success("Item updated successfully");
     } catch (err) {
-      toast.error('Failed to update item: ' + (err.response?.data?.message || err.message));
+      toast.error(
+        "Failed to update item: " + (err.response?.data?.message || err.message)
+      );
     } finally {
       setActionLoading(false);
     }
@@ -146,17 +169,19 @@ function ItemDetails() {
 
   const handleClaim = async () => {
     if (!user) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
     setActionLoading(true);
     try {
       await claimItem(id);
       await fetchItem();
-      toast.success('Item claimed successfully! The owner will be notified.');
-      navigate('/dashboard');
+      toast.success("Item claimed successfully! The owner will be notified.");
+      navigate("/dashboard");
     } catch (err) {
-      toast.error('Failed to claim item: ' + (err.response?.data?.message || err.message));
+      toast.error(
+        "Failed to claim item: " + (err.response?.data?.message || err.message)
+      );
     } finally {
       setActionLoading(false);
     }
@@ -164,28 +189,44 @@ function ItemDetails() {
 
   const handleStartConversation = async () => {
     if (!user) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
     setActionLoading(true);
     try {
       const participants = [user.id, item?.postedBy?._id];
-      console.log('Starting conversation with participants:', participants, 'and itemId:', id);
+      console.log(
+        "Starting conversation with participants:",
+        participants,
+        "and itemId:",
+        id
+      );
       const response = await startConversation({ itemId: id, participants });
-      console.log('Conversation API response:', response.data);
-      if (response.data && response.data.conversation && response.data.conversation._id) {
+      console.log("Conversation API response:", response.data);
+      if (
+        response.data &&
+        response.data.conversation &&
+        response.data.conversation._id
+      ) {
         navigate(`/messages/${response.data.conversation._id}`);
       } else if (response.status === 200 && response.data.conversation) {
         navigate(`/messages/${response.data.conversation._id}`);
       } else {
-        throw new Error('Invalid conversation response: _id not found in conversation object');
+        throw new Error(
+          "Invalid conversation response: _id not found in conversation object"
+        );
       }
-      toast.success('Conversation started successfully');
+      toast.success("Conversation started successfully");
     } catch (err) {
-      console.error('Conversation error:', err.response ? err.response.data : err.message);
+      console.error(
+        "Conversation error:",
+        err.response ? err.response.data : err.message
+      );
       toast.error(
-        'Failed to start conversation: ' +
-        (err.response?.data?.message || err.message || 'Unknown server error. Please try again later.')
+        "Failed to start conversation: " +
+          (err.response?.data?.message ||
+            err.message ||
+            "Unknown server error. Please try again later.")
       );
     } finally {
       setActionLoading(false);
@@ -196,22 +237,25 @@ function ItemDetails() {
     try {
       const itemUrl = `${window.location.origin}${location.pathname}`;
       await navigator.clipboard.writeText(itemUrl);
-      toast.success('Link copied to clipboard!');
+      toast.success("Link copied to clipboard!");
     } catch (err) {
-      toast.error('Failed to copy link to clipboard: ' + err.message);
+      toast.error("Failed to copy link to clipboard: " + err.message);
     }
   };
 
   const handleAssignKeeper = async () => {
-    if (!user || user.role !== 'keeper') return;
+    if (!user || user.role !== "keeper") return;
     setActionLoading(true);
     try {
       const payload = { keeperId: user.id, keeperName: user.name };
       await assignKeeperToItem(id, payload);
       await fetchItem();
-      toast.success('Assigned as keeper successfully');
+      toast.success("Assigned as keeper successfully");
     } catch (err) {
-      toast.error('Failed to assign keeper: ' + (err.response?.data?.message || err.message));
+      toast.error(
+        "Failed to assign keeper: " +
+          (err.response?.data?.message || err.message)
+      );
     } finally {
       setActionLoading(false);
     }
@@ -222,17 +266,22 @@ function ItemDetails() {
     const isPoster = user.id === item?.postedBy?._id;
     const isKeeper = user.id === item?.keeperId;
     if (!isPoster && !isKeeper) {
-      toast.error('Only the poster or assigned keeper can generate OTP.');
+      toast.error("Only the poster or assigned keeper can generate OTP.");
       return;
     }
     setActionLoading(true);
     try {
       const response = await generateOTPForItem(id);
       setOtpItemId(id);
-      setOtp('');
-      toast.success(`OTP generated successfully: ${response.data.otp}. Share this with the claimant.`);
+      setOtp("");
+      toast.success(
+        `OTP generated successfully: ${response.data.otp}. Share this with the claimant.`
+      );
     } catch (err) {
-      toast.error('Failed to generate OTP: ' + (err.response?.data?.message || err.message));
+      toast.error(
+        "Failed to generate OTP: " +
+          (err.response?.data?.message || err.message)
+      );
     } finally {
       setActionLoading(false);
     }
@@ -240,18 +289,20 @@ function ItemDetails() {
 
   const handleVerifyOTP = async () => {
     if (!otp.trim()) {
-      toast.error('Please enter the OTP.');
+      toast.error("Please enter the OTP.");
       return;
     }
     setActionLoading(true);
     try {
       await verifyOTPForItem(id, { otp });
       await fetchItem();
-      toast.success('OTP verified successfully! Item marked as returned.');
+      toast.success("OTP verified successfully! Item marked as returned.");
       setOtpItemId(null);
-      setOtp('');
+      setOtp("");
     } catch (err) {
-      toast.error('Failed to verify OTP: ' + (err.response?.data?.message || err.message));
+      toast.error(
+        "Failed to verify OTP: " + (err.response?.data?.message || err.message)
+      );
     } finally {
       setActionLoading(false);
     }
@@ -260,7 +311,10 @@ function ItemDetails() {
   const isOwner = user && String(user.id) === String(item?.postedBy?._id);
   const isKeeper = user && String(user.id) === String(item?.keeperId);
   const isClaimant = user && user.id === item?.claimedById;
-  const isPosterOrKeeper = user && (String(user.id) === String(item?.postedBy?._id) || String(user.id) === String(item?.keeperId));
+  const isPosterOrKeeper =
+    user &&
+    (String(user.id) === String(item?.postedBy?._id) ||
+      String(user.id) === String(item?.keeperId));
 
   if (loading) {
     return (
@@ -273,7 +327,9 @@ function ItemDetails() {
   if (!item || Object.keys(item).length === 0) {
     return (
       <div className="container mx-auto p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <p className="text-gray-600 text-lg font-medium">Item not found or failed to load.</p>
+        <p className="text-gray-600 text-lg font-medium">
+          Item not found or failed to load.
+        </p>
         <button
           onClick={handleManualFetch}
           className="ml-4 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
@@ -306,7 +362,9 @@ function ItemDetails() {
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                      <p className="text-white text-sm font-medium">Click to enlarge</p>
+                      <p className="text-white text-sm font-medium">
+                        Click to enlarge
+                      </p>
                     </div>
                   </div>
                 ) : (
@@ -323,32 +381,38 @@ function ItemDetails() {
                   </h2>
                   <div className="space-y-3">
                     <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Description:</span> {item.description}
+                      <span className="font-medium text-gray-900">
+                        Description:
+                      </span>{" "}
+                      {item.description}
                     </p>
                     <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Status:</span> {item.status}
+                      <span className="font-medium text-gray-900">Status:</span>{" "}
+                      {item.status}
                     </p>
                     <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Category:</span> {item.category?.name || 'N/A'}
+                      <span className="font-medium text-gray-900">Category:</span>{" "}
+                      {item.category?.name || "N/A"}
                     </p>
                     <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Location:</span> {item.location}
+                      <span className="font-medium text-gray-900">Location:</span>{" "}
+                      {item.location}
                     </p>
                     <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Posted By:</span>{' '}
-                      {item.postedBy?.name || 'Unknown'}
+                      <span className="font-medium text-gray-900">Posted By:</span>{" "}
+                      {item.postedBy?.name || "Unknown"}
                     </p>
                     <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Posted On:</span>{' '}
+                      <span className="font-medium text-gray-900">Posted On:</span>{" "}
                       {new Date(item.createdAt).toLocaleDateString()}
                     </p>
                     <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Keeper:</span>{' '}
-                      {item.keeperName || 'Not Assigned'}
+                      <span className="font-medium text-gray-900">Keeper:</span>{" "}
+                      {item.keeperName || "Not Assigned"}
                     </p>
                     <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Claimed By:</span>{' '}
-                      {item.claimedByName || 'Not Claimed'}
+                      <span className="font-medium text-gray-900">Claimed By:</span>{" "}
+                      {item.claimedByName || "Not Claimed"}
                     </p>
                   </div>
                 </div>
@@ -372,54 +436,62 @@ function ItemDetails() {
                         {!isOwner && !isKeeper && (
                           <button
                             onClick={handleClaim}
-                            disabled={actionLoading || item.status === 'Claimed'}
+                            disabled={actionLoading || item.status === "Claimed"}
                             className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                              actionLoading || item.status === 'Claimed'
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-green-600 hover:bg-green-700'
+                              actionLoading || item.status === "Claimed"
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-green-600 hover:bg-green-700"
                             }`}
                           >
                             {actionLoading
-                              ? 'Processing...'
-                              : item.status === 'Claimed'
-                              ? 'Already Claimed'
-                              : 'Claim Item'}
+                              ? "Processing..."
+                              : item.status === "Claimed"
+                              ? "Already Claimed"
+                              : "Claim Item"}
                           </button>
                         )}
                         <button
                           onClick={handleStartConversation}
-                          disabled={actionLoading}
+                          disabled={actionLoading} // Removed item.status === "Claimed" condition
                           className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                            actionLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                            actionLoading
+                              ? "bg-gray-400 cursor-not-allowed"
+                              : "bg-blue-600 hover:bg-blue-700"
                           }`}
                         >
-                          {actionLoading ? 'Processing...' : 'Message Owner'}
+                          {actionLoading ? "Processing..." : "Message Owner"}
                         </button>
                       </div>
                     )}
-                    {user && user.role === 'keeper' && !item.keeperId && (
+                    {user && user.role === "keeper" && !item.keeperId && (
                       <div className="space-y-3">
                         <button
                           onClick={handleAssignKeeper}
                           disabled={actionLoading}
                           className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                            actionLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
+                            actionLoading
+                              ? "bg-gray-400 cursor-not-allowed"
+                              : "bg-purple-600 hover:bg-purple-700"
                           }`}
                         >
-                          {actionLoading ? 'Processing...' : 'Assign Myself as Keeper'}
+                          {actionLoading
+                            ? "Processing..."
+                            : "Assign Myself as Keeper"}
                         </button>
                       </div>
                     )}
-                    {(isPosterOrKeeper && item.status === 'Claimed') && (
+                    {isPosterOrKeeper && item.status === "Claimed" && (
                       <div className="space-y-3">
                         <button
                           onClick={handleGenerateOTP}
                           disabled={actionLoading}
                           className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                            actionLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-700'
+                            actionLoading
+                              ? "bg-gray-400 cursor-not-allowed"
+                              : "bg-orange-600 hover:bg-orange-700"
                           }`}
                         >
-                          {actionLoading ? 'Processing...' : 'Generate OTP'}
+                          {actionLoading ? "Processing..." : "Generate OTP"}
                         </button>
                       </div>
                     )}
@@ -436,10 +508,12 @@ function ItemDetails() {
                           onClick={handleVerifyOTP}
                           disabled={actionLoading}
                           className={`py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                            actionLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
+                            actionLoading
+                              ? "bg-gray-400 cursor-not-allowed"
+                              : "bg-purple-600 hover:bg-purple-700"
                           }`}
                         >
-                          {actionLoading ? 'Verifying...' : 'Verify OTP'}
+                          {actionLoading ? "Verifying..." : "Verify OTP"}
                         </button>
                       </div>
                     )}
@@ -471,7 +545,9 @@ function ItemDetails() {
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                      <p className="text-white text-sm font-medium">Current Image</p>
+                      <p className="text-white text-sm font-medium">
+                        Current Image
+                      </p>
                     </div>
                   </div>
                 ) : (
@@ -504,7 +580,10 @@ function ItemDetails() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="title"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Title
                     </label>
                     <input
@@ -518,7 +597,10 @@ function ItemDetails() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="description"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Description
                     </label>
                     <textarea
@@ -533,7 +615,10 @@ function ItemDetails() {
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="category"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Category
                     </label>
                     <input
@@ -547,7 +632,10 @@ function ItemDetails() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="status"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Status
                     </label>
                     <select
@@ -565,7 +653,10 @@ function ItemDetails() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="location"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       Location
                     </label>
                     <input
@@ -593,10 +684,12 @@ function ItemDetails() {
                   type="submit"
                   disabled={actionLoading}
                   className={`py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                    actionLoading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                    actionLoading
+                      ? "bg-blue-400 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700"
                   }`}
                 >
-                  {actionLoading ? 'Saving...' : 'Save Changes'}
+                  {actionLoading ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </form>
@@ -615,7 +708,11 @@ function ItemDetails() {
               >
                 ×
               </button>
-              <img src={item.image} alt={item.title} className="w-full h-full object-contain" />
+              <img
+                src={item.image}
+                alt={item.title}
+                className="w-full h-full object-contain"
+              />
             </div>
           </div>
         )}
