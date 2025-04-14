@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getUserItems } from '../services/adminService';
-import { getUserById } from '../services/adminService'; 
+import { getUserItems, getUserById } from '../services/adminService';
 import { toast } from 'react-toastify';
+import Pagination from '../components/common/Pagination'; // Import the Pagination component
 
 function UserDetail() {
   const { id } = useParams(); // Get the user ID from the URL
@@ -22,7 +22,7 @@ function UserDetail() {
         setUser(userResponse.data.user);
 
         // Fetch items posted by the user with pagination
-        const itemsResponse = await getUserItems(id);
+        const itemsResponse = await getUserItems(id, currentPage, limit); // Assume getUserItems accepts page and limit
         setItems(itemsResponse.data.items || []);
         setTotalPages(itemsResponse.data.pagination?.totalPages || 1);
       } catch (err) {
@@ -32,7 +32,12 @@ function UserDetail() {
       }
     };
     fetchUserAndItems();
-  }, [id, currentPage]); // Re-fetch when page changes (if backend supports query params)
+  }, [id, currentPage]); // Re-fetch when id or currentPage changes
+
+  // Handler for page change
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   if (loading) {
     return <p className="text-gray-600 text-center mt-6">Loading...</p>;
@@ -101,27 +106,13 @@ function UserDetail() {
                   ))}
                 </tbody>
               </table>
-              {/* Pagination for Items */}
+              {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex justify-between items-center mt-4">
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-sm sm:text-base">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
               )}
             </div>
           ) : (
