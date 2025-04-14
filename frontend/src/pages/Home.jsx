@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { searchItems } from '../services/searchService'; // Updated to use searchItems endpoint
 import ItemCard from '../components/ItemCard';
 import { toast } from 'react-toastify';
+import Pagination from '../components/common/Pagination'; // Import the Pagination component
 
 function Home() {
   const [items, setItems] = useState([]);
@@ -62,7 +63,7 @@ function Home() {
   };
 
   const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) setPage(newPage);
+    setPage(newPage);
   };
 
   return (
@@ -120,25 +121,11 @@ function Home() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="mt-10 sm:mt-12 flex justify-center items-center gap-4">
-            <button
-              onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
-              className="px-4 py-2 text-sm sm:text-base bg-gray-200 text-gray-800 rounded-md disabled:opacity-50 hover:bg-gray-300 transition duration-200"
-            >
-              Previous
-            </button>
-            <span className="text-sm sm:text-base text-gray-700">
-              Page {page} of {totalPages}
-            </span>
-            <button
-              onClick={() => handlePageChange(page + 1)}
-              disabled={page === totalPages}
-              className="px-4 py-2 text-sm sm:text-base bg-gray-200 text-gray-800 rounded-md disabled:opacity-50 hover:bg-gray-300 transition duration-200"
-            >
-              Next
-            </button>
-          </div>
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         )}
       </main>
 

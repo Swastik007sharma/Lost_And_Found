@@ -43,11 +43,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
-	const selectedUser = useRef(null);
-	const userCardRef = useRef(null);
 	const shownToasts = useRef(new Set()); // Track shown toast messages
-
-	useClickOutside(userCardRef, () => (selectedUser.current = null));
 
 	const fetchUsers = useCallback(async () => {
 		setLoading(true);
@@ -219,16 +215,10 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 											</span>
 										</td>
 										<td className="px-6 py-4 text-sm flex gap-3">
-											<button
-												onClick={() => (selectedUser.current = u)}
-												className={`bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm ${u._id === user._id
-													? "opacity-50 cursor-not-allowed"
-													: ""
-													}`}
-												disabled={u._id === user._id}
-											>
-												View
-											</button>
+											<Link
+												to={`../users/${u._id}`}
+												className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+											>View</Link>
 											<button
 												onClick={() =>
 													handleToggleUserActivation(u._id, u.isActive)
@@ -255,61 +245,6 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 						totalPages={totalPages.users}
 						onPageChange={(newPage) => setPage((prev) => ({ ...prev, users: newPage }))}
 					/>
-					{selectedUser.current && (
-						<div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-							<div
-								ref={userCardRef}
-								className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg transform transition-all duration-300 scale-95 hover:scale-100"
-							>
-								<h3 className="text-xl font-semibold text-gray-800 mb-6">
-									User Details
-								</h3>
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
-									<div>
-										<p>
-											<strong>Name:</strong> {selectedUser.current.name}
-										</p>
-									</div>
-									<div>
-										<p>
-											<strong>Email:</strong> {selectedUser.current.email}
-										</p>
-									</div>
-									<div>
-										<p>
-											<strong>Role:</strong> {selectedUser.current.role}
-										</p>
-									</div>
-									<div>
-										<p>
-											<strong>Status:</strong>{" "}
-											{selectedUser.current.isActive ? "Active" : "Inactive"}
-										</p>
-									</div>
-									<div>
-										<p>
-											<strong>Joined:</strong>{" "}
-											{new Date(selectedUser.current.createdAt).toLocaleDateString()}
-										</p>
-									</div>
-								</div>
-								<div className="mt-6 flex justify-end gap-4">
-									<Link
-										to={`/users/${selectedUser.current._id}`}
-										className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm"
-									>
-										View More
-									</Link>
-									<button
-										onClick={() => (selectedUser.current = null)}
-										className="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-700 transition-colors duration-200 shadow-sm"
-									>
-										Close
-									</button>
-								</div>
-							</div>
-						</div>
-					)}
 				</>
 			)}
 		</div>
@@ -317,324 +252,324 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 }
 
 function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
-  const [items, setItems] = useState([]);
-  const [itemSearch, setItemSearch] = useState("");
-  const [itemSortBy, setItemSortBy] = useState("createdAt");
-  const [itemOrder, setItemOrder] = useState("desc");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [keepers, setKeepers] = useState([]);
-  const [selectedKeeperIds, setSelectedKeeperIds] = useState({});
-  const shownToasts = useRef(new Set()); // Track shown toast messages
+	const [items, setItems] = useState([]);
+	const [itemSearch, setItemSearch] = useState("");
+	const [itemSortBy, setItemSortBy] = useState("createdAt");
+	const [itemOrder, setItemOrder] = useState("desc");
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState("");
+	const [success, setSuccess] = useState("");
+	const [keepers, setKeepers] = useState([]);
+	const [selectedKeeperIds, setSelectedKeeperIds] = useState({});
+	const shownToasts = useRef(new Set()); // Track shown toast messages
 
-  const fetchItems = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [itemsResponse, keepersResponse] = await Promise.all([
-        getAllItems({
-          page: page.items,
-          limit,
-          search: itemSearch,
-          sortBy: itemSortBy,
-          order: itemOrder,
-        }),
-        getKeepers(),
-      ]);
-      setItems(itemsResponse.data.items || []);
-      setKeepers(keepersResponse.data.keepers || []);
-      setTotalPages((prev) => ({
-        ...prev,
-        items: itemsResponse.data.pagination?.totalPages || 1,
-      }));
-      setSelectedKeeperIds(
-        itemsResponse.data.items.reduce((acc, item) => ({
-          ...acc,
-          [item._id]: item.keeperId || "",
-        }), {})
-      );
-    } catch (err) {
-      const errorMsg = "Failed to load items: " + (err.response?.data?.message || err.message);
-      if (!shownToasts.current.has(errorMsg)) {
-        toast.error(errorMsg);
-        shownToasts.current.add(errorMsg);
-        setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
-      }
-      setError(errorMsg);
-    } finally {
-      setLoading(false);
-    }
-  }, [page.items, limit, itemSearch, itemSortBy, itemOrder, setTotalPages]);
+	const fetchItems = useCallback(async () => {
+		setLoading(true);
+		try {
+			const [itemsResponse, keepersResponse] = await Promise.all([
+				getAllItems({
+					page: page.items,
+					limit,
+					search: itemSearch,
+					sortBy: itemSortBy,
+					order: itemOrder,
+				}),
+				getKeepers(),
+			]);
+			setItems(itemsResponse.data.items || []);
+			setKeepers(keepersResponse.data.keepers || []);
+			setTotalPages((prev) => ({
+				...prev,
+				items: itemsResponse.data.pagination?.totalPages || 1,
+			}));
+			setSelectedKeeperIds(
+				itemsResponse.data.items.reduce((acc, item) => ({
+					...acc,
+					[item._id]: item.keeperId || "",
+				}), {})
+			);
+		} catch (err) {
+			const errorMsg = "Failed to load items: " + (err.response?.data?.message || err.message);
+			if (!shownToasts.current.has(errorMsg)) {
+				toast.error(errorMsg);
+				shownToasts.current.add(errorMsg);
+				setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+			}
+			setError(errorMsg);
+		} finally {
+			setLoading(false);
+		}
+	}, [page.items, limit, itemSearch, itemSortBy, itemOrder, setTotalPages]);
 
-  useEffect(() => {
-    const debounceFetch = setTimeout(() => fetchItems(), 300);
-    return () => clearTimeout(debounceFetch);
-  }, [fetchItems]);
+	useEffect(() => {
+		const debounceFetch = setTimeout(() => fetchItems(), 300);
+		return () => clearTimeout(debounceFetch);
+	}, [fetchItems]);
 
-  useEffect(() => {
-    if (success || error) {
-      const timeout = setTimeout(() => {
-        setSuccess("");
-        setError("");
-      }, 3000);
-      return () => clearTimeout(timeout);
-    }
-  }, [success, error]);
+	useEffect(() => {
+		if (success || error) {
+			const timeout = setTimeout(() => {
+				setSuccess("");
+				setError("");
+			}, 3000);
+			return () => clearTimeout(timeout);
+		}
+	}, [success, error]);
 
-  const handleToggleItemActivation = useCallback(async (itemId, isActive) => {
-    if (
-      window.confirm(
-        `Are you sure you want to ${isActive ? "deactivate" : "activate"} this item?`
-      )
-    ) {
-      setLoading(true);
-      try {
-        await toggleItemActivation(itemId);
-        setItems((prev) =>
-          prev.map((i) => (i._id === itemId ? { ...i, isActive: !isActive } : i))
-        );
-        const successMsg = `Item ${!isActive ? "activated" : "deactivated"} successfully`;
-        if (!shownToasts.current.has(successMsg)) {
-          toast.success(successMsg);
-          shownToasts.current.add(successMsg);
-          setTimeout(() => shownToasts.current.delete(successMsg), 5000); // Clear after 5s
-        }
-        setSuccess(successMsg);
-      } catch (err) {
-        const errorMsg = "Failed to toggle item activation: " + (err.response?.data?.message || err.message);
-        if (!shownToasts.current.has(errorMsg)) {
-          toast.error(errorMsg);
-          shownToasts.current.add(errorMsg);
-          setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
-        }
-        setError(errorMsg);
-      } finally {
-        setLoading(false);
-      }
-    }
-  }, []);
+	const handleToggleItemActivation = useCallback(async (itemId, isActive) => {
+		if (
+			window.confirm(
+				`Are you sure you want to ${isActive ? "deactivate" : "activate"} this item?`
+			)
+		) {
+			setLoading(true);
+			try {
+				await toggleItemActivation(itemId);
+				setItems((prev) =>
+					prev.map((i) => (i._id === itemId ? { ...i, isActive: !isActive } : i))
+				);
+				const successMsg = `Item ${!isActive ? "activated" : "deactivated"} successfully`;
+				if (!shownToasts.current.has(successMsg)) {
+					toast.success(successMsg);
+					shownToasts.current.add(successMsg);
+					setTimeout(() => shownToasts.current.delete(successMsg), 5000); // Clear after 5s
+				}
+				setSuccess(successMsg);
+			} catch (err) {
+				const errorMsg = "Failed to toggle item activation: " + (err.response?.data?.message || err.message);
+				if (!shownToasts.current.has(errorMsg)) {
+					toast.error(errorMsg);
+					shownToasts.current.add(errorMsg);
+					setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+				}
+				setError(errorMsg);
+			} finally {
+				setLoading(false);
+			}
+		}
+	}, []);
 
-  const handleAssignKeeper = useCallback(async (itemId) => {
-    const currentKeeperId = selectedKeeperIds[itemId];
-    if (!currentKeeperId) {
-      const errorMsg = "Please select a keeper";
-      if (!shownToasts.current.has(errorMsg)) {
-        toast.error(errorMsg);
-        shownToasts.current.add(errorMsg);
-        setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
-      }
-      setError(errorMsg);
-      return;
-    }
-    setLoading(true);
-    try {
-      const selectedKeeper = keepers.find((k) => k._id === currentKeeperId);
-      if (!selectedKeeper) {
-        throw new Error("Selected keeper not found");
-      }
-      const keeperName = selectedKeeper.name;
+	const handleAssignKeeper = useCallback(async (itemId) => {
+		const currentKeeperId = selectedKeeperIds[itemId];
+		if (!currentKeeperId) {
+			const errorMsg = "Please select a keeper";
+			if (!shownToasts.current.has(errorMsg)) {
+				toast.error(errorMsg);
+				shownToasts.current.add(errorMsg);
+				setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+			}
+			setError(errorMsg);
+			return;
+		}
+		setLoading(true);
+		try {
+			const selectedKeeper = keepers.find((k) => k._id === currentKeeperId);
+			if (!selectedKeeper) {
+				throw new Error("Selected keeper not found");
+			}
+			const keeperName = selectedKeeper.name;
 
-      await assignKeeperToItem(itemId, { keeperId: currentKeeperId, keeperName });
-      const successMsg = `Keeper ${keeperName} assigned to item ${itemId}`;
-      if (!shownToasts.current.has(successMsg)) {
-        toast.success(successMsg);
-        shownToasts.current.add(successMsg);
-        setTimeout(() => shownToasts.current.delete(successMsg), 5000); // Clear after 5s
-      }
-      setSuccess(successMsg);
+			await assignKeeperToItem(itemId, { keeperId: currentKeeperId, keeperName });
+			const successMsg = `Keeper ${keeperName} assigned to item ${itemId}`;
+			if (!shownToasts.current.has(successMsg)) {
+				toast.success(successMsg);
+				shownToasts.current.add(successMsg);
+				setTimeout(() => shownToasts.current.delete(successMsg), 5000); // Clear after 5s
+			}
+			setSuccess(successMsg);
 
-      const updatedItemsResponse = await getAllItems({
-        page: page.items,
-        limit,
-        search: itemSearch,
-        sortBy: itemSortBy,
-        order: itemOrder,
-      });
-      setItems(updatedItemsResponse.data.items || []);
-      setSelectedKeeperIds((prev) => ({
-        ...prev,
-        [itemId]: updatedItemsResponse.data.items.find((i) => i._id === itemId)?.keeperId || "",
-      }));
-    } catch (err) {
-      const errorMsg = "Failed to assign keeper: " + (err.response?.data?.message || err.message);
-      if (!shownToasts.current.has(errorMsg)) {
-        toast.error(errorMsg);
-        shownToasts.current.add(errorMsg);
-        setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
-      }
-      setError(errorMsg);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedKeeperIds, keepers, page.items, limit, itemSearch, itemSortBy, itemOrder]);
+			const updatedItemsResponse = await getAllItems({
+				page: page.items,
+				limit,
+				search: itemSearch,
+				sortBy: itemSortBy,
+				order: itemOrder,
+			});
+			setItems(updatedItemsResponse.data.items || []);
+			setSelectedKeeperIds((prev) => ({
+				...prev,
+				[itemId]: updatedItemsResponse.data.items.find((i) => i._id === itemId)?.keeperId || "",
+			}));
+		} catch (err) {
+			const errorMsg = "Failed to assign keeper: " + (err.response?.data?.message || err.message);
+			if (!shownToasts.current.has(errorMsg)) {
+				toast.error(errorMsg);
+				shownToasts.current.add(errorMsg);
+				setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+			}
+			setError(errorMsg);
+		} finally {
+			setLoading(false);
+		}
+	}, [selectedKeeperIds, keepers, page.items, limit, itemSearch, itemSortBy, itemOrder]);
 
-  const handleKeeperChange = (itemId, event) => {
-    setSelectedKeeperIds((prev) => ({
-      ...prev,
-      [itemId]: event.target.value,
-    }));
-  };
+	const handleKeeperChange = (itemId, event) => {
+		setSelectedKeeperIds((prev) => ({
+			...prev,
+			[itemId]: event.target.value,
+		}));
+	};
 
-  const itemSearchSection = useMemo(
-    () => (
-      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center bg-white p-4 rounded-lg shadow-sm">
-        <input
-          type="text"
-          placeholder="Search by title, description, or status..."
-          value={itemSearch}
-          onChange={(e) => {
-            setItemSearch(e.target.value);
-            setPage((prev) => ({ ...prev, items: 1 }));
-          }}
-          className="w-full sm:w-1/3 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
-        />
-        <select
-          value={itemSortBy}
-          onChange={(e) => {
-            setItemSortBy(e.target.value);
-            setPage((prev) => ({ ...prev, items: 1 }));
-          }}
-          className="w-full sm:w-1/3 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
-        >
-          <option value="title">Title</option>
-          <option value="status">Status</option>
-          <option value="createdAt">Created At</option>
-        </select>
-        <select
-          value={itemOrder}
-          onChange={(e) => {
-            setItemOrder(e.target.value);
-            setPage((prev) => ({ ...prev, items: 1 }));
-          }}
-          className="w-full sm:w-1/3 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
-        >
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
-      </div>
-    ),
-    [itemSearch, itemSortBy, itemOrder, setPage]
-  );
+	const itemSearchSection = useMemo(
+		() => (
+			<div className="mb-6 flex flex-col sm:flex-row gap-4 items-center bg-white p-4 rounded-lg shadow-sm">
+				<input
+					type="text"
+					placeholder="Search by title, description, or status..."
+					value={itemSearch}
+					onChange={(e) => {
+						setItemSearch(e.target.value);
+						setPage((prev) => ({ ...prev, items: 1 }));
+					}}
+					className="w-full sm:w-1/3 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+				/>
+				<select
+					value={itemSortBy}
+					onChange={(e) => {
+						setItemSortBy(e.target.value);
+						setPage((prev) => ({ ...prev, items: 1 }));
+					}}
+					className="w-full sm:w-1/3 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+				>
+					<option value="title">Title</option>
+					<option value="status">Status</option>
+					<option value="createdAt">Created At</option>
+				</select>
+				<select
+					value={itemOrder}
+					onChange={(e) => {
+						setItemOrder(e.target.value);
+						setPage((prev) => ({ ...prev, items: 1 }));
+					}}
+					className="w-full sm:w-1/3 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+				>
+					<option value="asc">Ascending</option>
+					<option value="desc">Descending</option>
+				</select>
+			</div>
+		),
+		[itemSearch, itemSortBy, itemOrder, setPage]
+	);
 
-  return (
-    <div className="bg-white p-6 rounded-xl shadow-lg transition-all duration-300">
-      {itemSearchSection}
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Manage Items</h2>
-      {(success || error) && (
-        <div className="mb-4">
-          {success && (
-            <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow-md animate-fade-in">
-              <p className="text-sm font-medium">{success}</p>
-            </div>
-          )}
-          {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-md animate-fade-in">
-              <p className="text-sm font-medium">{error}</p>
-            </div>
-          )}
-        </div>
-      )}
-      {loading ? (
-        <Loader />
-      ) : (
-        <>
-          <div className="overflow-x-auto rounded-lg shadow-sm">
-            <table className="min-w-full table-auto border-collapse bg-white">
-              <thead>
-                <tr className="bg-gray-100 text-left text-sm font-semibold text-gray-700">
-                  <th className="px-6 py-4 border-b">Title</th>
-                  <th className="px-6 py-4 border-b">Status</th>
-                  <th className="px-6 py-4 border-b">Posted By</th>
-                  <th className="px-6 py-4 border-b">Category</th>
-                  <th className="px-6 py-4 border-b">Active Status</th>
-                  <th className="px-6 py-4 border-b">Keeper</th>
-                  <th className="px-6 py-4 border-b">Claimed By</th>
-                  <th className="px-6 py-4 border-b">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item) => (
-                  <tr
-                    key={item._id}
-                    className="border-t hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <td className="px-6 py-4 text-sm text-gray-800">{item.title}</td>
-                    <td className="px-6 py-4 text-sm text-gray-800">{item.status}</td>
-                    <td className="px-6 py-4 text-sm text-gray-800">
-                      {item.postedBy?.name || "Unknown"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-800">
-                      {item.category?.name || "N/A"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-800">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${item.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                          }`}
-                      >
-                        {item.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-800">
-                      {item.keeperName || "Not Assigned"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-800">
-                      {item.claimedByName || "Not Claimed"}
-                    </td>
-                    <td className="px-6 py-4 text-sm flex gap-3 flex-wrap">
-                      <Link
-                        to={`/items/${item._id}`}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm"
-                      >
-                        View
-                      </Link>
-                      <button
-                        onClick={() =>
-                          handleToggleItemActivation(item._id, item.isActive)
-                        }
-                        className={`px-4 py-2 rounded-lg text-sm transition-colors duration-200 shadow-sm ${item.isActive
-                          ? "bg-red-600 hover:bg-red-700"
-                          : "bg-green-600 hover:bg-green-700"
-                          } text-white`}
-                      >
-                        {item.isActive ? "Deactivate" : "Activate"}
-                      </button>
-                      <select
-                        value={selectedKeeperIds[item._id] || ""}
-                        onChange={(e) => handleKeeperChange(item._id, e)}
-                        className="p-2 border border-gray-200 rounded-lg text-sm"
-                      >
-                        <option value="">Select Keeper</option>
-                        {keepers.map((k) => (
-                          <option key={k._id} value={k._id}>
-                            {k.name}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => handleAssignKeeper(item._id)}
-                        className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700 transition-colors duration-200 shadow-sm"
-                      >
-                        Assign Keeper
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <Pagination
-            currentPage={page.items}
-            totalPages={totalPages.items}
-            onPageChange={(newPage) =>
-              setPage((prev) => ({ ...prev, items: newPage }))
-            }
-          />
-        </>
-      )}
-    </div>
-  );
+	return (
+		<div className="bg-white p-6 rounded-xl shadow-lg transition-all duration-300">
+			{itemSearchSection}
+			<h2 className="text-2xl font-semibold text-gray-800 mb-6">Manage Items</h2>
+			{(success || error) && (
+				<div className="mb-4">
+					{success && (
+						<div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow-md animate-fade-in">
+							<p className="text-sm font-medium">{success}</p>
+						</div>
+					)}
+					{error && (
+						<div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-md animate-fade-in">
+							<p className="text-sm font-medium">{error}</p>
+						</div>
+					)}
+				</div>
+			)}
+			{loading ? (
+				<Loader />
+			) : (
+				<>
+					<div className="overflow-x-auto rounded-lg shadow-sm">
+						<table className="min-w-full table-auto border-collapse bg-white">
+							<thead>
+								<tr className="bg-gray-100 text-left text-sm font-semibold text-gray-700">
+									<th className="px-6 py-4 border-b">Title</th>
+									<th className="px-6 py-4 border-b">Status</th>
+									<th className="px-6 py-4 border-b">Posted By</th>
+									<th className="px-6 py-4 border-b">Category</th>
+									<th className="px-6 py-4 border-b">Active Status</th>
+									<th className="px-6 py-4 border-b">Keeper</th>
+									<th className="px-6 py-4 border-b">Claimed By</th>
+									<th className="px-6 py-4 border-b">Actions</th>
+								</tr>
+							</thead>
+							<tbody>
+								{items.map((item) => (
+									<tr
+										key={item._id}
+										className="border-t hover:bg-gray-50 transition-colors duration-200"
+									>
+										<td className="px-6 py-4 text-sm text-gray-800">{item.title}</td>
+										<td className="px-6 py-4 text-sm text-gray-800">{item.status}</td>
+										<td className="px-6 py-4 text-sm text-gray-800">
+											{item.postedBy?.name || "Unknown"}
+										</td>
+										<td className="px-6 py-4 text-sm text-gray-800">
+											{item.category?.name || "N/A"}
+										</td>
+										<td className="px-6 py-4 text-sm text-gray-800">
+											<span
+												className={`px-2 py-1 rounded-full text-xs ${item.isActive
+													? "bg-green-100 text-green-700"
+													: "bg-red-100 text-red-700"
+													}`}
+											>
+												{item.isActive ? "Active" : "Inactive"}
+											</span>
+										</td>
+										<td className="px-6 py-4 text-sm text-gray-800">
+											{item.keeperName || "Not Assigned"}
+										</td>
+										<td className="px-6 py-4 text-sm text-gray-800">
+											{item.claimedByName || "Not Claimed"}
+										</td>
+										<td className="px-6 py-4 text-sm flex gap-3 flex-wrap">
+											<Link
+												to={`/items/${item._id}`}
+												className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+											>
+												View
+											</Link>
+											<button
+												onClick={() =>
+													handleToggleItemActivation(item._id, item.isActive)
+												}
+												className={`px-4 py-2 rounded-lg text-sm transition-colors duration-200 shadow-sm ${item.isActive
+													? "bg-red-600 hover:bg-red-700"
+													: "bg-green-600 hover:bg-green-700"
+													} text-white`}
+											>
+												{item.isActive ? "Deactivate" : "Activate"}
+											</button>
+											<select
+												value={selectedKeeperIds[item._id] || ""}
+												onChange={(e) => handleKeeperChange(item._id, e)}
+												className="p-2 border border-gray-200 rounded-lg text-sm"
+											>
+												<option value="">Select Keeper</option>
+												{keepers.map((k) => (
+													<option key={k._id} value={k._id}>
+														{k.name}
+													</option>
+												))}
+											</select>
+											<button
+												onClick={() => handleAssignKeeper(item._id)}
+												className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700 transition-colors duration-200 shadow-sm"
+											>
+												Assign Keeper
+											</button>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+					<Pagination
+						currentPage={page.items}
+						totalPages={totalPages.items}
+						onPageChange={(newPage) =>
+							setPage((prev) => ({ ...prev, items: newPage }))
+						}
+					/>
+				</>
+			)}
+		</div>
+	);
 }
 
 // Main AdminDashboard Component
