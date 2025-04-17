@@ -26,15 +26,15 @@ import {
 	toggleItemActivation,
 	assignKeeperToItem,
 } from "../services/itemService";
-import { register } from "../services/authService";
-import { Link } from "react-router-dom";
+import { register, verifyOtp } from "../services/authService"; // Added verifyOtp
+import { Link, useNavigate } from "react-router-dom"; // Added useNavigate
 import useClickOutside from "../hooks/useClickOutside";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Loader from "../components/common/Loader";
 import Pagination from "../components/common/Pagination";
 import { toast } from "react-toastify"; // Ensure Toastify is imported
 
-// UsersTab Component
+// UsersTab Component (unchanged)
 function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 	const [users, setUsers] = useState([]);
 	const [userSearch, setUserSearch] = useState("");
@@ -43,7 +43,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
-	const shownToasts = useRef(new Set()); // Track shown toast messages
+	const shownToasts = useRef(new Set());
 
 	const fetchUsers = useCallback(async () => {
 		setLoading(true);
@@ -65,7 +65,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 			if (!shownToasts.current.has(errorMsg)) {
 				toast.error(errorMsg);
 				shownToasts.current.add(errorMsg);
-				setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
 			}
 			setError(errorMsg);
 		} finally {
@@ -89,11 +89,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 	}, [success, error]);
 
 	const handleToggleUserActivation = useCallback(async (userId, isActive) => {
-		if (
-			window.confirm(
-				`Are you sure you want to ${isActive ? "deactivate" : "activate"} this user?`
-			)
-		) {
+		if (window.confirm(`Are you sure you want to ${isActive ? "deactivate" : "activate"} this user?`)) {
 			setLoading(true);
 			try {
 				await toggleUserActivation(userId);
@@ -104,7 +100,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 				if (!shownToasts.current.has(successMsg)) {
 					toast.success(successMsg);
 					shownToasts.current.add(successMsg);
-					setTimeout(() => shownToasts.current.delete(successMsg), 5000); // Clear after 5s
+					setTimeout(() => shownToasts.current.delete(successMsg), 5000);
 				}
 				setSuccess(successMsg);
 			} catch (err) {
@@ -112,7 +108,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 				if (!shownToasts.current.has(errorMsg)) {
 					toast.error(errorMsg);
 					shownToasts.current.add(errorMsg);
-					setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+					setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
 				}
 				setError(errorMsg);
 			} finally {
@@ -261,7 +257,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 	const [success, setSuccess] = useState("");
 	const [keepers, setKeepers] = useState([]);
 	const [selectedKeeperIds, setSelectedKeeperIds] = useState({});
-	const shownToasts = useRef(new Set()); // Track shown toast messages
+	const shownToasts = useRef(new Set());
 
 	const fetchItems = useCallback(async () => {
 		setLoading(true);
@@ -293,7 +289,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 			if (!shownToasts.current.has(errorMsg)) {
 				toast.error(errorMsg);
 				shownToasts.current.add(errorMsg);
-				setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
 			}
 			setError(errorMsg);
 		} finally {
@@ -317,11 +313,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 	}, [success, error]);
 
 	const handleToggleItemActivation = useCallback(async (itemId, isActive) => {
-		if (
-			window.confirm(
-				`Are you sure you want to ${isActive ? "deactivate" : "activate"} this item?`
-			)
-		) {
+		if (window.confirm(`Are you sure you want to ${isActive ? "deactivate" : "activate"} this item?`)) {
 			setLoading(true);
 			try {
 				await toggleItemActivation(itemId);
@@ -332,7 +324,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 				if (!shownToasts.current.has(successMsg)) {
 					toast.success(successMsg);
 					shownToasts.current.add(successMsg);
-					setTimeout(() => shownToasts.current.delete(successMsg), 5000); // Clear after 5s
+					setTimeout(() => shownToasts.current.delete(successMsg), 5000);
 				}
 				setSuccess(successMsg);
 			} catch (err) {
@@ -340,7 +332,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 				if (!shownToasts.current.has(errorMsg)) {
 					toast.error(errorMsg);
 					shownToasts.current.add(errorMsg);
-					setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+					setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
 				}
 				setError(errorMsg);
 			} finally {
@@ -356,7 +348,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 			if (!shownToasts.current.has(errorMsg)) {
 				toast.error(errorMsg);
 				shownToasts.current.add(errorMsg);
-				setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
 			}
 			setError(errorMsg);
 			return;
@@ -374,7 +366,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 			if (!shownToasts.current.has(successMsg)) {
 				toast.success(successMsg);
 				shownToasts.current.add(successMsg);
-				setTimeout(() => shownToasts.current.delete(successMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(successMsg), 5000);
 			}
 			setSuccess(successMsg);
 
@@ -395,7 +387,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 			if (!shownToasts.current.has(errorMsg)) {
 				toast.error(errorMsg);
 				shownToasts.current.add(errorMsg);
-				setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
 			}
 			setError(errorMsg);
 		} finally {
@@ -575,6 +567,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 // Main AdminDashboard Component
 function AdminDashboard() {
 	const { user } = useContext(AuthContext);
+	const navigate = useNavigate(); // Added for redirection
 	const [activeTab, setActiveTab] = useState("overview");
 	const [stats, setStats] = useState({});
 	const [keepers, setKeepers] = useState([]);
@@ -584,7 +577,7 @@ function AdminDashboard() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
-	const shownToasts = useRef(new Set()); // Track shown toast messages
+	const shownToasts = useRef(new Set());
 
 	const [page, setPage] = useState({
 		users: 1,
@@ -658,7 +651,7 @@ function AdminDashboard() {
 			if (!shownToasts.current.has(errorMsg)) {
 				toast.error(errorMsg);
 				shownToasts.current.add(errorMsg);
-				setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
 			}
 			setError(errorMsg);
 		} finally {
@@ -695,7 +688,7 @@ function AdminDashboard() {
 			if (!shownToasts.current.has(errorMsg)) {
 				toast.error(errorMsg);
 				shownToasts.current.add(errorMsg);
-				setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
 			}
 			setError(errorMsg);
 			setLoading(false);
@@ -707,7 +700,7 @@ function AdminDashboard() {
 			if (!shownToasts.current.has(errorMsg)) {
 				toast.error(errorMsg);
 				shownToasts.current.add(errorMsg);
-				setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
 			}
 			setError(errorMsg);
 			setLoading(false);
@@ -721,11 +714,11 @@ function AdminDashboard() {
 				password: accountForm.password,
 				role: accountForm.role,
 			});
-			const successMsg = `Account created successfully for ${response.data.user.email}`;
+			const successMsg = `Account creation initiated for ${response.data.email}. An OTP has been sent to the email for verification.`;
 			if (!shownToasts.current.has(successMsg)) {
 				toast.success(successMsg);
 				shownToasts.current.add(successMsg);
-				setTimeout(() => shownToasts.current.delete(successMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(successMsg), 5000);
 			}
 			setSuccess(successMsg);
 			setAccountForm({
@@ -735,14 +728,14 @@ function AdminDashboard() {
 				confirmPassword: "",
 				role: "admin",
 			});
-			const statsResponse = await getDashboardStats();
-			setStats(statsResponse.data.stats || {});
+			// Redirect to OTP verification page
+			navigate(`/verify-otp?email=${encodeURIComponent(accountForm.email)}`);
 		} catch (err) {
 			const errorMsg = "Failed to create account: " + (err.response?.data?.message || err.message);
 			if (!shownToasts.current.has(errorMsg)) {
 				toast.error(errorMsg);
 				shownToasts.current.add(errorMsg);
-				setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
 			}
 			setError(errorMsg);
 		} finally {
@@ -761,7 +754,7 @@ function AdminDashboard() {
 			if (!shownToasts.current.has(successMsg)) {
 				toast.success(successMsg);
 				shownToasts.current.add(successMsg);
-				setTimeout(() => shownToasts.current.delete(successMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(successMsg), 5000);
 			}
 			setSuccess(successMsg);
 			setCategoryForm({ name: "", description: "" });
@@ -770,7 +763,7 @@ function AdminDashboard() {
 			if (!shownToasts.current.has(errorMsg)) {
 				toast.error(errorMsg);
 				shownToasts.current.add(errorMsg);
-				setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
 			}
 			setError(errorMsg);
 		} finally {
@@ -801,7 +794,7 @@ function AdminDashboard() {
 			if (!shownToasts.current.has(successMsg)) {
 				toast.success(successMsg);
 				shownToasts.current.add(successMsg);
-				setTimeout(() => shownToasts.current.delete(successMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(successMsg), 5000);
 			}
 			setSuccess(successMsg);
 			selectedCategory.current = null;
@@ -810,7 +803,7 @@ function AdminDashboard() {
 			if (!shownToasts.current.has(errorMsg)) {
 				toast.error(errorMsg);
 				shownToasts.current.add(errorMsg);
-				setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+				setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
 			}
 			setError(errorMsg);
 		} finally {
@@ -828,7 +821,7 @@ function AdminDashboard() {
 				if (!shownToasts.current.has(successMsg)) {
 					toast.success(successMsg);
 					shownToasts.current.add(successMsg);
-					setTimeout(() => shownToasts.current.delete(successMsg), 5000); // Clear after 5s
+					setTimeout(() => shownToasts.current.delete(successMsg), 5000);
 				}
 				setSuccess(successMsg);
 			} catch (err) {
@@ -836,7 +829,7 @@ function AdminDashboard() {
 				if (!shownToasts.current.has(errorMsg)) {
 					toast.error(errorMsg);
 					shownToasts.current.add(errorMsg);
-					setTimeout(() => shownToasts.current.delete(errorMsg), 5000); // Clear after 5s
+					setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
 				}
 				setError(errorMsg);
 			} finally {

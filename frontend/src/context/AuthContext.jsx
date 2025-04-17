@@ -54,7 +54,12 @@ export function AuthProvider({ children }) {
     }
 
     if (user && user.id) {
-      const backendUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL || 'http://localhost:5000'; // Use .env variable
+      // Determine backend URL based on environment
+      const isProduction = !import.meta.env.DEV;
+      const baseUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const backendUrl = isProduction
+        ? baseUrl.replace(/^http:/, 'https:') // Ensure HTTPS in production
+        : baseUrl;
       console.log('Initializing Socket.IO connection to:', backendUrl);
 
       socketRef.current = io(backendUrl, {
