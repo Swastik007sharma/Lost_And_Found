@@ -40,35 +40,54 @@ exports.register = async (req, res) => {
         // If the account is active, return an error
         return res.status(400).json({ message: 'User already exists', code: 'USER_EXISTS' });
       } else {
-        // If the account is deactivated, reactivate it
-        existingUser.isActive = true;
-        // existingUser.name = name; // Update name in case it has changed
-        // existingUser.password = password; // Update password (hashing handled in model)
-        // existingUser.role = role; // Update role (if allowed by role-based access control)
+        // If the account is deactivated, reactivate it (but only after OTP verification)
+        existingUser.isActive = false; // Keep inactive until verified
         await existingUser.save();
 
-        // Generate JWT token for the reactivated user
-        const token = jwt.sign({ id: existingUser._id, role: existingUser.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+        // Generate initial OTP for reactivation
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        existingUser.resetPasswordOtp = otp;
+        existingUser.resetPasswordOtpExpiresAt = otpExpiresAt;
+        await existingUser.save();
+
+        // Send OTP via email
+        await sendEmail(
+          email,
+          'Account Reactivation OTP - Lost and Found Platform',
+          'passwordResetOtp',
+          { name: existingUser.name, otp }
+        );
 
         return res.status(200).json({
-          message: 'Account reactivated successfully',
-          user: { id: existingUser._id, name: existingUser.name, email: existingUser.email, role: existingUser.role },
-          authorization: `Bearer ${token}`, // Fixed syntax
+          message: 'Account reactivation initiated. Please verify OTP.',
+          email,
         });
       }
     }
 
-    // If no user exists, create a new user
-    const user = new User({ name, email, password, role });
+    // If no user exists, create a new user with isActive: false
+    const user = new User({ name, email, password, role, isActive: false });
     await user.save();
 
-    // Generate JWT token for the new user
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+    // Generate initial OTP for new registration
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    user.resetPasswordOtp = otp;
+    user.resetPasswordOtpExpiresAt = otpExpiresAt;
+    await user.save();
 
-    res.status(201).json({
-      message: 'User registered successfully',
-      user: { id: user._id, name, email, role: user.role },
-      authorization: `Bearer ${token}`, // Fixed syntax
+    // Send OTP via email
+    await sendEmail(
+      email,
+      'Account Verification OTP - Lost and Found Platform',
+      'passwordResetOtp',
+      { name, otp }
+    );
+
+    res.status(200).json({
+      message: 'Registration initiated. Please verify OTP to activate your account.',
+      email,
     });
   } catch (error) {
     console.error('Registration Error:', error.message);
@@ -172,14 +191,19 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: 'OTP has expired', code: 'EXPIRED_OTP' });
     }
 
-    // OTP is valid, clear it after verification
+    // OTP is valid, activate the account and generate JWT
+    user.isActive = true;
     user.resetPasswordOtp = null;
     user.resetPasswordOtpExpiresAt = null;
     await user.save();
 
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+
     res.status(200).json({
-      message: 'OTP verified successfully. You can now reset your password.',
-      email,
+      message: 'OTP verified successfully. Account activated.',
+      authorization: `Bearer ${token}`, // Provide token after verification
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
     console.error('Verify OTP Error:', error.message);

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { register, forgotPassword } from '../../services/authService';
+import { register } from '../../services/authService';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
@@ -40,16 +40,11 @@ function Register() {
       const response = await register({ name, email, password, role: 'user' });
       console.log('Registration response:', response.data);
 
-      // Store token and user data temporarily for verification
-      localStorage.setItem('tempRegistrationToken', response.data.authorization);
-      localStorage.setItem('tempRegistrationUser', JSON.stringify(response.data.user));
-
-      // Send OTP for verification
-      await forgotPassword({ email });
-      toast.success('Registration successful! Redirecting to OTP verification.');
+      // No token is generated yet; proceed to OTP verification
+      toast.success('Registration initiated. Please verify OTP to activate your account.');
       navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Registration failed. Please try again.');
+      toast.error(err.response?.data?.details[0]?.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }

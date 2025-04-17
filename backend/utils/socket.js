@@ -8,14 +8,26 @@ module.exports = (server) => {
     cors: {
       origin: (origin, callback) => {
         const allowedOrigins = process.env.ALLOWED_ORIGINS
-          ? process.env.ALLOWED_ORIGINS.split(',')
-          : ['http://localhost:5173', 'http://localhost:5000', 'http://localhost:3000'];
+          ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim().replace(/\/$/, ''))
+          : ['http://localhost:5173', 'http://localhost:5000', 'http://localhost:3000'].map(origin => origin.replace(/\/$/, ''));
         console.log('Requested origin:', origin, 'Allowed origins:', allowedOrigins);
-        if (!origin || allowedOrigins.includes(origin)) {
-          console.log('Origin allowed:', origin);
+
+        // Allow requests with no origin (e.g., server-side or some clients)
+        if (!origin) {
+          console.log('No origin, allowing connection');
+          callback(null, true);
+          return;
+        }
+
+        // Normalize origin by removing trailing slashes
+        const normalizedOrigin = origin.replace(/\/$/, '');
+
+        // Allow the production origin explicitly, in addition to allowedOrigins
+        if (normalizedOrigin === 'https://lost-and-found-off.onrender.com' || allowedOrigins.includes(normalizedOrigin)) {
+          console.log('Origin allowed:', normalizedOrigin);
           callback(null, true);
         } else {
-          console.log('Origin denied:', origin);
+          console.log('Origin denied:', normalizedOrigin);
           callback(new Error('Not allowed by CORS'));
         }
       },
@@ -79,7 +91,6 @@ module.exports = (server) => {
           return socket.emit('errorMessage', 'Message not saved, please use API');
         }
 
-        // Broadcast the message (already saved by API)
         const message = {
           _id,
           conversation: conversationId,
@@ -91,22 +102,19 @@ module.exports = (server) => {
         };
         io.to(conversationId).emit('receiveMessage', message);
 
-        // Fetch conversation details
         const conversation = await Conversation.findById(conversationId).populate('item participants', 'name email');
         if (!conversation) {
           console.warn('Conversation not found for notification');
           return;
         }
 
-        // Assume sender is the claimant for simplicity (adjust logic if claimant is tracked differently)
         const claimant = conversation.participants.find(p => p._id.toString() === senderId);
         if (!claimant) {
           console.warn('Claimant not found in participants');
           return;
         }
 
-        // Send email to claimant
-        const exchangeLocation = 'Your exchange location here'; // Replace with dynamic data if available
+        const exchangeLocation = 'Your exchange location here'; // Replace with dynamic data
         await sendEmail(
           claimant.email,
           'Claim Notification',
@@ -118,7 +126,6 @@ module.exports = (server) => {
           }
         );
 
-        // Send notification to claimant
         const notificationData = {
           userId: claimant._id,
           message: `Your claim for ${conversation.item ? conversation.item.title : 'an item'} has been noted. Exchange at ${exchangeLocation}.`,
@@ -133,7 +140,6 @@ module.exports = (server) => {
         await notification.save();
         io.to(claimant._id.toString()).emit('newNotification', notification);
 
-        // Notify other participants (optional)
         const recipients = conversation.participants.filter(p => p._id.toString() !== senderId);
         for (const recipient of recipients) {
           const recipientNotification = new Notification({

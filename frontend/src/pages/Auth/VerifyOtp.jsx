@@ -21,24 +21,11 @@ function VerifyOtp() {
   const navigate = useNavigate();
   const { login: setAuth } = useContext(AuthContext);
 
-  // Retrieve registration token from localStorage (set during register)
-  const registrationToken = localStorage.getItem('tempRegistrationToken');
-  const registrationUser = localStorage.getItem('tempRegistrationUser')
-    ? JSON.parse(localStorage.getItem('tempRegistrationUser'))
-    : null;
-
   useEffect(() => {
     if (!email) {
       toast.error('No email provided for verification');
     }
-    // Clean up temp storage on unmount if not used
-    return () => {
-      if (!isForgot && !registrationToken) {
-        localStorage.removeItem('tempRegistrationToken');
-        localStorage.removeItem('tempRegistrationUser');
-      }
-    };
-  }, [email, isForgot, registrationToken]);
+  }, [email]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,15 +57,13 @@ function VerifyOtp() {
           await resetPassword({ email, newPassword });
           toast.success('Password reset successfully. Redirecting to login...');
           setTimeout(() => navigate('/login'), 2000);
-        } else if (registrationToken && registrationUser) {
-          setAuth(registrationToken, registrationUser);
-          localStorage.setItem('token', registrationToken);
-          localStorage.setItem('user', JSON.stringify(registrationUser));
-          localStorage.removeItem('tempRegistrationToken');
-          localStorage.removeItem('tempRegistrationUser');
-          navigate('/dashboard');
         } else {
-          navigate('/login');
+          // Registration verification successful
+          setAuth(response.data.authorization, response.data.user);
+          localStorage.setItem('token', response.data.authorization);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+          toast.success('Account verified and activated. Redirecting to dashboard...');
+          navigate('/dashboard');
         }
       }
     } catch (err) {
