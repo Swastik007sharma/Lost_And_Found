@@ -71,7 +71,7 @@ export function AuthProvider({ children }) {
         reconnectionAttempts: 10,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
-        timeout: 15000,
+        timeout: 30000, // Increased timeout to handle Render delays
         forceNew: true,
       });
 
@@ -120,14 +120,27 @@ export function AuthProvider({ children }) {
           onClose: () => removeNotification(notifId),
         });
       });
-    }
 
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
-      setNotifications([]); // Clear notifications on disconnect
-    };
+      // Ping-Pong mechanism to keep connection alive
+      const pingInterval = setInterval(() => {
+        if (socketRef.current && socketRef.current.connected) {
+          console.log('Sending ping');
+          socketRef.current.emit('ping');
+        }
+      }, 30000); // Ping every 30 seconds
+
+      socketRef.current.on('pong', () => {
+        console.log('Received pong');
+      });
+
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+          clearInterval(pingInterval); // Clean up interval on disconnect
+        }
+        setNotifications([]); // Clear notifications on disconnect
+      };
+    }
   }, [user]);
 
   const login = (newToken, userData) => {
