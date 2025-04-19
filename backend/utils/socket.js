@@ -161,6 +161,12 @@ module.exports = (server) => {
     socket.on('disconnect', (reason) => {
       console.log('Client disconnected:', socket.id, 'Reason:', reason, 'Transport:', socket.conn.transport.name, 'Details:', socket.conn.transport ? socket.conn.transport.socket._events : 'No transport events');
     });
+
+    // Handle ping and respond with pong
+    socket.on('ping', () => {
+      console.log('Received ping from:', socket.id);
+      socket.emit('pong');
+    });
   });
 
   io.on('error', (err) => {
