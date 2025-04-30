@@ -44,7 +44,8 @@ function Register() {
       toast.success('Registration initiated. Please verify OTP to activate your account.');
       navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
     } catch (err) {
-      toast.error(err.response?.data?.details[0]?.message || 'Registration failed. Please try again.');
+      const errorMessage = err.response?.data?.message || err.response?.data?.details?.[0]?.message || 'Registration failed. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
