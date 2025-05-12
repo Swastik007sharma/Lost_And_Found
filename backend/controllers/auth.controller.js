@@ -81,7 +81,7 @@ exports.register = async (req, res) => {
     await sendEmail(
       email,
       'Account Verification OTP - Lost and Found Platform',
-      'passwordResetOtp',
+      'accountVerificationOtp',
       { name, otp }
     );
 

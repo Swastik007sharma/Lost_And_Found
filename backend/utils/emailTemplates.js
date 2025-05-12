@@ -88,4 +88,20 @@ module.exports = {
       </body>
     </html>
   `,
+
+  // Template for account verification OTP email during registration
+  accountVerificationOtpTemplate: (name, otp) => `
+    <html>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #2c3e50;">Lost and Found Platform</h2>
+        <p>Hello ${name},</p>
+        <p>Thank you for registering with the Lost and Found Platform!</p>
+        <p>Your OTP for account verification is: <strong style="color: #e74c3c;">${otp}</strong></p>
+        <p>Please use this OTP to verify your account within <strong>10 minutes</strong>.</p>
+        <p>If you did not initiate this registration, please ignore this email or contact support.</p>
+        <hr style="border: 1px solid #ddd;">
+        <p style="font-size: 12px; color: #7f8c8d;">Lost and Found Platform © 2025</p>
+      </body>
+    </html>
+  `,
 };
