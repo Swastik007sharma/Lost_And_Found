@@ -5,7 +5,8 @@ const {
   returnNotificationTemplate,
   keeperAssignedNotificationTemplate,
   passwordResetOtpTemplate,
-  claimTransactionTemplate, // New template
+  claimTransactionTemplate,
+  accountVerificationOtpTemplate, // Added new template
 } = require('./emailTemplates');
 
 const transporter = nodemailer.createTransport({
@@ -36,7 +37,7 @@ const sendEmail = async (to, subject, templateName, templateData) => {
         html = otpTemplate(templateData.name, templateData.itemTitle, templateData.otp);
         break;
       case 'claimNotification':
-        html = claimNotificationTemplate(templateData.name, templateData.itemTitle, templateData.exchangeLocation);
+        html = claimNotificationTemplate(templateData.name, templateData.itemTitle);
         break;
       case 'returnNotification':
         html = returnNotificationTemplate(templateData.name, templateData.itemTitle);
@@ -49,6 +50,9 @@ const sendEmail = async (to, subject, templateName, templateData) => {
         break;
       case 'claimTransaction':
         html = claimTransactionTemplate(templateData.name, templateData.itemTitle, templateData.otp, templateData.ownerName);
+        break;
+      case 'accountVerificationOtp':
+        html = accountVerificationOtpTemplate(templateData.name, templateData.otp);
         break;
       default:
         throw new Error('Invalid email template name');
