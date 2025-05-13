@@ -13,12 +13,12 @@ export function AuthProvider({ children }) {
 
   const [token, setToken] = useState(() => localStorage.getItem('token') || null);
   const [loading, setLoading] = useState(true);
-  const [notifications, setNotifications] = useState([]); // Local notification state
+  const [notifications, setNotifications] = useState([]);
   const socketRef = useRef(null);
 
   useEffect(() => {
     console.log('Initializing auth state');
-    setLoading(false); // Set loading to false after initial state setup
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -48,18 +48,14 @@ export function AuthProvider({ children }) {
       toast.error('Failed to sync user with storage.');
     }
 
-    // Initialize or update Socket.IO connection when user changes
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
 
     if (user && user.id) {
-      // Determine backend URL based on environment
       const isProduction = !import.meta.env.DEV;
       const baseUrl = import.meta.env.VITE_REACT_APP_BACKEND_URL || 'http://localhost:5000';
-      const backendUrl = isProduction
-        ? baseUrl.replace(/^http:/, 'https:') // Ensure HTTPS in production
-        : baseUrl;
+      const backendUrl = isProduction ? baseUrl.replace(/^http:/, 'https:') : baseUrl;
       console.log('Initializing Socket.IO connection to:', backendUrl);
 
       socketRef.current = io(backendUrl, {
@@ -71,7 +67,7 @@ export function AuthProvider({ children }) {
         reconnectionAttempts: 10,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
-        timeout: 30000, // Increased timeout to handle Render delays
+        timeout: 30000,
         forceNew: true,
       });
 
@@ -121,13 +117,12 @@ export function AuthProvider({ children }) {
         });
       });
 
-      // Ping-Pong mechanism to keep connection alive
       const pingInterval = setInterval(() => {
         if (socketRef.current && socketRef.current.connected) {
           console.log('Sending ping');
           socketRef.current.emit('ping');
         }
-      }, 30000); // Ping every 30 seconds
+      }, 30000);
 
       socketRef.current.on('pong', () => {
         console.log('Received pong');
@@ -136,9 +131,9 @@ export function AuthProvider({ children }) {
       return () => {
         if (socketRef.current) {
           socketRef.current.disconnect();
-          clearInterval(pingInterval); // Clean up interval on disconnect
+          clearInterval(pingInterval);
         }
-        setNotifications([]); // Clear notifications on disconnect
+        setNotifications([]);
       };
     }
   }, [user]);
@@ -188,6 +183,7 @@ export function AuthProvider({ children }) {
 
   const value = {
     user,
+    setUser, // Add setUser to context value
     token,
     login,
     logout,
