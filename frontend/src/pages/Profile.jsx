@@ -5,20 +5,13 @@ import { updateUserProfile, updateUserPassword, deleteUserAccount } from '../ser
 import Loader from '../components/common/Loader';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Ensure react-icons is installed
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 function Profile() {
-  const { user, setUser } = useContext(AuthContext);
+  const { user, setUser, token } = useContext(AuthContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
-  // State for read-only display
-  const [displayData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    role: user?.role || 'user',
-  });
 
   // State for password update form
   const [passwordForm, setPasswordForm] = useState({
@@ -38,14 +31,23 @@ function Profile() {
     email: user?.email || '',
   });
 
-  // Toggle states for forms (only one can be open at a time)
-  const [isFormOpen, setIsFormOpen] = useState(null); // 'profile' or 'password'
+  // Toggle states for forms
+  const [isFormOpen, setIsFormOpen] = useState(null);
+
+  // Derive displayData directly from user
+  const displayData = {
+    name: user?.name || '',
+    email: user?.email || '',
+    role: user?.role || 'user',
+  };
 
   useEffect(() => {
-    if (!user) {
+    console.log('Profile component - Current user:', user, 'Token:', token);
+    if (!user && !token) {
+      console.log('No user or token, redirecting to login');
       navigate('/login');
     }
-  }, [user, navigate]);
+  }, [user, token, navigate]);
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
@@ -68,14 +70,12 @@ function Profile() {
     e.preventDefault();
     setLoading(true);
 
-    // Frontend validation
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error('New password and confirm password do not match');
-      setLoading(false);
-      return;
-    }
-
     try {
+      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+        toast.error('New password and confirm password do not match');
+        return;
+      }
+
       await updateUserPassword({
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
@@ -84,7 +84,8 @@ function Profile() {
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setIsFormOpen(null);
     } catch (err) {
-      toast.error('Failed to update password: ' + err.message);
+      console.error('Password Update Error:', err);
+      toast.error('Failed to update password: ' + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }
@@ -94,16 +95,45 @@ function Profile() {
     e.preventDefault();
     setLoading(true);
     try {
+      // Validate token before request
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      console.log('Sending profile update:', profileForm, 'Token:', token);
       const response = await updateUserProfile({
         name: profileForm.name,
         email: profileForm.email,
       });
+      console.log('API Response:', response);
+
+      // Handle backend response structure
+      const updatedUser = response.data.user;
+      console.log('Extracted updated user:', updatedUser);
+
+      // Validate updatedUser
+      if (!updatedUser || !updatedUser.name || !updatedUser.email) {
+        throw new Error('Invalid user data returned from API');
+      }
+
       toast.success('Profile updated successfully!');
-      setUser({ ...user, ...response.data.user });
-      setIsFormOpen(null);
+      setUser({ ...user, ...updatedUser }); // Update AuthContext
+      setProfileForm({ name: updatedUser.name, email: updatedUser.email }); // Sync form
     } catch (err) {
-      toast.error('Failed to update profile: ' + err.message);
+      console.error('Profile Update Error:', err);
+      const errorMessage = err.response?.data?.error || err.message;
+      if (err.response?.status === 401) {
+        console.log('Unauthorized error, token may be invalid');
+        toast.error('Session expired. Please log in again.');
+        setUser(null);
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        toast.error('Failed to update profile: ' + errorMessage);
+      }
     } finally {
+      console.log('Closing profile form, isFormOpen before:', isFormOpen);
+      setIsFormOpen(null);
+      console.log('isFormOpen after:', isFormOpen);
       setLoading(false);
     }
   };
@@ -114,10 +144,11 @@ function Profile() {
       try {
         await deleteUserAccount();
         toast.success('Account deactivated successfully!');
-        setUser(null); // Clear user context
-        navigate('/login'); // Redirect to login page
+        setUser(null);
+        navigate('/login');
       } catch (err) {
-        toast.error('Failed to delete account: ' + err.message);
+        console.error('Delete Account Error:', err);
+        toast.error('Failed to delete account: ' + (err.response?.data?.error || err.message));
       } finally {
         setLoading(false);
       }
@@ -128,12 +159,14 @@ function Profile() {
     setIsFormOpen((prev) => (prev === formType ? null : formType));
   };
 
-  if (!user) return <Loader />;
+  if (!user && !token) return <Loader />;
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6 text-center">User Profile</h1>
+        <div className="mb-6">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center">User Profile</h1>
+        </div>
 
         {/* Read-Only User Details */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -174,10 +207,12 @@ function Profile() {
         {/* Update Name & Email Form */}
         {isFormOpen === 'profile' && (
           <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Update Name & Email</h2>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold text-gray-900">Update Name & Email</h2>
+            </div>
             <form onSubmit={handleProfileUpdate} className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name for:</label>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name:</label>
                 <Input
                   id="name"
                   label=""
@@ -188,7 +223,7 @@ function Profile() {
                 />
               </div>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email for:</label>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email:</label>
                 <Input
                   id="email"
                   label=""
@@ -217,10 +252,12 @@ function Profile() {
         {/* Update Password Form */}
         {isFormOpen === 'password' && (
           <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Update Password</h2>
+            <div className="mb-4">
+              <h2 className="text-2xl font-semibold text-gray-900">Update Password</h2>
+            </div>
             <form onSubmit={handlePasswordUpdate} className="space-y-4">
               <div className="relative">
-                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">Current Password for:</label>
+                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">Current Password:</label>
                 <Input
                   id="currentPassword"
                   label=""
@@ -239,7 +276,7 @@ function Profile() {
                 </button>
               </div>
               <div className="relative">
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password for:</label>
+                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password:</label>
                 <Input
                   id="newPassword"
                   label=""
@@ -258,7 +295,7 @@ function Profile() {
                 </button>
               </div>
               <div className="relative">
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm Password for:</label>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm Password:</label>
                 <Input
                   id="confirmPassword"
                   label=""
