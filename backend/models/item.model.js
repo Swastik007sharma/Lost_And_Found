@@ -8,12 +8,14 @@ const itemSchema = new Schema({
     required: [true, 'Title is required'],
     minlength: 3,
     trim: true,
+    index: true,
   },
   description: {
     type: String,
     required: [true, 'Description is required'],
     minlength: 10,
     trim: true,
+    index: true,
   },
   category: {
     type: mongoose.Schema.Types.ObjectId,
@@ -75,7 +77,9 @@ const itemSchema = new Schema({
 }, {
   timestamps: true,
 });
-
+// Indexes for faster querying
+itemSchema.index({ createdAt: -1 }); // For sorting by creation date
+itemSchema.index({ updatedAt: -1 }); // For sorting by update date
 // Apply the pagination plugin to the schema
 itemSchema.plugin(mongoosePaginate);
 

@@ -6,8 +6,11 @@ import { getCategories } from '../services/categoryService';
 import { Link, useOutletContext } from 'react-router-dom';
 import ItemCard from '../components/ItemCard';
 import Pagination from '../components/common/Pagination';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import Input from '../components/common/Input';
+import Select from '../components/common/Select';
+import Button from '../components/common/Button';
+import Loader from '../components/common/Loader';
+import { toast } from 'react-toastify';
 
 function UserDashboard() {
   const { user, addNotification } = useContext(AuthContext);
@@ -45,11 +48,16 @@ function UserDashboard() {
         const response = await getCategories();
         setCategories(response.data.categories || []);
       } catch (err) {
-        addNotification(`Failed to load categories: ${err.response?.data?.message || err.message}`, 'error');
+        const errorMsg = `Failed to load categories: ${err.response?.data?.message || err.message}`;
+        if (!shownToasts.current.has(errorMsg)) {
+          toast.error(errorMsg);
+          shownToasts.current.add(errorMsg);
+          setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
+        }
       }
     };
     fetchCategories();
-  }, [addNotification]);
+  }, []);
 
   // Fetch items with debounce
   useEffect(() => {
@@ -67,7 +75,12 @@ function UserDashboard() {
         setItems(itemsResponse.data.items || []);
         setItemsTotalPages(itemsResponse.data.pagination?.totalPages || 1);
       } catch (err) {
-        addNotification(`Failed to load data: ${err.response?.data?.message || err.message}`, 'error');
+        const errorMsg = `Failed to load data: ${err.response?.data?.message || err.message}`;
+        if (!shownToasts.current.has(errorMsg)) {
+          toast.error(errorMsg);
+          shownToasts.current.add(errorMsg);
+          setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
+        }
       } finally {
         setLoading(false);
       }
@@ -77,7 +90,12 @@ function UserDashboard() {
     if (socket) {
       const handleNewNotification = (notification) => {
         if (notification.type === 'item' && user.id === notification.userId) {
-          addNotification(notification.message, 'info');
+          const infoMsg = notification.message;
+          if (!shownToasts.current.has(infoMsg)) {
+            toast.info(infoMsg);
+            shownToasts.current.add(infoMsg);
+            setTimeout(() => shownToasts.current.delete(infoMsg), 5000);
+          }
           // Trigger fetch after notification
           clearTimeout(fetchTimeoutRef.current);
           fetchTimeoutRef.current = setTimeout(async () => {
@@ -87,7 +105,12 @@ function UserDashboard() {
               setItems(itemsResponse.data.items || []);
               setItemsTotalPages(itemsResponse.data.pagination?.totalPages || 1);
             } catch (err) {
-              addNotification(`Failed to load data: ${err.response?.data?.message || err.message}`, 'error');
+              const errorMsg = `Failed to load data: ${err.response?.data?.message || err.message}`;
+              if (!shownToasts.current.has(errorMsg)) {
+                toast.error(errorMsg);
+                shownToasts.current.add(errorMsg);
+                setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
+              }
             } finally {
               setLoading(false);
             }
@@ -105,7 +128,7 @@ function UserDashboard() {
     return () => {
       if (fetchTimeoutRef.current) clearTimeout(fetchTimeoutRef.current);
     };
-  }, [itemsPage, user, socket, addNotification]);
+  }, [itemsPage, user, socket]);
 
   useEffect(() => {
     localStorage.setItem('userDashboardViewType', viewType);
@@ -154,40 +177,90 @@ function UserDashboard() {
       const itemsResponse = await getMyItems({ page: itemsPage, limit });
       setItems(itemsResponse.data.items || []);
       setItemsTotalPages(itemsResponse.data.pagination?.totalPages || 1);
-      addNotification('Item updated successfully!', 'success', { toastId: `update-${itemId}` });
+      const successMsg = 'Item updated successfully!';
+      if (!shownToasts.current.has(successMsg)) {
+        toast.success(successMsg);
+        shownToasts.current.add(successMsg);
+        setTimeout(() => shownToasts.current.delete(successMsg), 5000);
+      }
       setEditingItemId(null);
       setEditFormData({ title: '', description: '', category: '', status: '', location: '', image: null });
       setCurrentImage('');
     } catch (err) {
-      addNotification(`Failed to update item: ${err.response?.data?.message || err.message}`, 'error', { toastId: `update-error-${itemId}` });
+      const errorMsg = `Failed to update item: ${err.response?.data?.message || err.message}`;
+      if (!shownToasts.current.has(errorMsg)) {
+        toast.error(errorMsg);
+        shownToasts.current.add(errorMsg);
+        setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
+      }
     }
-  }, [editFormData, itemsPage, addNotification]);
+  }, [editFormData, itemsPage]);
 
   const handleDelete = useCallback(async (itemId) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
-      try {
-        await deleteUserItem(itemId);
-        setItems((prev) => prev.filter((item) => item._id !== itemId));
-        if (items.length === 1 && itemsPage > 1) {
-          setItemsPage((prev) => prev - 1);
-        } else {
+    const confirmed = window.confirm('Are you sure you want to delete this item?');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const response = await deleteUserItem(itemId);
+
+      // Optimistically update the UI
+      setItems((prev) => {
+        const updatedItems = prev.filter((item) => item._id !== itemId);
+        return updatedItems;
+      });
+
+      // Adjust pagination if necessary
+      if (items.length === 1 && itemsPage > 1) {
+        setItemsPage((prev) => prev - 1);
+      } else {
+        // Refetch to ensure consistency
+        try {
           const itemsResponse = await getMyItems({ page: itemsPage, limit });
           setItems(itemsResponse.data.items || []);
           setItemsTotalPages(itemsResponse.data.pagination?.totalPages || 1);
+        } catch (fetchErr) {
+          console.error("Error refetching items:", fetchErr);
+          // If refetch fails, the optimistic update still ensures the UI is updated
         }
-        addNotification('Item deleted successfully!', 'success', { toastId: `delete-${itemId}` });
-      } catch (err) {
-        addNotification(`Failed to delete item: ${err.response?.data?.message || err.message}`, 'error', { toastId: `delete-error-${itemId}` });
+      }
+
+      const successMsg = 'Item deleted successfully!';
+      if (!shownToasts.current.has(successMsg)) {
+        toast.success(successMsg);
+        shownToasts.current.add(successMsg);
+        setTimeout(() => shownToasts.current.delete(successMsg), 5000);
+      }
+    } catch (err) {
+      console.error("Delete error:", err.response?.data || err.message);
+      const errorMsg = `Failed to delete item: ${err.response?.data?.message || err.message}`;
+      if (!shownToasts.current.has(errorMsg)) {
+        toast.error(errorMsg);
+        shownToasts.current.add(errorMsg);
+        setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
+      }
+      try {
+        const itemsResponse = await getMyItems({ page: itemsPage, limit });
+        setItems(itemsResponse.data.items || []);
+        setItemsTotalPages(itemsResponse.data.pagination?.totalPages || 1);
+      } catch (fetchErr) {
+        console.error("Error refetching items after failed deletion:", fetchErr);
       }
     }
-  }, [items, itemsPage, addNotification]);
+  }, [items, itemsPage]);
 
   const handleGenerateOTP = useCallback(async (itemId) => {
     const item = items.find((i) => i._id === itemId);
     if (!item) return;
 
     if (user.id !== item.postedBy._id && user.id !== item.keeperId) {
-      addNotification('Only the poster or keeper can generate OTP.', 'error', { toastId: `otp-auth-${itemId}` });
+      const errorMsg = 'Only the poster or keeper can generate OTP.';
+      if (!shownToasts.current.has(errorMsg)) {
+        toast.error(errorMsg);
+        shownToasts.current.add(errorMsg);
+        setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
+      }
       return;
     }
 
@@ -196,15 +269,30 @@ function UserDashboard() {
       setOtpItemId(itemId);
       setShowOtpVerification(true);
       setOtp('');
-      addNotification(`OTP generated: ${response.data.otp}. Share this with the claimant to verify return.`, 'info', { toastId: `otp-gen-${itemId}` });
+      const infoMsg = `OTP generated: ${response.data.otp}. Share this with the claimant to verify return.`;
+      if (!shownToasts.current.has(infoMsg)) {
+        toast.info(infoMsg);
+        shownToasts.current.add(infoMsg);
+        setTimeout(() => shownToasts.current.delete(infoMsg), 5000);
+      }
     } catch (err) {
-      addNotification(`Failed to generate OTP: ${err.response?.data?.message || err.message}`, 'error', { toastId: `otp-error-${itemId}` });
+      const errorMsg = `Failed to generate OTP: ${err.response?.data?.message || err.message}`;
+      if (!shownToasts.current.has(errorMsg)) {
+        toast.error(errorMsg);
+        shownToasts.current.add(errorMsg);
+        setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
+      }
     }
-  }, [items, user.id, addNotification]);
+  }, [items, user.id]);
 
   const handleVerifyOTP = useCallback(async (itemId) => {
     if (!otp.trim()) {
-      addNotification('Please enter the OTP.', 'error', { toastId: `otp-input-${itemId}` });
+      const errorMsg = 'Please enter the OTP.';
+      if (!shownToasts.current.has(errorMsg)) {
+        toast.error(errorMsg);
+        shownToasts.current.add(errorMsg);
+        setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
+      }
       return;
     }
     try {
@@ -212,14 +300,24 @@ function UserDashboard() {
       setItems((prev) =>
         prev.map((item) => (item._id === itemId ? { ...item, status: 'Returned' } : item))
       );
-      addNotification('OTP verified successfully! Item marked as returned.', 'success', { toastId: `otp-verify-${itemId}` });
+      const successMsg = 'OTP verified successfully! Item marked as returned.';
+      if (!shownToasts.current.has(successMsg)) {
+        toast.success(successMsg);
+        shownToasts.current.add(successMsg);
+        setTimeout(() => shownToasts.current.delete(successMsg), 5000);
+      }
       setShowOtpVerification(false);
       setOtpItemId(null);
       setOtp('');
     } catch (err) {
-      addNotification(`Failed to verify OTP: ${err.response?.data?.message || err.message}`, 'error', { toastId: `otp-verify-error-${itemId}` });
+      const errorMsg = `Failed to verify OTP: ${err.response?.data?.message || err.message}`;
+      if (!shownToasts.current.has(errorMsg)) {
+        toast.error(errorMsg);
+        shownToasts.current.add(errorMsg);
+        setTimeout(() => shownToasts.current.delete(errorMsg), 5000);
+      }
     }
-  }, [otp, addNotification]);
+  }, [otp]);
 
   const handleCancelOTP = useCallback(() => {
     setShowOtpVerification(false);
@@ -233,131 +331,119 @@ function UserDashboard() {
 
   if (!user) {
     return (
-      <div className="container mx-auto p-2 sm:p-4 md:p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <p className="text-gray-600 text-sm sm:text-lg md:text-xl font-medium">Please log in to view your dashboard.</p>
+      <div className="container mx-auto p-6 bg-[var(--bg-color)] min-h-screen flex items-center justify-center">
+        <p className="text-[var(--text-color)] text-lg font-medium">Please log in to view your dashboard.</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-2 sm:p-4 md:p-6 lg:p-10 bg-gray-50 min-h-screen">
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        limit={1} // Limit to 3 toasts at a time
-      />
+    <div className="container mx-auto p-6 bg-[var(--bg-color)] min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 md:mb-8">
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-0">User Dashboard</h1>
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 md:space-x-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-[var(--text-color)] mb-4 sm:mb-0">User Dashboard</h1>
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
             <Link
               to="/items/create"
-              className="bg-blue-600 text-white py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md hover:bg-blue-700 transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
+              className="bg-[var(--primary)] text-[var(--text-color)] py-2 px-4 rounded-md hover:bg-blue-700 transition-colors duration-200 text-sm font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
             >
               Add New Item
             </Link>
             <Link
               to="/profile"
-              className="bg-green-600 text-white py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md hover:bg-green-700 transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
+              className="bg-green-600 text-[var(--text-color)] py-2 px-4 rounded-md hover:bg-green-700 transition-colors duration-200 text-sm font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
             >
               Profile
             </Link>
             <Link
               to="/messages"
-              className="bg-purple-600 text-white py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md hover:bg-purple-700 transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
+              className="bg-purple-600 text-[var(--text-color)] py-2 px-4 rounded-md hover:bg-purple-700 transition-colors duration-200 text-sm font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
             >
               Messages
             </Link>
             <Link
               to="/notifications"
-              className="bg-yellow-600 text-white py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md hover:bg-yellow-700 transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
+              className="bg-yellow-600 text-[var(--text-color)] py-2 px-4 rounded-md hover:bg-yellow-700 transition-colors duration-200 text-sm font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
             >
               Notifications
             </Link>
-            <button
+            <Button
               onClick={() => setViewType(viewType === 'list' ? 'card' : 'list')}
-              className="bg-gray-200 text-gray-800 py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md hover:bg-gray-300 transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
+              className="bg-[var(--secondary)] text-[var(--text-color)] py-2 px-4 rounded-md hover:bg-gray-600 transition-colors duration-200 text-sm font-medium shadow-md hover:shadow-lg w-full sm:w-auto"
             >
               Switch to {viewType === 'list' ? 'Card' : 'List'} View
-            </button>
+            </Button>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center h-32 sm:h-48 md:h-64">
-            <p className="text-gray-600 text-sm sm:text-lg md:text-xl animate-pulse">Loading...</p>
+          <div className="flex justify-center items-center h-64">
+            <Loader />
           </div>
         ) : (
           <div>
             {viewType === 'list' ? (
-              <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4">
+              <div className="bg-[var(--bg-color)] rounded-lg shadow-lg p-4">
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                  <table className="min-w-full divide-y divide-[var(--secondary)]">
+                    <thead className="bg-gray-100">
                       <tr>
-                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Image</th>
-                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Title</th>
-                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Status</th>
-                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Category</th>
-                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Posted On</th>
-                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold text-gray-600">Actions</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-[var(--text-color)]">Image</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-[var(--text-color)]">Title</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-[var(--text-color)]">Status</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-[var(--text-color)]">Category</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-[var(--text-color)]">Posted On</th>
+                        <th className="px-4 py-2 text-left text-sm font-semibold text-[var(--text-color)]">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-[var(--secondary)]">
                       {items.map((item) => (
                         <tr key={item._id} className="hover:bg-gray-50 transition-colors">
                           {editingItemId === item._id ? (
                             <>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2">
+                              <td className="px-4 py-2">
                                 <div className="flex flex-col items-center">
                                   {currentImage && (
-                                    <img src={currentImage} alt={item.title} className="w-8 sm:w-12 md:w-16 h-8 sm:h-12 md:h-16 object-cover rounded-md mb-1 sm:mb-2" />
+                                    <img src={currentImage} alt={item.title} className="w-16 h-16 object-cover rounded-md mb-2" />
                                   )}
-                                  <input
+                                  <Input
                                     type="file"
                                     name="image"
                                     onChange={handleEditChange}
-                                    className="w-full p-1 sm:p-2 border border-gray-300 rounded-md text-xs sm:text-sm"
+                                    className="w-full text-sm"
                                   />
                                 </div>
                               </td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2">
-                                <input
+                              <td className="px-4 py-2">
+                                <Input
                                   type="text"
                                   name="title"
                                   value={editFormData.title}
                                   onChange={handleEditChange}
-                                  className="w-full p-1 sm:p-2 border border-gray-300 rounded-md text-xs sm:text-sm"
+                                  className="w-full text-sm"
                                   required
                                 />
                               </td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2">
-                                <select
+                              <td className="px-4 py-2">
+                                <Select
                                   name="status"
                                   value={editFormData.status}
                                   onChange={handleEditChange}
-                                  className="w-full p-1 sm:p-2 border border-gray-300 rounded-md text-xs sm:text-sm"
+                                  className="w-full text-sm"
                                   required
                                 >
                                   <option value="Lost">Lost</option>
                                   <option value="Found">Found</option>
                                   <option value="Claimed">Claimed</option>
                                   <option value="Returned">Returned</option>
-                                </select>
+                                </Select>
                               </td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2">
-                                <select
+                              <td className="px-4 py-2">
+                                <Select
                                   name="category"
                                   value={editFormData.category}
                                   onChange={handleEditChange}
-                                  className="w-full p-1 sm:p-2 border border-gray-300 rounded-md text-xs sm:text-sm"
+                                  className="w-full text-sm"
                                   required
                                 >
                                   <option value="">Select a category</option>
@@ -366,86 +452,94 @@ function UserDashboard() {
                                       {category.name}
                                     </option>
                                   ))}
-                                </select>
+                                </Select>
                               </td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm">{new Date(item.createdAt).toLocaleDateString()}</td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 flex flex-col sm:flex-row gap-1 sm:gap-2">
-                                <button
+                              <td className="px-4 py-2 text-sm text-[var(--text-color)]">{new Date(item.createdAt).toLocaleDateString()}</td>
+                              <td className="px-4 py-2 flex flex-col sm:flex-row gap-2">
+                                <Button
                                   onClick={() => handleEditSubmit(item._id)}
-                                  className="bg-green-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-green-600 transition-colors w-full sm:w-auto"
+                                  className="bg-[var(--primary)] text-[var(--text-color)] px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors w-full sm:w-auto"
                                 >
                                   Save
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                   onClick={() => {
                                     setEditingItemId(null);
                                     setCurrentImage('');
                                   }}
-                                  className="bg-gray-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-gray-600 transition-colors w-full sm:w-auto mt-1 sm:mt-0"
+                                  className="bg-[var(--secondary)] text-[var(--text-color)] px-4 py-2 rounded-md text-sm hover:bg-gray-600 transition-colors w-full sm:w-auto"
                                 >
                                   Cancel
-                                </button>
+                                </Button>
                               </td>
                             </>
                           ) : (
                             <>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2">
-                                {item.image && <img src={item.image} alt={item.title} className="w-8 sm:w-12 md:w-16 h-8 sm:h-12 md:h-16 object-cover rounded-md" />}
+                              <td className="px-4 py-2">
+                                {item.image && <img src={item.image} alt={item.title} className="w-16 h-16 object-cover rounded-md" />}
                               </td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium">{item.title}</td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm capitalize">{item.status}</td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm">{item.category?.name || 'N/A'}</td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm">{new Date(item.createdAt).toLocaleDateString()}</td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 flex flex-col sm:flex-row gap-1 sm:gap-2 flex-wrap">
+                              <td className="px-4 py-2 text-sm font-medium text-[var(--text-color)]">{item.title}</td>
+                              <td className="px-4 py-2 text-sm capitalize text-[var(--text-color)]">{item.status}</td>
+                              <td className="px-4 py-2 text-sm text-[var(--text-color)]">{item.category?.name || 'N/A'}</td>
+                              <td className="px-4 py-2 text-sm text-[var(--text-color)]">{new Date(item.createdAt).toLocaleDateString()}</td>
+                              <td className="px-4 py-2 flex flex-col sm:flex-row gap-2 flex-wrap">
                                 <Link
                                   to={`/items/${item._id}`}
-                                  className="bg-blue-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-blue-600 transition-colors w-full sm:w-auto"
+                                  className="bg-[var(--primary)] text-[var(--text-color)] px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors w-full sm:w-auto"
                                 >
                                   View
                                 </Link>
-                                <button
-                                  onClick={() => handleEdit(item)}
-                                  className="bg-yellow-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-yellow-600 transition-colors w-full sm:w-auto mt-1 sm:mt-0"
+                                <Button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleEdit(item);
+                                  }}
+                                  className="bg-yellow-600 text-[var(--text-color)] px-4 py-2 rounded-md text-sm hover:bg-yellow-700 transition-colors w-full sm:w-auto"
                                 >
                                   Edit
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(item._id)}
-                                  className="bg-red-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-red-600 transition-colors w-full sm:w-auto mt-1 sm:mt-0"
+                                </Button>
+                                <Button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDelete(item._id);
+                                  }}
+                                  className="bg-red-600 text-[var(--text-color)] px-4 py-2 rounded-md text-sm hover:bg-red-700 transition-colors w-full sm:w-auto"
                                 >
                                   Delete
-                                </button>
+                                </Button>
                                 {item.status === 'Claimed' && !isClaimant && (
                                   <>
                                     {isPosterOrKeeper && (
-                                      <button
+                                      <Button
                                         onClick={() => handleGenerateOTP(item._id)}
-                                        className="bg-indigo-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-indigo-600 transition-colors w-full sm:w-auto mt-1 sm:mt-0"
+                                        className="bg-[var(--primary)] text-[var(--text-color)] px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors w-full sm:w-auto"
                                       >
                                         Generate OTP
-                                      </button>
+                                      </Button>
                                     )}
                                     {showOtpVerification && otpItemId === item._id && (
-                                      <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2 w-full">
-                                        <input
+                                      <div className="flex items-center gap-2 mt-2 w-full">
+                                        <Input
                                           type="text"
                                           value={otp}
                                           onChange={(e) => setOtp(e.target.value)}
                                           placeholder="Enter OTP"
-                                          className="p-1 sm:p-2 border border-gray-300 rounded-md text-xs sm:text-sm w-full sm:w-20 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                          className="p-2 text-sm w-full sm:w-20"
                                         />
-                                        <button
+                                        <Button
                                           onClick={() => handleVerifyOTP(item._id)}
-                                          className="bg-purple-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-purple-600 transition-colors w-full sm:w-auto mt-1 sm:mt-0"
+                                          className="bg-[var(--primary)] text-[var(--text-color)] px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors w-full sm:w-auto"
                                         >
                                           Verify
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                           onClick={handleCancelOTP}
-                                          className="bg-gray-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm hover:bg-gray-600 transition-colors w-full sm:w-auto mt-1 sm:mt-0"
+                                          className="bg-[var(--secondary)] text-[var(--text-color)] px-4 py-2 rounded-md text-sm hover:bg-gray-600 transition-colors w-full sm:w-auto"
                                         >
                                           Cancel
-                                        </button>
+                                        </Button>
                                       </div>
                                     )}
                                   </>
@@ -459,7 +553,7 @@ function UserDashboard() {
                   </table>
                 </div>
                 {items.length > 0 && (
-                  <div className="mt-2 sm:mt-4 md:mt-6">
+                  <div className="mt-6">
                     <Pagination
                       currentPage={itemsPage}
                       totalPages={itemsTotalPages}
@@ -469,7 +563,7 @@ function UserDashboard() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {items.map((item) => {
                   const isClaimant = user.id === item.claimedById;
                   const isPosterOrKeeper = user.id === item.postedBy._id || user.id === item.keeperId;
@@ -478,8 +572,16 @@ function UserDashboard() {
                     <ItemCard
                       key={item._id}
                       item={item}
-                      onEdit={() => handleEdit(item)}
-                      onDelete={() => handleDelete(item._id)}
+                      onEdit={(e) => {
+                        e?.preventDefault();
+                        e?.stopPropagation();
+                        handleEdit(item);
+                      }}
+                      onDelete={(e) => {
+                        e?.preventDefault();
+                        e?.stopPropagation();
+                        handleDelete(item._id);
+                      }}
                       showActions={editingItemId !== item._id}
                       isEditing={editingItemId === item._id}
                       editFormData={editingItemId === item._id ? editFormData : null}
@@ -489,23 +591,24 @@ function UserDashboard() {
                         setEditingItemId(null);
                         setCurrentImage('');
                       }}
-                      // Hide Generate OTP and Verify OTP for claimant
                       onGenerateOTP={item.status === 'Claimed' && !isClaimant && isPosterOrKeeper ? () => handleGenerateOTP(item._id) : null}
                       onVerifyOTP={item.status === 'Claimed' && showOtpVerification && otpItemId === item._id && !isClaimant ? () => handleVerifyOTP(item._id) : null}
                       otp={showOtpVerification && otpItemId === item._id && !isClaimant ? otp : ''}
                       setOtp={showOtpVerification && otpItemId === item._id && !isClaimant ? setOtp : null}
                       onCancelOTP={showOtpVerification && otpItemId === item._id && !isClaimant ? handleCancelOTP : null}
+                      preventNavigation={true}
+                      redirectAfterDelete={null}
                     />
                   );
                 })}
               </div>
             )}
             {items.length === 0 && (
-              <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4 text-center">
-                <p className="text-gray-600 text-sm sm:text-lg md:text-xl">No items found. Start by adding a new item!</p>
+              <div className="bg-[var(--bg-color)] rounded-lg shadow-lg p-4 text-center">
+                <p className="text-[var(--text-color)] text-lg">No items found. Start by adding a new item!</p>
                 <Link
                   to="/items/create"
-                  className="mt-2 sm:mt-4 inline-block bg-blue-600 text-white py-1 sm:py-2 px-2 sm:px-4 rounded-md hover:bg-blue-700 transition-colors duration-200 text-sm sm:text-base font-medium shadow-md hover:shadow-lg"
+                  className="mt-4 inline-block bg-[var(--primary)] text-[var(--text-color)] py-2 px-4 rounded-md hover:bg-blue-700 transition-colors duration-200 text-base font-medium shadow-md hover:shadow-lg"
                 >
                   Add New Item
                 </Link>

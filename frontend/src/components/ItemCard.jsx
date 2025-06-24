@@ -1,5 +1,10 @@
-import { Link } from 'react-router-dom';
+import { useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import { FaEdit, FaTrash } from 'react-icons/fa';
+import Button from './common/Button';
+import Input from './common/Input';
+import Textarea from './common/Textarea';
 
 const ItemCard = ({
   item,
@@ -11,70 +16,149 @@ const ItemCard = ({
   onEditChange,
   onEditSubmit,
   onCancelEdit,
-  onMarkAsReturned, // New prop for marking item as returned
-  onGenerateOTP,    // New prop for generating OTP
-  onVerifyOTP,      // New prop for verifying OTP
-  otp,              // OTP value
-  setOtp,           // Function to update OTP
+  onGenerateOTP,
+  onVerifyOTP,
+  otp,
+  setOtp,
 }) => {
+  // Access the current user from AuthContext
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  // Determine status badge colors based on status
+  const statusStyles = {
+    Lost: 'bg-red-500 text-white',
+    Found: 'bg-green-500 text-white',
+    Claimed: 'bg-yellow-500 text-black',
+    Returned: 'bg-blue-500 text-white',
+  };
+
+  // Prevent navigation when clicking action buttons
+  const handleActionClick = (e, action) => {
+    e.stopPropagation(); // Prevent any parent Link navigation
+    action(e);
+  };
+
+  const handleSaveClick = (e) => {
+    console.log('Save button clicked', { editFormData });
+    if (onEditSubmit) {
+      handleActionClick(e, onEditSubmit);
+    } else {
+      console.error('onEditSubmit is not defined. Please provide an onEditSubmit function in the parent component.');
+    }
+  };
+
+  // Handle Delete button click
+  const handleDeleteClick = (e) => {
+    console.log('Delete button clicked in ItemCard for item:', item._id);
+    e.stopPropagation();
+    onDelete(e); // Call the onDelete handler with the event
+  };
+
+  // Determine visibility of buttons
+  const isPoster = user && user.id === item?.postedBy?._id;
+  const isKeeper = user && user.id === item?.keeperId;
+  const isAdmin = user && user.role === 'admin';
+
+  // Edit button visibility: Only the poster can see it
+  const canEdit = isPoster;
+
+  // Delete button visibility: Poster or admin can see it
+  const canDelete = isPoster || isAdmin;
+
+  // Generate OTP button visibility: Poster or keeper can see it (only when status is 'Claimed')
+  const canGenerateOTP = (isPoster || isKeeper) && item.status === 'Claimed';
+
+  // Debug Save button and edit form visibility
+  console.log('ItemCard render:', { isEditing, canEdit, editFormData });
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden w-full relative">
-      <div className="relative w-full h-48 sm:h-56 md:h-64 bg-gray-100 rounded-t-xl overflow-hidden">
-        {item.image ? (
-          <img
-            src={item.image}
-            alt={item.title}
-            className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-            onClick={() => window.open(item.image, '_blank')}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm sm:text-base">
-            No Image Available
-          </div>
-        )}
-        {showActions && (
-          <div className="absolute top-2 right-2 flex gap-2">
-            <button
-              onClick={onEdit}
-              className="text-blue-600 hover:text-blue-800 p-2 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 transition-colors"
-              aria-label="Edit item"
-            >
-              <FaEdit size={16} />
-            </button>
-            <button
-              onClick={onDelete}
-              className="text-red-600 hover:text-red-800 p-2 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 transition-colors"
-              aria-label="Delete item"
-            >
-              <FaTrash size={16} />
-            </button>
-          </div>
-        )}
-      </div>
+    <div className="bg-[var(--bg-color)] border border-[var(--secondary)] rounded-xl shadow-sm transform transition-all duration-300 hover:scale-105 hover:shadow-lg overflow-hidden w-full relative">
+      {/* Image Section - Clickable to Navigate */}
+      <Link to={`/items/${item._id}`}>
+        <div className="relative w-full h-48 sm:h-56 md:h-64 bg-[var(--bg-color)] rounded-t-xl overflow-hidden">
+          {item.image ? (
+            <img
+              src={item.image}
+              alt={item.title}
+              className="w-full h-full object-cover transition-opacity rounded-t-xl"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-200 text-[var(--secondary)] text-sm sm:text-base rounded-t-xl">
+              <svg
+                className="w-12 h-12"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 4v16m8-8H4"
+                ></path>
+              </svg>
+            </div>
+          )}
+          {/* Status Badge */}
+          <span
+            className={`absolute top-2 left-2 px-2 py-1 text-xs font-semibold rounded-full ${
+              statusStyles[item.status] || 'bg-gray-500 text-white'
+            }`}
+          >
+            {item.status.toUpperCase()}
+          </span>
+          {showActions && (
+            <div className="absolute top-2 right-2 flex gap-2">
+              {canEdit && (
+                <Button
+                  onClick={(e) => handleActionClick(e, onEdit)}
+                  className="p-2 rounded-full bg-[var(--bg-color)] bg-opacity-80 hover:bg-opacity-100 text-[var(--primary)] hover:text-blue-800 shadow-sm"
+                  aria-label="Edit item"
+                >
+                  <FaEdit size={16} />
+                </Button>
+              )}
+              {canDelete && (
+                <Button
+                  onClick={handleDeleteClick}
+                  className="p-2 rounded-full bg-[var(--bg-color)] bg-opacity-80 hover:bg-opacity-100 text-red-600 hover:text-red-800 shadow-sm"
+                  aria-label="Delete item"
+                >
+                  <FaTrash size={16} />
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </Link>
 
       {isEditing ? (
         <div className="p-4 sm:p-5">
           <div className="space-y-4">
-            <input
+            <Input
               type="text"
               name="title"
               value={editFormData.title}
               onChange={onEditChange}
-              className="w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base"
+              placeholder="Item Title"
+              className="text-sm sm:text-base rounded-md border-[var(--secondary)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
               required
             />
-            <textarea
+            <Textarea
               name="description"
               value={editFormData.description}
               onChange={onEditChange}
-              className="w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base h-20"
+              placeholder="Description"
+              className="text-sm sm:text-base h-20 rounded-md border-[var(--secondary)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
               required
             />
             <select
               name="status"
               value={editFormData.status}
               onChange={onEditChange}
-              className="w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base"
+              className="w-full p-2 border border-[var(--secondary)] rounded-md text-sm sm:text-base bg-[var(--bg-color)] text-[var(--text-color)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
               required
             >
               <option value="Lost">Lost</option>
@@ -82,93 +166,92 @@ const ItemCard = ({
               <option value="Claimed">Claimed</option>
               <option value="Returned">Returned</option>
             </select>
-            <input
+            <Input
               type="text"
               name="category"
               value={editFormData.category}
               onChange={onEditChange}
-              className="w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base"
+              placeholder="Category"
+              className="text-sm sm:text-base rounded-md border-[var(--secondary)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
               required
             />
-            <input
+            <Input
               type="text"
               name="location"
               value={editFormData.location}
               onChange={onEditChange}
-              className="w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base"
+              placeholder="Location"
+              className="text-sm sm:text-base rounded-md border-[var(--secondary)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
               required
             />
-            <input
+            <Input
               type="file"
               name="image"
               onChange={onEditChange}
-              className="w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base"
+              className="text-sm sm:text-base"
             />
             <div className="flex justify-end gap-2 mt-4">
-              <button
-                onClick={onEditSubmit}
-                className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition-colors text-sm"
+              <Button
+                onClick={handleSaveClick}
+                className="bg-[var(--primary)] hover:bg-blue-700 text-white px-4 py-2 rounded-md"
               >
                 Save
-              </button>
-              <button
-                onClick={onCancelEdit}
-                className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600 transition-colors text-sm"
+              </Button>
+              <Button
+                onClick={(e) => handleActionClick(e, onCancelEdit)}
+                className="bg-[var(--secondary)] hover:bg-gray-600 text-white px-4 py-2 rounded-md"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       ) : (
         <div className="p-4 sm:p-5">
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
-            {item.title}
-          </h3>
-          <div className="text-sm sm:text-base text-gray-600 space-y-2 mb-4">
+          {/* Title - Clickable to Navigate */}
+          <Link to={`/items/${item._id}`}>
+            <h3 className="text-lg sm:text-xl font-bold text-[var(--text-color)] mb-2 line-clamp-2 hover:underline">
+              {item.title}
+            </h3>
+          </Link>
+          <div className="text-sm sm:text-base text-[var(--secondary)] space-y-2 mb-4">
             <p>
-              <span className="font-medium text-gray-800">Status:</span>{' '}
+              <span className="font-medium text-[var(--text-color)]">Status:</span>{' '}
               <span className="capitalize">{item.status}</span>
             </p>
             <p>
-              <span className="font-medium text-gray-800">Category:</span>{' '}
+              <span className="font-medium text-[var(--text-color)]">Category:</span>{' '}
               {item.category?.name || 'N/A'}
             </p>
             <p>
-              <span className="font-medium text-gray-800">Posted On:</span>{' '}
+              <span className="font-medium text-[var(--text-color)]">Posted On:</span>{' '}
               {new Date(item.createdAt).toLocaleDateString()}
             </p>
           </div>
           <div className="mt-4 flex flex-col gap-2">
-            <Link
-              to={`/items/${item._id}`}
-              className="text-sm sm:text-base text-blue-600 hover:text-blue-800 font-medium underline underline-offset-2 transition-colors text-right"
-            >
-              View Details
-            </Link>
-            {item.status === 'Claimed' && showActions && (
+            {showActions && canGenerateOTP && (
               <div className="flex flex-col gap-2">
-                <button
-                  onClick={onGenerateOTP}
-                  className="bg-indigo-500 text-white px-3 py-1 rounded-md hover:bg-indigo-600 transition-colors text-sm w-full"
+                <Button
+                  onClick={(e) => handleActionClick(e, onGenerateOTP)}
+                  className="bg-[var(--primary)] hover:bg-blue-700 text-white px-4 py-2 rounded-md"
                 >
                   Generate OTP
-                </button>
+                </Button>
                 {onVerifyOTP && (
                   <div className="flex items-center gap-2">
-                    <input
+                    <Input
                       type="text"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
                       placeholder="Enter OTP"
-                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                      className="text-sm rounded-md border-[var(--secondary)] focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                     />
-                    <button
-                      onClick={onVerifyOTP}
-                      className="bg-purple-500 text-white px-3 py-1 rounded-md hover:bg-purple-600 transition-colors text-sm"
+                    <Button
+                      onClick={(e) => handleActionClick(e, onVerifyOTP)}
+                      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
                     >
                       Verify
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>

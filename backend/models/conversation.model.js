@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
-const mongoosePaginate = require('mongoose-paginate-v2'); // Import the plugin
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 const conversationSchema = new Schema({
   item: {
@@ -17,15 +17,18 @@ const conversationSchema = new Schema({
     required: [true, 'Participants are required'],
     validate: [
       {
-        validator: (arr) => arr.length >= 2,
-        msg: 'A conversation must have at least two participants',
+        validator: (arr) => Array.isArray(arr) && arr.length === 2,
+        msg: 'Participants must be an array with exactly two participants',
       },
       {
         validator: (arr) => new Set(arr).size === arr.length,
         msg: 'Participants must be unique',
       },
+      {
+        validator: (arr) => arr.every(id => mongoose.Types.ObjectId.isValid(id)),
+        msg: 'All participants must be valid ObjectIds',
+      },
     ],
-    index: true,
   },
   lastMessage: {
     type: Schema.Types.ObjectId,
@@ -39,10 +42,19 @@ const conversationSchema = new Schema({
   timestamps: true,
 });
 
-// Apply the mongoose-paginate-v2 plugin
-conversationSchema.plugin(mongoosePaginate);
+// Pre-save hook to ensure participants is valid and sorted
+conversationSchema.pre('save', function(next) {
+  if (!Array.isArray(this.participants)) {
+    return next(new Error('Participants must be an array'));
+  }
+  if (this.participants.length !== 2) {
+    return next(new Error('Participants must have exactly two entries'));
+  }
+  this.participants = this.participants.sort();
+  next();
+});
 
-// Maintain the unique index on item and participants
-conversationSchema.index({ item: 1, participants: 1 }, { unique: true });
+conversationSchema.plugin(mongoosePaginate);
+conversationSchema.index({ item: 1, "participants.0": 1, "participants.1": 1 }, { unique: true });
 
 module.exports = mongoose.model('Conversation', conversationSchema);

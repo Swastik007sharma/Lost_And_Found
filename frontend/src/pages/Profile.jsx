@@ -42,9 +42,7 @@ function Profile() {
   };
 
   useEffect(() => {
-    console.log('Profile component - Current user:', user, 'Token:', token);
     if (!user && !token) {
-      console.log('No user or token, redirecting to login');
       navigate('/login');
     }
   }, [user, token, navigate]);
@@ -100,16 +98,13 @@ function Profile() {
         throw new Error('No authentication token found');
       }
 
-      console.log('Sending profile update:', profileForm, 'Token:', token);
       const response = await updateUserProfile({
         name: profileForm.name,
         email: profileForm.email,
       });
-      console.log('API Response:', response);
 
       // Handle backend response structure
       const updatedUser = response.data.user;
-      console.log('Extracted updated user:', updatedUser);
 
       // Validate updatedUser
       if (!updatedUser || !updatedUser.name || !updatedUser.email) {
@@ -123,7 +118,6 @@ function Profile() {
       console.error('Profile Update Error:', err);
       const errorMessage = err.response?.data?.error || err.message;
       if (err.response?.status === 401) {
-        console.log('Unauthorized error, token may be invalid');
         toast.error('Session expired. Please log in again.');
         setUser(null);
         setTimeout(() => navigate('/login'), 2000);
@@ -131,9 +125,7 @@ function Profile() {
         toast.error('Failed to update profile: ' + errorMessage);
       }
     } finally {
-      console.log('Closing profile form, isFormOpen before:', isFormOpen);
       setIsFormOpen(null);
-      console.log('isFormOpen after:', isFormOpen);
       setLoading(false);
     }
   };

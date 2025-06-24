@@ -7,17 +7,35 @@ exports.createConversation = async (req, res) => {
     const { itemId, participants } = req.validatedBody;
     console.log('Received request with itemId:', itemId, 'and participants:', participants);
 
-    // Validate item (since route validation ensures itemId format, we only check existence)
+    // Validate participants is an array
+    if (!Array.isArray(participants) || participants.length !== 2) {
+      return res.status(400).json({ message: 'Participants must be an array with exactly 2 entries', code: 'INVALID_PARTICIPANTS' });
+    }
+
+    // Validate item
     const item = await Item.findOne({ _id: itemId, isActive: true });
     if (!item) {
       return res.status(404).json({ message: 'Item not found', code: 'NOT_FOUND' });
     }
-    console.log('Item status before conversation:', item.status); // Debug log
+    console.log('Item status before conversation:', item.status);
 
-    // Check for existing conversation
+    // Sort participants for consistency
+    const sortedParticipants = [...participants].sort();
+    console.log('Sorted participants:', sortedParticipants);
+
+    // Debug: Check existing conversations for this item
+    const existingConversations = await Conversation.find({ item: itemId });
+    console.log('Existing conversations for item:', existingConversations);
+
+    // Check for existing conversation (order-independent)
+    console.log('Executing findOne with query:', {
+      item: itemId,
+      participants: { $all: sortedParticipants, $size: sortedParticipants.length },
+      isActive: true,
+    });
     const existingConversation = await Conversation.findOne({
       item: itemId,
-      participants: { $all: participants.sort() }, // Sort participants to handle order consistency
+      participants: { $all: sortedParticipants, $size: sortedParticipants.length },
       isActive: true,
     });
     console.log('Existing conversation check result:', existingConversation);
@@ -32,7 +50,7 @@ exports.createConversation = async (req, res) => {
     // Create new conversation
     const conversation = new Conversation({
       item: itemId,
-      participants: participants.sort(), // Sort to ensure consistency with index
+      participants: sortedParticipants,
       isActive: true,
     });
 
@@ -41,13 +59,23 @@ exports.createConversation = async (req, res) => {
 
     // Verify item status after save
     const updatedItem = await Item.findById(itemId);
-    console.log('Item status after conversation:', updatedItem.status); // Debug log
+    console.log('Item status after conversation:', updatedItem.status);
 
     res.status(201).json({ message: 'Conversation created successfully', conversation });
   } catch (error) {
-    console.error('Error creating conversation:', error.message, error.stack); // Detailed error logging
+    console.error('Error creating conversation:', error.message, error.stack);
     if (error.code === 11000) {
-      return res.status(409).json({ message: 'A conversation with this item and participants already exists', code: 'DUPLICATE_CONVERSATION' });
+      // Debug: Fetch potential duplicate
+      const potentialDuplicate = await Conversation.find({
+        item: req.validatedBody.itemId,
+        participants: { $in: req.validatedBody.participants },
+      });
+      console.log('Potential duplicate conversations:', potentialDuplicate);
+      return res.status(409).json({
+        message: 'A conversation with this item and participants already exists',
+        code: 'DUPLICATE_CONVERSATION',
+        potentialDuplicate,
+      });
     }
     res.status(500).json({ message: 'Failed to create conversation', code: 'SERVER_ERROR' });
   }

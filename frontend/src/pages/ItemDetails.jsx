@@ -11,6 +11,8 @@ import {
 } from "../services/itemService";
 import { startConversation } from "../services/conversationService";
 import { toast } from "react-toastify";
+import { GoShareAndroid } from "react-icons/go";
+import Loader from "../components/common/Loader";
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -30,9 +32,14 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div>
-          <p>Something went wrong: {this.state.error.message}</p>
-          <button onClick={() => window.location.reload()}>Reload</button>
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <p className="text-lg text-red-600">Something went wrong: {this.state.error.message}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 py-2 px-4 bg-[var(--primary)] text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Reload
+          </button>
         </div>
       );
     }
@@ -47,8 +54,8 @@ function ItemDetails() {
   const location = useLocation();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [claimLoading, setClaimLoading] = useState(false); // Separate loading for claim
-  const [conversationLoading, setConversationLoading] = useState(false); // Separate loading for conversation
+  const [claimLoading, setClaimLoading] = useState(false);
+  const [conversationLoading, setConversationLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     title: "",
@@ -64,7 +71,6 @@ function ItemDetails() {
   const [otpItemId, setOtpItemId] = useState(null);
 
   const fetchItem = async () => {
-    console.log("Fetching item - id:", id, "user:", user);
     if (!id) {
       console.warn("No id provided for fetch");
       setLoading(false);
@@ -72,9 +78,7 @@ function ItemDetails() {
     }
     setLoading(true);
     try {
-      console.log("Sending request to getItemDetails with id:", id);
       const response = await getItemDetails(id);
-      console.log("Received response from getItemDetails:", response.data);
       setItem(response.data.item || {});
       setEditFormData({
         title: response.data.item?.title || "",
@@ -101,26 +105,16 @@ function ItemDetails() {
   };
 
   useEffect(() => {
-    console.log("Initial useEffect running - id:", id, "user:", user);
     fetchItem();
   }, [id]);
 
   useEffect(() => {
-    console.log(
-      "Secondary useEffect running - id:",
-      id,
-      "loading:",
-      loading,
-      "item:",
-      item
-    );
     if (!loading && !item) {
       fetchItem();
     }
   }, [loading, item]);
 
   const handleManualFetch = () => {
-    console.log("Manual fetch triggered with id:", id);
     fetchItem();
   };
 
@@ -141,7 +135,7 @@ function ItemDetails() {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    setClaimLoading(true); // Use claimLoading for edit action
+    setClaimLoading(true);
     const data = new FormData();
     data.append("title", editFormData.title);
     data.append("description", editFormData.description);
@@ -196,14 +190,7 @@ function ItemDetails() {
     setConversationLoading(true);
     try {
       const participants = [user.id, item?.postedBy?._id];
-      console.log(
-        "Starting conversation with participants:",
-        participants,
-        "and itemId:",
-        id
-      );
       const response = await startConversation({ itemId: id, participants });
-      console.log("Conversation API response:", response.data);
       if (
         response.data &&
         response.data.conversation &&
@@ -319,21 +306,21 @@ function ItemDetails() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <p className="text-lg text-gray-600 animate-pulse">Loading...</p>
+      <div className="flex items-center justify-center">
+        <Loader />
       </div>
     );
   }
 
   if (!item || Object.keys(item).length === 0) {
     return (
-      <div className="container mx-auto p-6 bg-gray-50 min-h-screen flex items-center justify-center">
-        <p className="text-gray-600 text-lg font-medium">
+      <div className="flex items-center justify-center">
+        <p className="text-[var(--secondary)] text-lg font-medium">
           Item not found or failed to load.
         </p>
         <button
           onClick={handleManualFetch}
-          className="ml-4 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
+          className="ml-4 py-2 px-4 bg-[var(--primary)] text-white rounded-md hover:bg-blue-700 transition-colors"
         >
           Retry Fetch
         </button>
@@ -343,355 +330,375 @@ function ItemDetails() {
 
   return (
     <ErrorBoundary>
-      <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 border-b-2 border-gray-200 pb-2">
-            {item.title}
-          </h1>
-
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-5xl mx-auto lg:mt-8">
           {!isEditing ? (
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="mb-6">
-                {item.image ? (
-                  <div
-                    className="relative w-full h-64 rounded-lg overflow-hidden shadow-md cursor-pointer"
-                    onClick={() => setIsImageModalOpen(true)}
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                      <p className="text-white text-sm font-medium">
-                        Click to enlarge
-                      </p>
+            <div className="bg-[var(--card-bg)] rounded-xl shadow-sm overflow-hidden">
+              <div className="flex flex-col md:flex-row">
+                {/* Image Section */}
+                <div className="md:w-1/3 p-6 bg-gray-100">
+                  {item.image ? (
+                    <div
+                      className="w-full h-full rounded-lg overflow-hidden cursor-pointer"
+                      onClick={() => setIsImageModalOpen(true)}
+                    >
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      />
                     </div>
-                  </div>
-                ) : (
-                  <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <p className="text-gray-500 text-sm">No image available</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-2">
-                    Item Details
-                  </h2>
-                  <div className="space-y-3">
-                    <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">
-                        Description:
-                      </span>{" "}
-                      {item.description}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Status:</span>{" "}
-                      {item.status}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Category:</span>{" "}
-                      {item.category?.name || "N/A"}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Location:</span>{" "}
-                      {item.location}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Posted By:</span>{" "}
-                      {item.postedBy?.name || "Unknown"}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Posted On:</span>{" "}
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Keeper:</span>{" "}
-                      {item.keeperName || "Not Assigned"}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-medium text-gray-900">Claimed By:</span>{" "}
-                      {item.claimedByName || "Not Claimed"}
-                    </p>
-                  </div>
+                  ) : (
+                    <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <svg
+                        className="w-16 h-16 text-[var(--border-color)]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 4v16m8-8H4"
+                        ></path>
+                      </svg>
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-2">
-                    Actions
-                  </h2>
-                  <div className="space-y-4">
-                    {isOwner ? (
-                      <div className="space-y-3">
-                        <button
-                          onClick={handleEdit}
-                          className="w-full py-2 px-4 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors duration-200 font-medium text-sm shadow-md hover:shadow-lg"
-                        >
-                          Edit Item
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {!isOwner && !isKeeper && (
-                          <button
-                            onClick={handleClaim}
-                            disabled={claimLoading || item.status === "Claimed"}
-                            className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                              claimLoading || item.status === "Claimed"
-                                ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-green-600 hover:bg-green-700"
-                            }`}
-                          >
-                            {claimLoading
-                              ? "Processing..."
-                              : item.status === "Claimed"
-                              ? "Already Claimed"
-                              : "Claim Item"}
-                          </button>
-                        )}
-                        <button
-                          onClick={handleStartConversation}
-                          disabled={conversationLoading}
-                          className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                            conversationLoading
-                              ? "bg-gray-400 cursor-not-allowed"
-                              : "bg-blue-600 hover:bg-blue-700"
-                          }`}
-                        >
-                          {conversationLoading ? "Processing..." : "Message Owner"}
-                        </button>
-                      </div>
-                    )}
-                    {user && user.role === "keeper" && !item.keeperId && (
-                      <div className="space-y-3">
-                        <button
-                          onClick={handleAssignKeeper}
-                          disabled={claimLoading}
-                          className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                            claimLoading
-                              ? "bg-gray-400 cursor-not-allowed"
-                              : "bg-purple-600 hover:bg-purple-700"
-                          }`}
-                        >
-                          {claimLoading
-                            ? "Processing..."
-                            : "Assign Myself as Keeper"}
-                        </button>
-                      </div>
-                    )}
-                    {isPosterOrKeeper && item.status === "Claimed" && (
-                      <div className="space-y-3">
-                        <button
-                          onClick={handleGenerateOTP}
-                          disabled={claimLoading}
-                          className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                            claimLoading
-                              ? "bg-gray-400 cursor-not-allowed"
-                              : "bg-orange-600 hover:bg-orange-700"
-                          }`}
-                        >
-                          {claimLoading ? "Processing..." : "Generate OTP"}
-                        </button>
-                      </div>
-                    )}
-                    {otpItemId === id && (
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          value={otp}
-                          onChange={(e) => setOtp(e.target.value)}
-                          placeholder="Enter OTP"
-                          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                        />
-                        <button
-                          onClick={handleVerifyOTP}
-                          disabled={claimLoading}
-                          className={`py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                            claimLoading
-                              ? "bg-gray-400 cursor-not-allowed"
-                              : "bg-purple-600 hover:bg-purple-700"
-                          }`}
-                        >
-                          {claimLoading ? "Verifying..." : "Verify OTP"}
-                        </button>
-                      </div>
-                    )}
-                    <button
-                      onClick={handleShare}
-                      className="w-full py-2 px-4 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors duration-200 font-medium text-sm shadow-md hover:shadow-lg"
-                    >
-                      Share Item
-                    </button>
+                {/* Details Section */}
+                <div className="md:w-2/3 p-6 relative">
+                  {/* Share Icon - Pinned to Top-Right of Details Section */}
+                  <button
+                    onClick={handleShare}
+                    className="absolute top-6 right-6 p-2 rounded-full bg-[var(--status-bg)] hover:bg-opacity-80 transition-colors z-10"
+                    aria-label="Share Item"
+                  >
+                    <GoShareAndroid />
+                  </button>
+
+                  <div className="flex items-center mb-4">
+                    <span className="inline-block px-3 py-1 bg-[var(--status-bg)] text-[var(--status-text)] text-xs font-semibold rounded-full">
+                      {item.status.toUpperCase()}
+                    </span>
+                    <h1 className="ml-3 text-2xl font-bold text-[var(--text-color)]">
+                      {item.title}
+                    </h1>
                   </div>
+
+                  <p className="text-[var(--secondary)] mb-6">{item.description}</p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <h2 className="text-lg font-semibold text-[var(--text-color)] mb-3">
+                        Item Details
+                      </h2>
+                      <div className="space-y-2">
+                        <p className="text-sm text-[var(--secondary)]">
+                          <span className="font-medium">Category:</span>{" "}
+                          {item.category?.name || "N/A"}
+                        </p>
+                        <p className="text-sm text-[var(--secondary)]">
+                          <span className="font-medium">Location:</span>{" "}
+                          {item.location}
+                        </p>
+                        <p className="text-sm text-[var(--secondary)]">
+                          <span className="font-medium">Posted By:</span>{" "}
+                          {item.postedBy?.name || "Unknown"}{" "}
+                          {item.postedBy?.role === "admin" && "(Admin)"}
+                        </p>
+                        <p className="text-sm text-[var(--secondary)]">
+                          <span className="font-medium">Posted On:</span>{" "}
+                          {new Date(item.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-[var(--text-color)] mb-3">
+                        Status Information
+                      </h2>
+                      <div className="space-y-2">
+                        <p className="text-sm text-[var(--secondary)]">
+                          <span className="font-medium">Status:</span>{" "}
+                          {item.status}
+                        </p>
+                        <p className="text-sm text-[var(--secondary)]">
+                          <span className="font-medium">Keeper:</span>{" "}
+                          {item.keeperName || "Not Assigned"}
+                        </p>
+                        <p className="text-sm text-[var(--secondary)]">
+                          <span className="font-medium">Claimed By:</span>{" "}
+                          {item.claimedByName || "Not Claimed"}
+                        </p>
+                        <p className="text-sm text-[var(--secondary)]">
+                          <span className="font-medium">Reference #:</span>{" "}
+                          LF-{item.createdAt.split("-")[0]}-{id.slice(-4)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-3">
+                    {isOwner ? (
+                      <button
+                        onClick={handleEdit}
+                        className="flex-1 py-2 px-4 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors font-medium"
+                      >
+                        Edit Item
+                      </button>
+                    ) : (
+                      <>
+                        {!isOwner && !isKeeper && (
+                          <>
+                            <button
+                              onClick={handleClaim}
+                              disabled={claimLoading || item.status === "Claimed"}
+                              className={`flex-1 py-2 px-4 rounded-md text-white font-medium transition-colors ${
+                                claimLoading || item.status === "Claimed"
+                                  ? "bg-gray-400 cursor-not-allowed"
+                                  : "bg-[var(--primary)] hover:bg-blue-700"
+                              }`}
+                            >
+                              {claimLoading
+                                ? "Processing..."
+                                : item.status === "Claimed"
+                                ? "Already Claimed"
+                                : "Claim This Item"}
+                            </button>
+                            <button
+                              onClick={handleStartConversation}
+                              disabled={conversationLoading}
+                              className={`flex-1 py-2 px-4 rounded-md text-[var(--primary)] border border-[var(--primary)] font-medium transition-colors bg-white hover:bg-gray-50 ${
+                                conversationLoading
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : "opacity-100"
+                              }`}
+                            >
+                              {conversationLoading ? "Processing..." : "Message Post Owner"}
+                            </button>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {user && user.role === "keeper" && !item.keeperId && (
+                    <button
+                      onClick={handleAssignKeeper}
+                      disabled={claimLoading}
+                      className={`mt-4 w-full py-2 px-4 rounded-md text-white font-medium transition-colors ${
+                        claimLoading
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-purple-600 hover:bg-purple-700"
+                      }`}
+                    >
+                      {claimLoading
+                        ? "Processing..."
+                        : "Assign Myself as Keeper"}
+                    </button>
+                  )}
+
+                  {isPosterOrKeeper && item.status === "Claimed" && (
+                    <button
+                      onClick={handleGenerateOTP}
+                      disabled={claimLoading}
+                      className={`mt-4 w-full py-2 px-4 rounded-md text-white font-medium transition-colors ${
+                        claimLoading
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-orange-600 hover:bg-orange-700"
+                      }`}
+                    >
+                      {claimLoading ? "Processing..." : "Generate OTP"}
+                    </button>
+                  )}
+
+                  {otpItemId === id && (
+                    <div className="mt-4 flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        placeholder="Enter OTP"
+                        className="flex-1 p-2 border border-[var(--border-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      />
+                      <button
+                        onClick={handleVerifyOTP}
+                        disabled={claimLoading}
+                        className={`py-2 px-4 rounded-md text-white font-medium transition-colors ${
+                          claimLoading
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-purple-600 hover:bg-purple-700"
+                        }`}
+                      >
+                        {claimLoading ? "Verifying..." : "Verify OTP"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           ) : (
-            <form
-              onSubmit={handleEditSubmit}
-              className="bg-white rounded-lg shadow-lg p-6"
-              encType="multipart/form-data"
-            >
-              <div className="mb-6">
-                {item.image ? (
-                  <div
-                    className="relative w-full h-64 rounded-lg overflow-hidden shadow-md mb-2 cursor-pointer"
-                    onClick={() => setIsImageModalOpen(true)}
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+            <form onSubmit={handleEditSubmit} className="bg-[var(--card-bg)] rounded-xl shadow-sm p-6">
+              <h1 className="text-2xl font-bold text-[var(--text-color)] mb-6">
+                Edit Item: {item.title}
+              </h1>
+              <div className="flex flex-col md:flex-row">
+                <div className="md:w-1/3 p-6 bg-gray-100">
+                  {item.image ? (
+                    <div
+                      className="w-full h-64 rounded-lg overflow-hidden cursor-pointer mb-4"
+                      onClick={() => setIsImageModalOpen(true)}
+                    >
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center mb-4">
+                      <p className="text-[var(--secondary)] text-sm">No image available</p>
+                    </div>
+                  )}
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="file"
+                      id="image"
+                      name="image"
+                      accept="image/*"
+                      onChange={handleEditChange}
+                      className="w-full p-2 border border-[var(--border-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-[var(--primary)] hover:file:bg-blue-100"
                     />
-                    <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                      <p className="text-white text-sm font-medium">
-                        Current Image
-                      </p>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="removeImage"
+                        checked={removeImage}
+                        onChange={handleEditChange}
+                        className="mr-2 h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-[var(--border-color)] rounded"
+                      />
+                      <span className="text-sm text-[var(--text-color)]">Remove Image</span>
+                    </label>
+                  </div>
+                </div>
+                <div className="md:w-2/3 p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label
+                          htmlFor="title"
+                          className="block text-sm font-medium text-[var(--text-color)] mb-1"
+                        >
+                          Title
+                        </label>
+                        <input
+                          type="text"
+                          id="title"
+                          name="title"
+                          value={editFormData.title}
+                          onChange={handleEditChange}
+                          className="w-full p-2 border border-[var(--border-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-sm"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="description"
+                          className="block text-sm font-medium text-[var(--text-color)] mb-1"
+                        >
+                          Description
+                        </label>
+                        <textarea
+                          id="description"
+                          name="description"
+                          value={editFormData.description}
+                          onChange={handleEditChange}
+                          className="w-full p-2 border border-[var(--border-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-sm h-24 resize-y"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label
+                          htmlFor="category"
+                          className="block text-sm font-medium text-[var(--text-color)] mb-1"
+                        >
+                          Category
+                        </label>
+                        <input
+                          type="text"
+                          id="category"
+                          name="category"
+                          value={editFormData.category}
+                          onChange={handleEditChange}
+                          className="w-full p-2 border border-[var(--border-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-sm"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="status"
+                          className="block text-sm font-medium text-[var(--text-color)] mb-1"
+                        >
+                          Status
+                        </label>
+                        <select
+                          id="status"
+                          name="status"
+                          value={editFormData.status}
+                          onChange={handleEditChange}
+                          className="w-full p-2 border border-[var(--border-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-sm"
+                          required
+                        >
+                          <option value="Lost">Lost</option>
+                          <option value="Found">Found</option>
+                          <option value="Claimed">Claimed</option>
+                          <option value="Returned">Returned</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="location"
+                          className="block text-sm font-medium text-[var(--text-color)] mb-1"
+                        >
+                          Location
+                        </label>
+                        <input
+                          type="text"
+                          id="location"
+                          name="location"
+                          value={editFormData.location}
+                          onChange={handleEditChange}
+                          className="w-full p-2 border border-[var(--border-color)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary)] text-sm"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
-                ) : (
-                  <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center mb-2">
-                    <p className="text-gray-500 text-sm">No image available</p>
-                  </div>
-                )}
-                <div className="flex items-center space-x-4">
-                  <input
-                    type="file"
-                    id="image"
-                    name="image"
-                    accept="image/*"
-                    onChange={handleEditChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="removeImage"
-                      checked={removeImage}
-                      onChange={handleEditChange}
-                      className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="text-sm text-gray-700">Remove Image</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="title"
-                      className="block text-sm font-medium text-gray-700 mb-1"
+                  <div className="mt-6 flex justify-end space-x-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="py-2 px-4 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors font-medium"
                     >
-                      Title
-                    </label>
-                    <input
-                      type="text"
-                      id="title"
-                      name="title"
-                      value={editFormData.title}
-                      onChange={handleEditChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="description"
-                      className="block text-sm font-medium text-gray-700 mb-1"
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={claimLoading}
+                      className={`py-2 px-4 rounded-md text-white font-medium transition-colors ${
+                        claimLoading
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-[var(--primary)] hover:bg-blue-700"
+                      }`}
                     >
-                      Description
-                    </label>
-                    <textarea
-                      id="description"
-                      name="description"
-                      value={editFormData.description}
-                      onChange={handleEditChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm h-24 resize-y"
-                      required
-                    />
+                      {claimLoading ? "Saving..." : "Save Changes"}
+                    </button>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="category"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Category
-                    </label>
-                    <input
-                      type="text"
-                      id="category"
-                      name="category"
-                      value={editFormData.category}
-                      onChange={handleEditChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="status"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Status
-                    </label>
-                    <select
-                      id="status"
-                      name="status"
-                      value={editFormData.status}
-                      onChange={handleEditChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      required
-                    >
-                      <option value="Lost">Lost</option>
-                      <option value="Found">Found</option>
-                      <option value="Claimed">Claimed</option>
-                      <option value="Returned">Returned</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="location"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Location
-                    </label>
-                    <input
-                      type="text"
-                      id="location"
-                      name="location"
-                      value={editFormData.location}
-                      onChange={handleEditChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="py-2 px-4 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors duration-200 text-sm font-medium shadow-md hover:shadow-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={claimLoading}
-                  className={`py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${
-                    claimLoading
-                      ? "bg-blue-400 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700"
-                  }`}
-                >
-                  {claimLoading ? "Saving..." : "Save Changes"}
-                </button>
               </div>
             </form>
           )}
@@ -705,7 +712,7 @@ function ItemDetails() {
             <div className="relative max-w-4xl w-full h-[80vh] bg-white rounded-lg overflow-hidden shadow-2xl">
               <button
                 onClick={() => setIsImageModalOpen(false)}
-                className="absolute top-4 right-4 text-white bg-red-500 rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                className="absolute top-4 right-4 text-white bg-red-500 rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors"
               >
                 ×
               </button>

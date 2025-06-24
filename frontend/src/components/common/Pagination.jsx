@@ -1,33 +1,42 @@
-import React from 'react';
+import Button from './Button';
 
 function Pagination({ currentPage, totalPages, onPageChange }) {
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  const maxPages = 5;
+  const startPage = Math.max(1, currentPage - Math.floor(maxPages / 2));
+  const endPage = Math.min(totalPages, startPage + maxPages - 1);
+  const pages = Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
 
   return (
     <div className="flex justify-center items-center gap-2 mt-6">
-      <button
+      <Button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
+        className="bg-[var(--bg-color)] text-[var(--text-color)] hover:bg-[var(--secondary)] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Previous
-      </button>
+      </Button>
+      {startPage > 1 && <span className="text-[var(--text-color)]">...</span>}
       {pages.map((page) => (
-        <button
+        <Button
           key={page}
           onClick={() => onPageChange(page)}
-          className={`px-3 py-1 rounded-md ${page === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+          className={
+            page === currentPage
+              ? 'bg-[var(--primary)] text-[var(--text-color)] hover:bg-blue-700'
+              : 'bg-[var(--bg-color)] text-[var(--text-color)] hover:bg-[var(--secondary)]'
+          }
         >
           {page}
-        </button>
+        </Button>
       ))}
-      <button
+      {endPage < totalPages && <span className="text-[var(--text-color)]">...</span>}
+      <Button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
+        className="bg-[var(--bg-color)] text-[var(--text-color)] hover:bg-[var(--secondary)] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Next
-      </button>
+      </Button>
     </div>
   );
 }

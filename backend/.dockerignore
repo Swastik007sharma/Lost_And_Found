@@ -1,7 +1,6 @@
 node_modules
 npm-debug.log
 .env
-uploads/
-logs/
-.DS_Store
-coverage/
+uploads
+logs
+.gitignore

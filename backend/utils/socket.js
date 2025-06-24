@@ -10,7 +10,7 @@ module.exports = (server) => {
         const allowedOrigins = process.env.ALLOWED_ORIGINS
           ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim().replace(/\/$/, ''))
           : ['http://localhost:5173', 'http://localhost:5000', 'http://localhost:3000'].map(origin => origin.replace(/\/$/, ''));
-        console.log('Requested origin:', origin, 'Allowed origins:', allowedOrigins);
+        // console.log('Requested origin:', origin, 'Allowed origins:', allowedOrigins);
 
         // Allow requests with no origin (e.g., server-side or some clients)
         if (!origin) {
@@ -24,14 +24,15 @@ module.exports = (server) => {
 
         // Allow the production origin explicitly, in addition to allowedOrigins
         if (normalizedOrigin === 'https://lost-and-found-off.onrender.com' || allowedOrigins.includes(normalizedOrigin)) {
-          console.log('Origin allowed:', normalizedOrigin);
+          // console.log('Origin allowed:', normalizedOrigin);
           callback(null, true);
         } else {
-          console.log('Origin denied:', normalizedOrigin);
+          // console.log('Origin denied:', normalizedOrigin);
           callback(new Error('Not allowed by CORS'));
         }
       },
       methods: ['GET', 'POST', 'OPTIONS'],
+      // secure: process.env.NODE_ENV === 'production',
       credentials: true,
       allowedHeaders: ['Content-Type', 'Authorization', 'Upgrade', 'Connection'],
     },
@@ -43,19 +44,19 @@ module.exports = (server) => {
   });
 
   io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id, 'Transport:', socket.conn.transport.name, 'Handshake:', socket.handshake);
+    // console.log('New client connected:', socket.id, 'Transport:', socket.conn.transport.name, 'Handshake:', socket.handshake);
 
     const userId = socket.handshake.query.userId;
 
     if (userId) {
       socket.join(userId);
-      console.log(`User ${userId} joined personal room`);
+      // console.log(`User ${userId} joined personal room`);
     } else {
-      console.log('No userId provided, connection may be unstable');
+      // console.log('No userId provided, connection may be unstable');
     }
 
     socket.conn.on('upgrade', () => {
-      console.log('Upgrade attempt detected for socket:', socket.id);
+      // console.log('Upgrade attempt detected for socket:', socket.id);
     });
 
     socket.conn.on('upgradeError', (error) => {

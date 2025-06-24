@@ -26,15 +26,19 @@ import {
 	toggleItemActivation,
 	assignKeeperToItem,
 } from "../services/itemService";
-import { register, verifyOtp } from "../services/authService"; // Added verifyOtp
-import { Link, useNavigate } from "react-router-dom"; // Added useNavigate
+import { register, verifyOtp } from "../services/authService";
+import { Link, useNavigate } from "react-router-dom";
 import useClickOutside from "../hooks/useClickOutside";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Loader from "../components/common/Loader";
 import Pagination from "../components/common/Pagination";
-import { toast } from "react-toastify"; // Ensure Toastify is imported
+import Input from "../components/common/Input";
+import Select from "../components/common/Select";
+import Textarea from "../components/common/Textarea";
+import Button from "../components/common/Button";
+import { toast } from "react-toastify";
 
-// UsersTab Component (unchanged)
+// UsersTab Component
 function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 	const [users, setUsers] = useState([]);
 	const [userSearch, setUserSearch] = useState("");
@@ -119,8 +123,8 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 
 	const userSearchSection = useMemo(
 		() => (
-			<div className="mb-6 flex flex-col sm:flex-row gap-4 items-center bg-white p-4 rounded-lg shadow-sm">
-				<input
+			<div className="mb-6 flex flex-col sm:flex-row gap-4 items-center bg-[var(--bg-color)] p-4 rounded-lg shadow-sm">
+				<Input
 					type="text"
 					placeholder="Search by name, email, or role..."
 					value={userSearch}
@@ -128,49 +132,49 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 						setUserSearch(e.target.value);
 						setPage((prev) => ({ ...prev, users: 1 }));
 					}}
-					className="w-full sm:w-1/3 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+					className="w-full sm:w-1/3 text-sm input-border"
 				/>
-				<select
+				<Select
 					value={userSortBy}
 					onChange={(e) => {
 						setUserSortBy(e.target.value);
 						setPage((prev) => ({ ...prev, users: 1 }));
 					}}
-					className="w-full sm:w-1/3 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+					className="w-full sm:w-1/3 text-sm input-border"
 				>
 					<option value="name">Name</option>
 					<option value="email">Email</option>
 					<option value="createdAt">Created At</option>
-				</select>
-				<select
+				</Select>
+				<Select
 					value={userOrder}
 					onChange={(e) => {
 						setUserOrder(e.target.value);
 						setPage((prev) => ({ ...prev, users: 1 }));
 					}}
-					className="w-full sm:w-1/3 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+					className="w-full sm:w-1/3 text-sm input-border"
 				>
 					<option value="asc">Ascending</option>
 					<option value="desc">Descending</option>
-				</select>
+				</Select>
 			</div>
 		),
 		[userSearch, userSortBy, userOrder, setPage]
 	);
 
 	return (
-		<div className="bg-white p-6 rounded-xl shadow-lg transition-all duration-300">
+		<div className="bg-[var(--bg-color)] p-6 rounded-xl shadow-lg transition-all duration-300">
 			{userSearchSection}
-			<h2 className="text-2xl font-semibold text-gray-800 mb-6">Manage Users</h2>
+			<h2 className="text-2xl font-semibold text-[var(--text-color)] mb-6">Manage Users</h2>
 			{(success || error) && (
 				<div className="mb-4">
 					{success && (
-						<div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow-md animate-fade-in">
+						<div className="bg-green-600 text-white p-4 rounded-lg shadow-md animate-fade-in">
 							<p className="text-sm font-medium">{success}</p>
 						</div>
 					)}
 					{error && (
-						<div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-md animate-fade-in">
+						<div className="bg-red-600 text-white p-4 rounded-lg shadow-md animate-fade-in">
 							<p className="text-sm font-medium">{error}</p>
 						</div>
 					)}
@@ -181,9 +185,9 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 			) : (
 				<>
 					<div className="overflow-x-auto rounded-lg shadow-sm">
-						<table className="min-w-full table-auto border-collapse bg-white">
+						<table className="min-w-full table-auto border-collapse bg-[var(--bg-color)]">
 							<thead>
-								<tr className="bg-gray-100 text-left text-sm font-semibold text-gray-700">
+								<tr className="table-header text-left text-sm font-semibold text-[var(--text-color)]">
 									<th className="px-6 py-4 border-b">Name</th>
 									<th className="px-6 py-4 border-b">Email</th>
 									<th className="px-6 py-4 border-b">Role</th>
@@ -195,16 +199,14 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 								{users.map((u) => (
 									<tr
 										key={u._id}
-										className="border-t hover:bg-gray-50 transition-colors duration-200"
+										className="border-t table-row-hover transition-colors duration-200"
 									>
-										<td className="px-6 py-4 text-sm text-gray-800">{u.name}</td>
-										<td className="px-6 py-4 text-sm text-gray-800">{u.email}</td>
-										<td className="px-6 py-4 text-sm text-gray-800">{u.role}</td>
-										<td className="px-6 py-4 text-sm text-gray-800">
+										<td className="px-6 py-4 text-sm text-[var(--text-color)]">{u.name}</td>
+										<td className="px-6 py-4 text-sm text-[var(--text-color)]">{u.email}</td>
+										<td className="px-6 py-4 text-sm text-[var(--text-color)]">{u.role}</td>
+										<td className="px-6 py-4 text-sm text-[var(--text-color)]">
 											<span
-												className={`px-2 py-1 rounded-full text-xs ${u.isActive
-													? "bg-green-100 text-green-700"
-													: "bg-red-100 text-red-700"
+												className={`px-2 py-1 rounded-full text-xs ${u.isActive ? "bg-green-600 text-white" : "bg-red-600 text-white"
 													}`}
 											>
 												{u.isActive ? "Active" : "Inactive"}
@@ -213,23 +215,20 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 										<td className="px-6 py-4 text-sm flex gap-3">
 											<Link
 												to={`../users/${u._id}`}
-												className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm"
-											>View</Link>
-											<button
-												onClick={() =>
-													handleToggleUserActivation(u._id, u.isActive)
-												}
-												className={`px-4 py-2 rounded-lg text-sm transition-colors duration-200 shadow-sm ${u.isActive
+												className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+											>
+												View
+											</Link>
+											<Button
+												onClick={() => handleToggleUserActivation(u._id, u.isActive)}
+												className={`px-4 py-2 rounded-lg text-sm transition-colors duration-200 shadow-sm text-white ${u.isActive
 													? "bg-red-600 hover:bg-red-700"
 													: "bg-green-600 hover:bg-green-700"
-													} text-white ${u._id === user._id
-														? "opacity-50 cursor-not-allowed"
-														: ""
-													}`}
+													} ${u._id === user._id ? "opacity-50 cursor-not-allowed" : ""}`}
 												disabled={u._id === user._id}
 											>
 												{u.isActive ? "Deactivate" : "Activate"}
-											</button>
+											</Button>
 										</td>
 									</tr>
 								))}
@@ -404,8 +403,8 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 
 	const itemSearchSection = useMemo(
 		() => (
-			<div className="mb-6 flex flex-col sm:flex-row gap-4 items-center bg-white p-4 rounded-lg shadow-sm">
-				<input
+			<div className="mb-6 flex flex-col sm:flex-row gap-4 items-center bg-[var(--bg-color)] p-4 rounded-lg shadow-sm">
+				<Input
 					type="text"
 					placeholder="Search by title, description, or status..."
 					value={itemSearch}
@@ -413,49 +412,49 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 						setItemSearch(e.target.value);
 						setPage((prev) => ({ ...prev, items: 1 }));
 					}}
-					className="w-full sm:w-1/3 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+					className="w-full sm:w-1/3 text-sm input-border"
 				/>
-				<select
+				<Select
 					value={itemSortBy}
 					onChange={(e) => {
 						setItemSortBy(e.target.value);
 						setPage((prev) => ({ ...prev, items: 1 }));
 					}}
-					className="w-full sm:w-1/3 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+					className="w-full sm:w-1/3 text-sm input-border"
 				>
 					<option value="title">Title</option>
 					<option value="status">Status</option>
 					<option value="createdAt">Created At</option>
-				</select>
-				<select
+				</Select>
+				<Select
 					value={itemOrder}
 					onChange={(e) => {
 						setItemOrder(e.target.value);
 						setPage((prev) => ({ ...prev, items: 1 }));
 					}}
-					className="w-full sm:w-1/3 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+					className="w-full sm:w-1/3 text-sm input-border"
 				>
 					<option value="asc">Ascending</option>
 					<option value="desc">Descending</option>
-				</select>
+				</Select>
 			</div>
 		),
 		[itemSearch, itemSortBy, itemOrder, setPage]
 	);
 
 	return (
-		<div className="bg-white p-6 rounded-xl shadow-lg transition-all duration-300">
+		<div className="bg-[var(--bg-color)] p-6 rounded-xl shadow-lg transition-all duration-300">
 			{itemSearchSection}
-			<h2 className="text-2xl font-semibold text-gray-800 mb-6">Manage Items</h2>
+			<h2 className="text-2xl font-semibold text-[var(--text-color)] mb-6">Manage Items</h2>
 			{(success || error) && (
 				<div className="mb-4">
 					{success && (
-						<div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow-md animate-fade-in">
+						<div className="bg-green-600 text-white p-4 rounded-lg shadow-md animate-fade-in">
 							<p className="text-sm font-medium">{success}</p>
 						</div>
 					)}
 					{error && (
-						<div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-md animate-fade-in">
+						<div className="bg-red-600 text-white p-4 rounded-lg shadow-md animate-fade-in">
 							<p className="text-sm font-medium">{error}</p>
 						</div>
 					)}
@@ -466,9 +465,9 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 			) : (
 				<>
 					<div className="overflow-x-auto rounded-lg shadow-sm">
-						<table className="min-w-full table-auto border-collapse bg-white">
+						<table className="min-w-full table-auto border-collapse bg-[var(--bg-color)]">
 							<thead>
-								<tr className="bg-gray-100 text-left text-sm font-semibold text-gray-700">
+								<tr className="table-header text-left text-sm font-semibold text-[var(--text-color)]">
 									<th className="px-6 py-4 border-b">Title</th>
 									<th className="px-6 py-4 border-b">Status</th>
 									<th className="px-6 py-4 border-b">Posted By</th>
@@ -483,54 +482,50 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 								{items.map((item) => (
 									<tr
 										key={item._id}
-										className="border-t hover:bg-gray-50 transition-colors duration-200"
+										className="border-t table-row-hover transition-colors duration-200"
 									>
-										<td className="px-6 py-4 text-sm text-gray-800">{item.title}</td>
-										<td className="px-6 py-4 text-sm text-gray-800">{item.status}</td>
-										<td className="px-6 py-4 text-sm text-gray-800">
+										<td className="px-6 py-4 text-sm text-[var(--text-color)]">{item.title}</td>
+										<td className="px-6 py-4 text-sm text-[var(--text-color)]">{item.status}</td>
+										<td className="px-6 py-4 text-sm text-[var(--text-color)]">
 											{item.postedBy?.name || "Unknown"}
 										</td>
-										<td className="px-6 py-4 text-sm text-gray-800">
+										<td className="px-6 py-4 text-sm text-[var(--text-color)]">
 											{item.category?.name || "N/A"}
 										</td>
-										<td className="px-6 py-4 text-sm text-gray-800">
+										<td className="px-6 py-4 text-sm text-[var(--text-color)]">
 											<span
-												className={`px-2 py-1 rounded-full text-xs ${item.isActive
-													? "bg-green-100 text-green-700"
-													: "bg-red-100 text-red-700"
+												className={`px-2 py-1 rounded-full text-xs ${item.isActive ? "bg-green-600 text-white" : "bg-red-600 text-white"
 													}`}
 											>
 												{item.isActive ? "Active" : "Inactive"}
 											</span>
 										</td>
-										<td className="px-6 py-4 text-sm text-gray-800">
+										<td className="px-6 py-4 text-sm text-[var(--text-color)]">
 											{item.keeperName || "Not Assigned"}
 										</td>
-										<td className="px-6 py-4 text-sm text-gray-800">
+										<td className="px-6 py-4 text-sm text-[var(--text-color)]">
 											{item.claimedByName || "Not Claimed"}
 										</td>
 										<td className="px-6 py-4 text-sm flex gap-3 flex-wrap">
 											<Link
 												to={`/items/${item._id}`}
-												className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+												className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm"
 											>
 												View
 											</Link>
-											<button
-												onClick={() =>
-													handleToggleItemActivation(item._id, item.isActive)
-												}
-												className={`px-4 py-2 rounded-lg text-sm transition-colors duration-200 shadow-sm ${item.isActive
+											<Button
+												onClick={() => handleToggleItemActivation(item._id, item.isActive)}
+												className={`px-4 py-2 rounded-lg text-sm transition-colors duration-200 shadow-sm text-white ${item.isActive
 													? "bg-red-600 hover:bg-red-700"
 													: "bg-green-600 hover:bg-green-700"
-													} text-white`}
+													}`}
 											>
 												{item.isActive ? "Deactivate" : "Activate"}
-											</button>
-											<select
+											</Button>
+											<Select
 												value={selectedKeeperIds[item._id] || ""}
 												onChange={(e) => handleKeeperChange(item._id, e)}
-												className="p-2 border border-gray-200 rounded-lg text-sm"
+												className="p-2 text-sm input-border"
 											>
 												<option value="">Select Keeper</option>
 												{keepers.map((k) => (
@@ -538,13 +533,13 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 														{k.name}
 													</option>
 												))}
-											</select>
-											<button
+											</Select>
+											<Button
 												onClick={() => handleAssignKeeper(item._id)}
 												className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700 transition-colors duration-200 shadow-sm"
 											>
 												Assign Keeper
-											</button>
+											</Button>
 										</td>
 									</tr>
 								))}
@@ -554,9 +549,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 					<Pagination
 						currentPage={page.items}
 						totalPages={totalPages.items}
-						onPageChange={(newPage) =>
-							setPage((prev) => ({ ...prev, items: newPage }))
-						}
+						onPageChange={(newPage) => setPage((prev) => ({ ...prev, items: newPage }))}
 					/>
 				</>
 			)}
@@ -567,7 +560,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 // Main AdminDashboard Component
 function AdminDashboard() {
 	const { user } = useContext(AuthContext);
-	const navigate = useNavigate(); // Added for redirection
+	const navigate = useNavigate();
 	const [activeTab, setActiveTab] = useState("overview");
 	const [stats, setStats] = useState({});
 	const [keepers, setKeepers] = useState([]);
@@ -728,7 +721,6 @@ function AdminDashboard() {
 				confirmPassword: "",
 				role: "admin",
 			});
-			// Redirect to OTP verification page
 			navigate(`/verify-otp?email=${encodeURIComponent(accountForm.email)}`);
 		} catch (err) {
 			const errorMsg = "Failed to create account: " + (err.response?.data?.message || err.message);
@@ -853,27 +845,27 @@ function AdminDashboard() {
 		setShowConfirmPassword(!showConfirmPassword);
 
 	return (
-		<div className="container mx-auto p-6 bg-gray-100 min-h-screen transition-all duration-300">
-			<h1 className="text-3xl font-bold mb-8 text-gray-800 text-center animate-fade-in-down">
+		<div className="container mx-auto p-6 bg-[var(--bg-color)] min-h-screen transition-all duration-300">
+			<h1 className="text-3xl font-bold mb-8 text-[var(--text-color)] text-center animate-fade-in-down">
 				Admin Dashboard
 			</h1>
 
 			{(success || error) && (
 				<div className="fixed top-6 right-6 z-50 w-full max-w-sm">
 					{success && (
-						<div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow-md animate-fade-in">
+						<div className="bg-green-600 text-white p-4 rounded-lg shadow-md animate-fade-in">
 							<p className="text-sm font-medium">{success}</p>
 						</div>
 					)}
 					{error && (
-						<div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg shadow-md animate-fade-in">
+						<div className="bg-red-600 text-white p-4 rounded-lg shadow-md animate-fade-in">
 							<p className="text-sm font-medium">{error}</p>
 						</div>
 					)}
 				</div>
 			)}
 
-			<div className="flex flex-wrap gap-3 mb-8 border-b border-gray-300 pb-2">
+			<div className="flex flex-wrap gap-3 mb-8 border-b border-[var(--secondary)] pb-2">
 				{[
 					"overview",
 					"users",
@@ -883,19 +875,19 @@ function AdminDashboard() {
 					"categories",
 					"create-account",
 				].map((tab) => (
-					<button
+					<Button
 						key={tab}
 						onClick={() => setActiveTab(tab)}
-						className={`py-2 px-5 text-sm font-semibold rounded-lg transition-all duration-200 ${activeTab === tab
-							? "bg-blue-600 text-white shadow-md"
-							: "bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-gray-800"
+						className={`py-2 px-5 text-sm font-semibold rounded-lg transition-all duration-200 text-white ${activeTab === tab
+							? "bg-[var(--primary)] shadow-md"
+							: "bg-[var(--secondary)] hover:bg-gray-600"
 							}`}
 					>
 						{tab
 							.split("-")
 							.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 							.join(" ")}
-					</button>
+					</Button>
 				))}
 			</div>
 
@@ -910,17 +902,17 @@ function AdminDashboard() {
 								return (
 									<div
 										key={key}
-										className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+										className="bg-[var(--bg-color)] p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
 									>
-										<h2 className="text-xl font-semibold text-gray-800 mb-4 capitalize">
+										<h2 className="text-xl font-semibold text-[var(--text-color)] mb-4 capitalize">
 											{key.replace(/([A-Z])/g, " $1").trim()}
 										</h2>
-										<p className="text-3xl text-blue-600 font-bold">{value}</p>
+										<p className="text-3xl text-[var(--primary)] font-bold">{value}</p>
 									</div>
 								);
 							})}
-							<div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 col-span-1 sm:col-span-2 lg:col-span-3">
-								<h2 className="text-xl font-semibold text-gray-800 mb-4">
+							<div className="bg-[var(--bg-color)] p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 col-span-1 sm:col-span-2 lg:col-span-3">
+								<h2 className="text-xl font-semibold text-[var(--text-color)] mb-4">
 									Most Active Users
 								</h2>
 								{stats.mostActiveUsers?.length > 0 ? (
@@ -928,19 +920,19 @@ function AdminDashboard() {
 										{stats.mostActiveUsers.map((activeUser) => (
 											<li
 												key={activeUser.userId}
-												className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+												className="flex justify-between items-center p-3 bg-gray-50 rounded-lg table-row-hover transition-colors duration-200"
 											>
-												<span className="text-sm text-gray-700">
+												<span className="text-sm text-[var(--text-color)]">
 													{activeUser.name} ({activeUser.email})
 												</span>
-												<span className="text-sm text-blue-600 font-medium">
+												<span className="text-sm text-[var(--primary)] font-medium">
 													{activeUser.itemCount} items
 												</span>
 											</li>
 										))}
 									</ul>
 								) : (
-									<p className="text-gray-600 text-sm">No active users yet.</p>
+									<p className="text-[var(--secondary)] text-sm">No active users yet.</p>
 								)}
 							</div>
 						</div>
@@ -968,14 +960,14 @@ function AdminDashboard() {
 					)}
 
 					{activeTab === "keepers" && (
-						<div className="bg-white p-6 rounded-xl shadow-lg transition-all duration-300">
-							<h2 className="text-2xl font-semibold text-gray-800 mb-6">
+						<div className="bg-[var(--bg-color)] p-6 rounded-xl shadow-lg transition-all duration-300">
+							<h2 className="text-2xl font-semibold text-[var(--text-color)] mb-6">
 								Manage Keepers
 							</h2>
 							<div className="overflow-x-auto rounded-lg shadow-sm">
-								<table className="min-w-full table-auto border-collapse bg-white">
+								<table className="min-w-full table-auto border-collapse bg-[var(--bg-color)]">
 									<thead>
-										<tr className="bg-gray-100 text-left text-sm font-semibold text-gray-700">
+										<tr className="table-header text-left text-sm font-semibold text-[var(--text-color)]">
 											<th className="px-6 py-4 border-b">Name</th>
 											<th className="px-6 py-4 border-b">Email</th>
 										</tr>
@@ -984,12 +976,12 @@ function AdminDashboard() {
 										{keepers.map((keeper) => (
 											<tr
 												key={keeper._id}
-												className="border-t hover:bg-gray-50 transition-colors duration-200"
+												className="border-t table-row-hover transition-colors duration-200"
 											>
-												<td className="px-6 py-4 text-sm text-gray-800">
+												<td className="px-6 py-4 text-sm text-[var(--text-color)]">
 													{keeper.name}
 												</td>
-												<td className="px-6 py-4 text-sm text-gray-800">
+												<td className="px-6 py-4 text-sm text-[var(--text-color)]">
 													{keeper.email}
 												</td>
 											</tr>
@@ -1001,13 +993,13 @@ function AdminDashboard() {
 					)}
 
 					{activeTab === "conversations" && (
-						<div className="bg-white p-6 rounded-xl shadow-lg transition-all duration-300">
-							<h2 className="text-2xl font-semibold text-gray-800 mb-6">
+						<div className="bg-[var(--bg-color)] p-6 rounded-xl shadow-lg transition-all duration-300">
+							<h2 className="text-2xl font-semibold text-[var(--text-color)] mb-6">
 								Manage Conversations
 							</h2>
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 								<div>
-									<h3 className="text-xl font-semibold text-gray-800 mb-3">
+									<h3 className="text-xl font-semibold text-[var(--text-color)] mb-3">
 										Conversations
 									</h3>
 									<ul className="space-y-3 max-h-80 overflow-y-auto bg-gray-50 p-4 rounded-lg shadow-inner">
@@ -1016,24 +1008,21 @@ function AdminDashboard() {
 												key={conv._id}
 												onClick={() => handleConversationClick(conv)}
 												className={`p-3 rounded-lg cursor-pointer text-sm ${selectedConversation?._id === conv._id
-													? "bg-blue-100 text-blue-800"
-													: "hover:bg-gray-100 text-gray-700"
+													? "bg-[var(--primary)] text-white"
+													: "table-row-hover text-[var(--text-color)]"
 													} transition-colors duration-200`}
 											>
 												{conv.item?.title} ({conv.item?.status}) -{" "}
 												{conv.participants.map((p) => p.name).join(", ")}
-												<p className="text-xs text-gray-500 mt-1">
+												<p className="text-xs text-[var(--secondary)] mt-1">
 													Last Message: {conv.lastMessage?.content || "No messages yet"} (
-													{new Date(
-														conv.lastMessage?.createdAt || 0
-													).toLocaleString()}
-													)
+													{new Date(conv.lastMessage?.createdAt || 0).toLocaleString()})
 												</p>
 											</li>
 										))}
 									</ul>
 									<div className="flex justify-center items-center gap-4 mt-6">
-										<button
+										<Button
 											onClick={() =>
 												setPage((prev) => ({
 													...prev,
@@ -1041,14 +1030,14 @@ function AdminDashboard() {
 												}))
 											}
 											disabled={page.conversations === 1}
-											className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50 shadow-sm"
+											className="px-4 py-2 bg-[var(--secondary)] text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 disabled:opacity-50 shadow-sm"
 										>
 											Previous
-										</button>
-										<span className="text-sm text-gray-700 font-medium">
+										</Button>
+										<span className="text-sm text-[var(--text-color)] font-medium">
 											Page {page.conversations} of {totalPages.conversations}
 										</span>
-										<button
+										<Button
 											onClick={() =>
 												setPage((prev) => ({
 													...prev,
@@ -1059,36 +1048,35 @@ function AdminDashboard() {
 												}))
 											}
 											disabled={page.conversations === totalPages.conversations}
-											className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50 shadow-sm"
+											className="px-4 py-2 bg-[var(--secondary)] text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 disabled:opacity-50 shadow-sm"
 										>
 											Next
-										</button>
+										</Button>
 									</div>
 								</div>
 								<div>
-									<h3 className="text-xl font-semibold text-gray-800 mb-3">
+									<h3 className="text-xl font-semibold text-[var(--text-color)] mb-3">
 										Messages
 									</h3>
 									{selectedConversation ? (
 										<div
 											ref={messagesRef}
-											className="border border-gray-200 rounded-lg p-4 h-80 overflow-y-auto bg-gray-50 shadow-inner"
+											className="border border-[var(--secondary)] rounded-lg p-4 h-80 overflow-y-auto bg-gray-50 shadow-inner"
 										>
 											{selectedConversation.messages.map((msg) => (
 												<div
 													key={msg._id}
-													className="mb-3 p-3 bg-white rounded-lg shadow-sm"
+													className="mb-3 p-3 bg-[var(--bg-color)] rounded-lg shadow-sm"
 												>
-													<p className="text-xs text-gray-600">
-														{msg.sender?.name} (
-														{new Date(msg.createdAt).toLocaleString()}):
+													<p className="text-xs text-[var(--secondary)]">
+														{msg.sender?.name} ({new Date(msg.createdAt).toLocaleString()}):
 													</p>
-													<p className="text-sm text-gray-800 mt-1">{msg.content}</p>
+													<p className="text-sm text-[var(--text-color)] mt-1">{msg.content}</p>
 												</div>
 											))}
 										</div>
 									) : (
-										<p className="text-gray-600 text-sm bg-gray-50 p-4 rounded-lg shadow-inner">
+										<p className="text-[var(--secondary)] text-sm bg-gray-50 p-4 rounded-lg shadow-inner">
 											Select a conversation to view messages.
 										</p>
 									)}
@@ -1098,20 +1086,20 @@ function AdminDashboard() {
 					)}
 
 					{activeTab === "categories" && (
-						<div className="bg-white p-6 rounded-xl shadow-lg transition-all duration-300">
+						<div className="bg-[var(--bg-color)] p-6 rounded-xl shadow-lg transition-all duration-300">
 							<div className="mb-6 p-6 bg-gray-50 rounded-lg shadow-sm">
-								<h3 className="text-xl font-semibold text-gray-800 mb-4">
+								<h3 className="text-xl font-semibold text-[var(--text-color)] mb-4">
 									Add New Category
 								</h3>
 								<form onSubmit={handleAddCategory} className="space-y-4">
 									<div>
 										<label
 											htmlFor="category-name"
-											className="block text-sm font-medium text-gray-700"
+											className="block text-sm font-medium text-[var(--text-color)]"
 										>
 											Name
 										</label>
-										<input
+										<Input
 											id="category-name"
 											type="text"
 											value={categoryForm.name}
@@ -1121,18 +1109,18 @@ function AdminDashboard() {
 													name: e.target.value,
 												})
 											}
-											className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+											className="mt-1 text-sm input-border"
 											required
 										/>
 									</div>
 									<div>
 										<label
 											htmlFor="category-description"
-											className="block text-sm font-medium text-gray-700"
+											className="block text-sm font-medium text-[var(--text-color)]"
 										>
 											Description
 										</label>
-										<textarea
+										<Textarea
 											id="category-description"
 											value={categoryForm.description}
 											onChange={(e) =>
@@ -1141,28 +1129,28 @@ function AdminDashboard() {
 													description: e.target.value,
 												})
 											}
-											className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+											className="mt-1 text-sm input-border"
 											rows="3"
 										/>
 									</div>
-									<button
+									<Button
 										type="submit"
-										className="w-full bg-blue-600 text-white py-3 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm disabled:opacity-50"
+										className="w-full bg-[var(--primary)] text-white py-3 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm disabled:opacity-50"
 										disabled={loading}
 									>
 										{loading ? "Adding..." : "Add Category"}
-									</button>
+									</Button>
 								</form>
 							</div>
 							<div>
-								<h3 className="text-xl font-semibold text-gray-800 mb-4">
+								<h3 className="text-xl font-semibold text-[var(--text-color)] mb-4">
 									Available Categories
 								</h3>
 								{categories.length > 0 ? (
 									<div className="overflow-x-auto rounded-lg shadow-sm">
-										<table className="min-w-full table-auto border-collapse bg-white">
+										<table className="min-w-full table-auto border-collapse bg-[var(--bg-color)]">
 											<thead>
-												<tr className="bg-gray-100 text-left text-sm font-semibold text-gray-700">
+												<tr className="table-header text-left text-sm font-semibold text-[var(--text-color)]">
 													<th className="px-6 py-4 border-b">Name</th>
 													<th className="px-6 py-4 border-b">Description</th>
 													<th className="px-6 py-4 border-b">Status</th>
@@ -1174,51 +1162,49 @@ function AdminDashboard() {
 												{categories.map((category) => (
 													<tr
 														key={category._id}
-														className="border-t hover:bg-gray-50 transition-colors duration-200"
+														className="border-t table-row-hover transition-colors duration-200"
 													>
-														<td className="px-6 py-4 text-sm text-gray-800">
+														<td className="px-6 py-4 text-sm text-[var(--text-color)]">
 															{category.name}
 														</td>
-														<td className="px-6 py-4 text-sm text-gray-800">
+														<td className="px-6 py-4 text-sm text-[var(--text-color)]">
 															{category.description || "N/A"}
 														</td>
-														<td className="px-6 py-4 text-sm text-gray-800">
+														<td className="px-6 py-4 text-sm text-[var(--text-color)]">
 															<span
 																className={`px-2 py-1 rounded-full text-xs ${category.isActive
-																	? "bg-green-100 text-green-700"
-																	: "bg-red-100 text-red-700"
+																	? "bg-green-600 text-white"
+																	: "bg-red-600 text-white"
 																	}`}
 															>
 																{category.isActive ? "Active" : "Inactive"}
 															</span>
 														</td>
-														<td className="px-6 py-4 text-sm text-gray-800">
+														<td className="px-6 py-4 text-sm text-[var(--text-color)]">
 															{new Date(category.createdAt).toLocaleDateString()}
 														</td>
 														<td className="px-6 py-4 text-sm flex gap-3">
-															<button
+															<Button
 																onClick={() => handleEditCategory(category)}
-																className="bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-yellow-600 transition-colors duration-200 shadow-sm"
+																className="bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-yellow-700 transition-colors duration-200 shadow-sm"
 															>
 																Edit
-															</button>
-															<button
+															</Button>
+															<Button
 																onClick={() => handleDeleteCategory(category._id)}
-																className={`bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition-colors duration-200 shadow-sm ${!category.isActive
-																	? "opacity-50 cursor-not-allowed"
-																	: ""
+																className={`bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition-colors duration-200 shadow-sm ${!category.isActive ? "opacity-50 cursor-not-allowed" : ""
 																	}`}
 																disabled={!category.isActive}
 															>
 																Deactivate
-															</button>
+															</Button>
 														</td>
 													</tr>
 												))}
 											</tbody>
 										</table>
 										<div className="flex justify-center items-center gap-4 mt-6">
-											<button
+											<Button
 												onClick={() =>
 													setPage((prev) => ({
 														...prev,
@@ -1226,32 +1212,29 @@ function AdminDashboard() {
 													}))
 												}
 												disabled={page.categories === 1}
-												className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50 shadow-sm"
+												className="px-4 py-2 bg-[var(--secondary)] text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 disabled:opacity-50 shadow-sm"
 											>
 												Previous
-											</button>
-											<span className="text-sm text-gray-700 font-medium">
+											</Button>
+											<span className="text-sm text-[var(--text-color)] font-medium">
 												Page {page.categories} of {totalPages.categories}
 											</span>
-											<button
+											<Button
 												onClick={() =>
 													setPage((prev) => ({
 														...prev,
-														categories: Math.min(
-															prev.categories + 1,
-															totalPages.categories
-														),
+														categories: Math.min(prev.categories + 1, totalPages.categories),
 													}))
 												}
 												disabled={page.categories === totalPages.categories}
-												className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200 disabled:opacity-50 shadow-sm"
+												className="px-4 py-2 bg-[var(--secondary)] text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 disabled:opacity-50 shadow-sm"
 											>
 												Next
-											</button>
+											</Button>
 										</div>
 									</div>
 								) : (
-									<p className="text-gray-600 text-sm bg-gray-50 p-4 rounded-lg shadow-inner">
+									<p className="text-[var(--secondary)] text-sm bg-gray-50 p-4 rounded-lg shadow-inner">
 										No categories available.
 									</p>
 								)}
@@ -1260,23 +1243,23 @@ function AdminDashboard() {
 					)}
 
 					{selectedCategory.current && (
-						<div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+						<div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
 							<div
 								ref={categoryCardRef}
-								className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-lg transform transition-all duration-300 scale-95 hover:scale-100"
+								className="bg-[var(--bg-color)] p-6 rounded-xl shadow-2xl w-full max-w-lg transform transition-all duration-300 scale-95 hover:scale-100"
 							>
-								<h3 className="text-xl font-semibold text-gray-800 mb-6">
+								<h3 className="text-xl font-semibold text-[var(--text-color)] mb-6">
 									Edit Category
 								</h3>
 								<form onSubmit={handleUpdateCategory} className="space-y-4">
 									<div>
 										<label
 											htmlFor="edit-category-name"
-											className="block text-sm font-medium text-gray-700"
+											className="block text-sm font-medium text-[var(--text-color)]"
 										>
 											Name
 										</label>
-										<input
+										<Input
 											id="edit-category-name"
 											type="text"
 											value={editCategoryForm.name}
@@ -1286,18 +1269,18 @@ function AdminDashboard() {
 													name: e.target.value,
 												})
 											}
-											className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+											className="mt-1 text-sm input-border"
 											required
 										/>
 									</div>
 									<div>
 										<label
 											htmlFor="edit-category-description"
-											className="block text-sm font-medium text-gray-700"
+											className="block text-sm font-medium text-[var(--text-color)]"
 										>
 											Description
 										</label>
-										<textarea
+										<Textarea
 											id="edit-category-description"
 											value={editCategoryForm.description}
 											onChange={(e) =>
@@ -1306,12 +1289,12 @@ function AdminDashboard() {
 													description: e.target.value,
 												})
 											}
-											className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
+											className="mt-1 text-sm input-border"
 											rows="3"
 										/>
 									</div>
 									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-2">
+										<label className="block text-sm font-medium text-[var(--text-color)] mb-2">
 											Status
 										</label>
 										<div className="flex space-x-6">
@@ -1327,9 +1310,9 @@ function AdminDashboard() {
 															isActive: true,
 														})
 													}
-													className="mr-2 text-blue-600 focus:ring-blue-400"
+													className="mr-2 text-[var(--primary)] focus:ring-[var(--primary)]"
 												/>
-												<span className="text-sm text-gray-700">Active</span>
+												<span className="text-sm text-[var(--text-color)]">Active</span>
 											</label>
 											<label className="flex items-center">
 												<input
@@ -1343,27 +1326,27 @@ function AdminDashboard() {
 															isActive: false,
 														})
 													}
-													className="mr-2 text-blue-600 focus:ring-blue-400"
+													className="mr-2 text-[var(--primary)] focus:ring-[var(--primary)]"
 												/>
-												<span className="text-sm text-gray-700">Inactive</span>
+												<span className="text-sm text-[var(--text-color)]">Inactive</span>
 											</label>
 										</div>
 									</div>
 									<div className="flex justify-end gap-4 mt-6">
-										<button
+										<Button
 											type="submit"
-											className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm disabled:opacity-50"
+											className="bg-[var(--primary)] text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors duration-200 shadow-sm disabled:opacity-50"
 											disabled={loading}
 										>
 											{loading ? "Updating..." : "Update Category"}
-										</button>
-										<button
+										</Button>
+										<Button
 											type="button"
 											onClick={() => (selectedCategory.current = null)}
-											className="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-700 transition-colors duration-200 shadow-sm"
+											className="bg-[var(--secondary)] text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-600 transition-colors duration-200 shadow-sm"
 										>
 											Cancel
-										</button>
+										</Button>
 									</div>
 								</form>
 							</div>
@@ -1371,26 +1354,26 @@ function AdminDashboard() {
 					)}
 
 					{activeTab === "create-account" && (
-						<div className="bg-white p-6 rounded-xl shadow-lg transition-all duration-300 max-w-lg mx-auto">
-							<h2 className="text-2xl font-semibold text-gray-800 mb-6">
+						<div className="bg-[var(--bg-color)] p-6 rounded-xl shadow-lg transition-all duration-300 max-w-lg mx-auto">
+							<h2 className="text-2xl font-semibold text-[var(--text-color)] mb-6">
 								Create Admin/Keeper Account
 							</h2>
 							<form onSubmit={handleCreateAccount} className="space-y-6">
 								<div>
 									<label
 										htmlFor="name"
-										className="block text-sm font-medium text-gray-700"
+										className="block text-sm font-medium text-[var(--text-color)]"
 									>
 										Name
 									</label>
-									<input
+									<Input
 										id="name"
 										type="text"
 										value={accountForm.name}
 										onChange={(e) =>
 											setAccountForm({ ...accountForm, name: e.target.value })
 										}
-										className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50"
+										className="mt-1 text-sm input-border"
 										required
 										disabled={loading}
 									/>
@@ -1398,18 +1381,18 @@ function AdminDashboard() {
 								<div>
 									<label
 										htmlFor="email"
-										className="block text-sm font-medium text-gray-700"
+										className="block text-sm font-medium text-[var(--text-color)]"
 									>
 										Email
 									</label>
-									<input
+									<Input
 										id="email"
 										type="email"
 										value={accountForm.email}
 										onChange={(e) =>
 											setAccountForm({ ...accountForm, email: e.target.value })
 										}
-										className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50"
+										className="mt-1 text-sm input-border"
 										required
 										disabled={loading}
 									/>
@@ -1417,11 +1400,11 @@ function AdminDashboard() {
 								<div className="relative">
 									<label
 										htmlFor="password"
-										className="block text-sm font-medium text-gray-700"
+										className="block text-sm font-medium text-[var(--text-color)]"
 									>
 										Password
 									</label>
-									<input
+									<Input
 										id="password"
 										type={showPassword ? "text" : "password"}
 										value={accountForm.password}
@@ -1431,31 +1414,27 @@ function AdminDashboard() {
 												password: e.target.value,
 											})
 										}
-										className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50 pr-12"
+										className="mt-1 text-sm pr-12 input-border"
 										required
 										disabled={loading}
 									/>
 									<button
 										type="button"
 										onClick={togglePasswordVisibility}
-										className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-full text-gray-500 hover:text-gray-700 focus:outline-none mt-4"
+										className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-full icon-color hover:text-[var(--text-color)] focus:outline-none mt-4"
 										disabled={loading}
 									>
-										{showPassword ? (
-											<FaEyeSlash className="h-5 w-5" />
-										) : (
-											<FaEye className="h-5 w-5" />
-										)}
+										{showPassword ? <FaEyeSlash className="h-5 w-5" /> : <FaEye className="h-5 w-5" />}
 									</button>
 								</div>
 								<div className="relative">
 									<label
 										htmlFor="confirm-password"
-										className="block text-sm font-medium text-gray-700"
+										className="block text-sm font-medium text-[var(--text-color)]"
 									>
 										Confirm Password
 									</label>
-									<input
+									<Input
 										id="confirm-password"
 										type={showConfirmPassword ? "text" : "password"}
 										value={accountForm.confirmPassword}
@@ -1465,14 +1444,14 @@ function AdminDashboard() {
 												confirmPassword: e.target.value,
 											})
 										}
-										className="mt-1 block w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50 pr-12"
+										className="mt-1 text-sm pr-12 input-border"
 										required
 										disabled={loading}
 									/>
 									<button
 										type="button"
 										onClick={toggleConfirmPasswordVisibility}
-										className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-full text-gray-500 hover:text-gray-700 focus:outline-none mt-4"
+										className="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-full icon-color hover:text-[var(--text-color)] focus:outline-none mt-4"
 										disabled={loading}
 									>
 										{showConfirmPassword ? (
@@ -1483,7 +1462,7 @@ function AdminDashboard() {
 									</button>
 								</div>
 								<div>
-									<label className="block text-sm font-medium text-gray-700 mb-2">
+									<label className="block text-sm font-medium text-[var(--text-color)] mb-2">
 										Role
 									</label>
 									<div className="flex space-x-6">
@@ -1499,10 +1478,10 @@ function AdminDashboard() {
 														role: e.target.value,
 													})
 												}
-												className="mr-2 text-blue-600 focus:ring-blue-400 disabled:opacity-50"
+												className="mr-2 text-[var(--primary)] focus:ring-[var(--primary)] disabled:opacity-50"
 												disabled={loading}
 											/>
-											<span className="text-sm text-gray-700">Admin</span>
+											<span className="text-sm text-[var(--text-color)]">Admin</span>
 										</label>
 										<label className="flex items-center">
 											<input
@@ -1516,18 +1495,18 @@ function AdminDashboard() {
 														role: e.target.value,
 													})
 												}
-												className="mr-2 text-blue-600 focus:ring-blue-400 disabled:opacity-50"
+												className="mr-2 text-[var(--primary)] focus:ring-[var(--primary)] disabled:opacity-50"
 												disabled={loading}
 											/>
-											<span className="text-sm text-gray-700">Keeper</span>
+											<span className="text-sm text-[var(--text-color)]">Keeper</span>
 										</label>
 									</div>
 								</div>
-								<button
+								<Button
 									type="submit"
 									className={`w-full py-3 rounded-lg text-sm font-semibold text-white transition-all duration-200 shadow-md ${loading
 										? "bg-blue-400 cursor-not-allowed"
-										: "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
+										: "bg-[var(--primary)] hover:bg-blue-700 hover:shadow-lg"
 										}`}
 									disabled={loading}
 								>
@@ -1558,7 +1537,7 @@ function AdminDashboard() {
 									) : (
 										"Create Account"
 									)}
-								</button>
+								</Button>
 							</form>
 						</div>
 					)}

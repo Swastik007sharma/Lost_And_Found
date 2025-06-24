@@ -1,14 +1,13 @@
 import { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import Loader from './common/Loader'
 
 function AdminRoute({ children }) {
   const { token, user, loading } = useContext(AuthContext);
 
-  console.log('AdminRoute - Token:', token, 'User:', user, 'Loading:', loading);
-
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
 
   if (!token) {
@@ -22,10 +21,8 @@ function AdminRoute({ children }) {
   }
 
   const isAdmin = user.role === 'admin' || user.role === 'Admin' || user.role === 'administrator';
-  console.log('Is Admin:', isAdmin, 'Role:', user.role);
 
   if (!isAdmin) {
-    console.log('Not an admin, redirecting to /');
     return <Navigate to='/' replace />;
   }
 

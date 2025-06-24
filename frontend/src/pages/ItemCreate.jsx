@@ -47,7 +47,6 @@ function ItemCreate() {
     } else {
       setImage(null);
       setImagePreview(null);
-      console.log('No image selected');
     }
   };
 
