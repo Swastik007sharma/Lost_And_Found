@@ -5,8 +5,10 @@ const mainRouter = require('./routes/index.routes');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const Category = require('./models/category.model');
+const seed = require('./utils/seedCategory');
 const initSocket = require('./utils/socket');
+const swaggerui = require('swagger-ui-express')
+const swaggerjsdocs = require('swagger-jsdoc')
 
 const { errorHandler } = require('./middlewares/error.middleware');
 const loggerMiddleware = require('./middlewares/logger.middleware');
@@ -27,7 +29,7 @@ const server = http.createServer(app);
 app.use(loggerMiddleware);
 app.use(corsConfig);
 app.use(express.json());
-// app.use(rateLimiter);
+app.use(rateLimiter);
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -53,36 +55,31 @@ app.get('/ws-test', (req, res) => {
 });
 
 app.use('/api/v1', mainRouter);
+
+const options = {
+  definition: {
+    openapi: '3.0.0', 
+    info: {
+      title: 'CampusTrack API docs',
+      description: 'A simple RESTful API documentation with Swagger'
+    },
+    servers: [
+      {
+        url: process.env.FRONTEND_URL || 'http://localhost:5000',
+      },
+    ],
+  },
+  apis: ['./routes/*.js'],
+}
+
+const specs = swaggerjsdocs(options)
+app.use('/api-docs', swaggerui.serve, swaggerui.setup(specs))
+
 app.use(notFound);
 app.use(errorHandler);
 
 const io = initSocket(server);
 app.set('io', io);
-
-const seedCategories = async () => {
-  try {
-    const predefinedCategories = [
-      { name: 'Electronics', description: 'Devices and gadgets', isPredefined: true },
-      { name: 'Clothing', description: 'Apparel and accessories', isPredefined: true },
-      { name: 'Books', description: 'Textbooks and novels', isPredefined: true },
-      { name: 'Personal Items', description: 'Wallets, keys, etc.', isPredefined: true },
-      { name: 'Stationery', description: 'Pens, notebooks, etc.', isPredefined: true },
-    ];
-
-    const existingCategories = await Category.find({ name: { $in: predefinedCategories.map((c) => c.name) } });
-    const existingNames = existingCategories.map((c) => c.name);
-
-    const categoriesToInsert = predefinedCategories.filter((c) => !existingNames.includes(c.name));
-    if (categoriesToInsert.length > 0) {
-      await Category.insertMany(categoriesToInsert);
-      console.log('Categories seeded successfully');
-    } else {
-      console.log('No new categories to seed');
-    }
-  } catch (error) {
-    console.error('Error seeding categories:', error);
-  }
-};
 
 const shutdown = () => {
   console.log('Shutting down server...');
@@ -97,7 +94,7 @@ process.on('SIGTERM', shutdown);
 const startServer = async () => {
   try {
     await connectDB();
-    await seedCategories();
+    await seed(); //Seeds Category and subCategory data
     server.on('error', (err) => {
       console.error('Server error:', err.message);
     });
