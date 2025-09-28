@@ -15,7 +15,7 @@ const corsOptions = {
     if (allowedOrigins.includes(normalizedOrigin)) {
       callback(null, true);
     } else {
-      console.log(`CORS blocked: ${normalizedOrigin} not in ${allowedOrigins}`);
+      // console.log(`CORS blocked: ${normalizedOrigin} not in ${allowedOrigins}`);
       callback(new Error('Not allowed by CORS'));
     }
   },

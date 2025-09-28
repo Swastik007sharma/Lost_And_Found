@@ -2,6 +2,7 @@ const { z } = require('zod');
 const Item = require('../models/item.model');
 const cloudinary = require('../config/cloudinary');
 const fs = require('fs').promises;
+const fa = require('fs');
 const path = require('path');
 const { createItemSchema, updateItemSchema } = require('../schema/item.schema');
 const QRCode = require('qrcode');
@@ -11,6 +12,7 @@ const User = require('../models/user.model');
 const sendEmail = require('../utils/sendEmail');
 const Category = require('../models/category.model');
 const SubCategory = require('../models/subCategory.model');
+const { GoogleGenAI } = require("@google/genai");
 
 // Validation schemas for query parameters and body
 const querySchema = z.object({
@@ -61,22 +63,121 @@ exports.createItem = async (req, res) => {
     console.log('Request file:', req.file);
 
     const validatedData = createItemSchema.parse(req.body);
-    const { title, description, subCategory, category, tags, status, location } = validatedData;
+    let { title, description, subCategory, category, tags, status, location } = validatedData;
+
+    // Parse location if it's a string (for "Lost" items or manual entry)
+    if (typeof location === 'string') {
+      const match = location.match(/Lat:\s*([0-9.-]+),\s*Lon:\s*([0-9.-]+)/);
+      if (match) {
+        const [, latitude, longitude] = match;
+        location = {
+          type: 'Point',
+          coordinates: [parseFloat(longitude), parseFloat(latitude)]
+        };
+      } else {
+        console.log(`Location '${location}' treated as descriptive string.`);
+      }
+    }
+
     let imageUrl = null;
 
     if (req.file) {
       const filePath = req.file.path;
-      console.log('Uploading file to Cloudinary:', filePath);
+      console.log('Processing file:', filePath);
+
       try {
+        // Initialize Google Gemini API
+        const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
+
+        // Read and encode image as base64 for Gemini
+        const base64ImageFile = fa.readFileSync(filePath, {
+          encoding: "base64",
+        });
+
+        // Prepare prompt for Gemini to verify image
+        const prompt = `
+Analyze the provided image and determine if it matches the category "${category}" and subcategory "${subCategory}".
+You MUST return only a valid, single JSON object.
+
+JSON Schema:
+{
+"isMatch": boolean, // true if the image strongly matches the category/subcategory, false otherwise.
+"reason": string // A concise explanation of the verification result.
+}
+`;
+        const contents = [
+          {
+            inlineData: {
+              mimeType: "image/jpeg",
+              data: base64ImageFile,
+            },
+          },
+          { text: prompt },
+        ];
+
+        const resultGemini = await genAI.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: contents,
+        });
+
+        let geminiResponse;
+        try {
+          const jsonText = resultGemini.text
+            .trim()
+            .replace(/^```(json)?\s*|```$/g, ''); // Remove starting ```json or ``` and trailing ```
+
+          if (!jsonText) {
+            throw new Error('AI returned an empty or unparsable response after cleaning.');
+          }
+
+          geminiResponse = JSON.parse(jsonText);
+        } catch (parseError) {
+          console.error('Failed to parse Gemini JSON response (raw):', resultGemini.text);
+          throw new Error('Gemini returned invalid JSON or an unexpected format.');
+        }
+
+        console.log('Gemini verification result:', geminiResponse);
+
+        if (!geminiResponse.isMatch) {
+          return res.status(400).json({
+            message: 'Image does not match the specified category or subcategory',
+            code: 'IMAGE_VERIFICATION_FAILED',
+            details: geminiResponse.reason
+          });
+        }
+
+        // Upload to Cloudinary after verification
+        console.log('Uploading file to Cloudinary:', filePath);
         const result = await cloudinary.uploader.upload(filePath, { folder: 'lost-and-found' });
         imageUrl = result.secure_url;
         console.log('Cloudinary upload success:', imageUrl);
-      } catch (cloudinaryError) {
-        console.error('Cloudinary upload error:', cloudinaryError.message);
-        return res.status(500).json({ message: 'Failed to upload image to Cloudinary', code: 'CLOUDINARY_ERROR', details: cloudinaryError.message });
+      } catch (error) {
+        if (error.message.includes('Gemini returned invalid JSON') || error.message.includes('AI returned an empty or unparsable response')) {
+          console.error('Gemini API parse error:', error.message);
+          return res.status(500).json({
+            message: 'Failed to verify image: AI response format error. Please try again.',
+            code: 'GEMINI_RESPONSE_FORMAT_ERROR', // Changed code
+            details: error.message
+          });
+        }
+        if (error.message.includes('Error fetching from')) {
+          // Catch general API errors, including 404 for model not found
+          console.error('Gemini API connectivity/model error:', error.message);
+          return res.status(500).json({
+            message: 'Failed to connect to the Gemini API or model not found. Check model name and API key.',
+            code: 'GEMINI_API_FAILURE',
+            details: error.message
+          });
+        }
+        console.error('Cloudinary upload error:', error.message);
+        return res.status(500).json({
+          message: 'Failed to upload image to Cloudinary',
+          code: 'CLOUDINARY_ERROR',
+          details: error.message
+        });
       } finally {
         // Only delete files within the upload directory
-        const UPLOAD_DIR = path.resolve(__dirname, '../../uploads'); // adjust as needed
+        const UPLOAD_DIR = path.resolve(__dirname, '../uploads');
         const resolvedPath = path.resolve(filePath);
         if (resolvedPath.startsWith(UPLOAD_DIR)) {
           await fs.unlink(resolvedPath).catch((err) => console.error('Failed to delete temp file:', err));
@@ -92,7 +193,7 @@ exports.createItem = async (req, res) => {
     }
     const subcategoryDoc = await SubCategory.findOne({ name: subCategory, isActive: true });
     if (!subcategoryDoc) {
-      return res.status(400).json({ message: `Category '${subCategory}' not found`, code: 'INVALID_CATEGORY' });
+      return res.status(400).json({ message: `SubCategory '${subCategory}' not found`, code: 'INVALID_SUBCATEGORY' }); // Changed code to be more specific
     }
 
     const newItem = new Item({
@@ -266,7 +367,7 @@ exports.updateItem = async (req, res) => {
     item.title = updateData.title || item.title;
     item.description = updateData.description || item.description;
     item.category = updateData.category ? (await Category.findOne({ name: updateData.category, isActive: true }))?._id : item.category;
-    item.Subcategory = updateData.Subcategory ? (await Subcategory.findOne({ name: updateData.Subcategory, isActive: true }))?._id : item.category;
+    item.Subcategory = updateData.Subcategory ? (await SubCategory.findOne({ name: updateData.Subcategory, isActive: true }))?._id : item.Subcategory; // Corrected to SubCategory
     item.tags = updateData.tags || item.tags;
     item.status = updateData.status || item.status;
     item.location = updateData.location || item.location;

@@ -54,13 +54,13 @@ module.exports = (server) => {
       console.log('No userId provided, connection may be unstable');
     }
 
-    socket.conn.on('upgrade', () => {
-      console.log('Upgrade attempt detected for socket:', socket.id);
-    });
+    // socket.conn.on('upgrade', () => {
+    //   console.log('Upgrade attempt detected for socket:', socket.id);
+    // });
 
-    socket.conn.on('upgradeError', (error) => {
-      console.error('Upgrade error for socket:', socket.id, 'Error:', JSON.stringify(error));
-    });
+    // socket.conn.on('upgradeError', (error) => {
+    //   console.error('Upgrade error for socket:', socket.id, 'Error:', JSON.stringify(error));
+    // });
 
     socket.on('connect_error', (error) => {
       console.error('Socket connect error:', error.message, 'Details:', JSON.stringify(error));

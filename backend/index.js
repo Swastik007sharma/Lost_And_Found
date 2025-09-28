@@ -58,22 +58,58 @@ app.use('/api/v1', mainRouter);
 
 const options = {
   definition: {
-    openapi: '3.0.0', 
+    openapi: '3.0.0',
     info: {
-      title: 'CampusTrack API docs',
-      description: 'A simple RESTful API documentation with Swagger'
+      title: 'CampusTrack API',
+      version: '1.0.0',
+      description: 'REST API documentation for CampusTrack system',
+      contact: {
+        name: 'CampusTrack Support',
+        email: 'support@campustrack.com',
+      },
+      license: {
+        name: 'MIT',
+      },
     },
     servers: [
       {
-        url: process.env.FRONTEND_URL || 'http://localhost:5000',
+        url: `http://localhost:${process.env.PORT || 5000}/api/v1`,
+        description: 'Local development server',
+      },
+      {
+        url: 'https://campustrack.example.com/api/v1',
+        description: 'Production server',
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+      responses: {
+        UnauthorizedError: {
+          description: 'Access token is missing or invalid',
+        },
+        NotFoundError: {
+          description: 'Resource not found',
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
       },
     ],
   },
-  apis: ['./routes/*.js'],
-}
+  apis: ['./routes/**/*.js'], // Include all route files
+};
 
-const specs = swaggerjsdocs(options)
-app.use('/api-docs', swaggerui.serve, swaggerui.setup(specs))
+const specs = swaggerjsdocs(options);
+app.use('/api-docs', swaggerui.serve, swaggerui.setup(specs));
+
 
 app.use(notFound);
 app.use(errorHandler);
