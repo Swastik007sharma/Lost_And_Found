@@ -22,6 +22,8 @@ import VerifyOtp from "./pages/Auth/VerifyOtp"; // Import the VerifyOtp componen
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ThemeProvider } from "./context/ThemeContext";
+import Footer from "./components/Footer";
+import Navbar from "./components/Navbar";
 
 function App() {
 	return (
@@ -44,15 +46,17 @@ function App() {
 						<Route path="/login" element={<Login />} />
 						<Route path="/register" element={<Register />} />
 						<Route path="/verify-otp" element={<VerifyOtp />} />
-						<Route element={<Layout />}>
 							<Route
 								path="/home"
 								element={
 									<ProtectedRoute>
+										<Navbar/>
 										<Home />
+										<Footer />
 									</ProtectedRoute>
 								}
 							/>
+						<Route element={<Layout />}>
 							<Route
 								path="/items/:id"
 								element={

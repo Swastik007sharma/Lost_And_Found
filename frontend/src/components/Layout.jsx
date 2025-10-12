@@ -34,7 +34,6 @@ function Layout() {
       <main className="flex-1 font-sans py-6 sm:py-8 px-4 sm:px-6 lg:px-8" style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}>
         <Outlet context={{ socket }} />
       </main>
-      <Footer />
     </div>
   );
 }
