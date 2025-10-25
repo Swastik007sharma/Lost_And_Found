@@ -29,7 +29,8 @@ function ItemCreate() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await getCategories();
+        // Fetch all categories by setting a high limit
+        const response = await getCategories({ limit: 100 });
         setCategories(response.data.categories || []);
       } catch (err) {
         toast.error('Failed to load categories: ' + (err.response?.data?.message || err.message));
@@ -214,7 +215,8 @@ function ItemCreate() {
     );
   };
   return (
-    <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-bg)' }}>
+      {/* Modal for status selection */}
       <Modal isOpen={isModalOpen} onClose={() => handleStatusSelect('Lost')}>
         <div className="p-6 text-center" style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}>
           <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
@@ -229,6 +231,7 @@ function ItemCreate() {
                 color: 'var(--color-text)',
                 border: '1px solid var(--color-secondary)'
               }}
+              aria-label="Report a lost item"
             >
               🔴 I lost an item
             </button>
@@ -240,6 +243,7 @@ function ItemCreate() {
                 color: 'var(--color-text)',
                 border: '1px solid var(--color-secondary)'
               }}
+              aria-label="Report a found item"
             >
               🟢 I found an item
             </button>
@@ -247,9 +251,25 @@ function ItemCreate() {
         </div>
       </Modal>
 
+      {/* Stepper/progress indicator */}
+      {!isModalOpen && !showFoundSuccess && (
+        <div className="w-full flex justify-center mt-4 mb-2">
+          <ol className="flex items-center w-full max-w-xl mx-auto text-sm font-medium text-gray-500 dark:text-gray-300">
+            <li className={`flex-1 flex items-center ${formData.status ? 'text-blue-600 dark:text-blue-400' : ''}`}>1. Status</li>
+            <li className="mx-2">→</li>
+            <li className={`flex-1 flex items-center ${formData.title ? 'text-blue-600 dark:text-blue-400' : ''}`}>2. Details</li>
+            <li className="mx-2">→</li>
+            <li className={`flex-1 flex items-center ${(formData.status === 'Found' ? image : true) ? 'text-blue-600 dark:text-blue-400' : ''}`}>3. Image</li>
+            <li className="mx-2">→</li>
+            <li className="flex-1 flex items-center">4. Submit</li>
+          </ol>
+        </div>
+      )}
+
+      {/* Success message */}
       {showFoundSuccess ? (
         <div className="container mx-auto p-4 sm:p-6 lg:p-8 xl:p-10 flex flex-col items-center justify-center min-h-[60vh]">
-          <div className="max-w-xl w-full bg-green-50 dark:bg-green-900 rounded-lg shadow-lg p-8 flex flex-col items-center">
+          <div className="max-w-xl w-full bg-green-50 dark:bg-green-900 rounded-lg shadow-lg p-8 flex flex-col items-center animate-fade-in">
             <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-green-700 dark:text-green-200 text-center">Found Item Submitted!</h2>
             <p className="mb-6 text-lg text-center text-green-800 dark:text-green-100">
               You can now submit the item to a keeper for safekeeping, or keep it with yourself until someone claims it.
@@ -271,17 +291,32 @@ function ItemCreate() {
           </div>
         </div>
       ) : !isModalOpen && (
-        <div className="container mx-auto p-4 sm:p-6 lg:p-8 xl:p-10">
-          <div className="max-w-2xl mx-auto">
+        <div className="container mx-auto p-4 sm:p-6 lg:p-8 xl:p-10 flex-1">
+          <div className="max-w-2xl mx-auto relative">
+            {/* Back button */}
+            <button
+              type="button"
+              className="absolute left-0 top-0 mt-2 ml-2 px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none"
+              onClick={() => navigate('/dashboard')}
+              aria-label="Back to dashboard"
+            >
+              ← Back
+            </button>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-center" style={{ color: 'var(--color-text)' }}>
               Add New Item {formData.status && `(${formData.status === 'Lost' ? '🔴 Lost' : '🟢 Found'})`}
             </h1>
             <form
               onSubmit={handleSubmit}
-              className="p-6 sm:p-8 md:p-10 rounded-lg shadow-lg"
+              className="p-6 sm:p-8 md:p-10 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 animate-fade-in"
               encType="multipart/form-data"
-              style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}
+              style={{ color: 'var(--color-text)' }}
+              aria-label="Create new item form"
             >
+              {/* Section: Details */}
+              <h2 className="text-lg font-semibold mb-2 border-b border-gray-200 dark:border-gray-700 pb-1 flex items-center gap-2">
+                <span>Item Details</span>
+                <span className="text-xs text-gray-400">Step 2/4</span>
+              </h2>
               {/* Title */}
               <div className="mb-6">
                 <label htmlFor="title" className="block text-sm sm:text-base md:text-lg font-medium mb-2" style={{ color: 'var(--color-text)' }}>

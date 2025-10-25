@@ -19,6 +19,16 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     console.log('Initializing auth state');
     setLoading(false);
+
+    // Listen for forced logout (e.g., JWT expired)
+    const handleAuthLogout = () => {
+      logout();
+      toast.error('Session expired. Please log in again.');
+    };
+    window.addEventListener('auth-logout', handleAuthLogout);
+    return () => {
+      window.removeEventListener('auth-logout', handleAuthLogout);
+    };
   }, []);
 
   useEffect(() => {
