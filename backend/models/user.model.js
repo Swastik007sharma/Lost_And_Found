@@ -23,6 +23,22 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'keeper', 'admin'],
     default: 'user',
   },
+  // Keeper-specific fields
+  location: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  department: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  description: {
+    type: String,
+    trim: true,
+    default: '',
+  },
   isActive: {
     type: Boolean,
     default: true,

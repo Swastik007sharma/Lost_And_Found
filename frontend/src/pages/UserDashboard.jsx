@@ -318,17 +318,54 @@ function UserDashboard() {
                                   {currentImage && (
                                     <img src={currentImage} alt={item.title} className="w-8 sm:w-12 md:w-16 h-8 sm:h-12 md:h-16 object-cover rounded-md mb-1 sm:mb-2" />
                                   )}
-                                  <input
-                                    type="file"
-                                    name="image"
-                                    onChange={handleEditChange}
-                                    className="w-full p-1 sm:p-2 border rounded-md text-xs sm:text-sm"
-                                    style={{ 
-                                      border: '1px solid var(--color-secondary)', 
-                                      background: 'var(--color-bg)', 
-                                      color: 'var(--color-text)' 
-                                    }}
-                                  />
+                                  {editFormData.status === 'Found' ? (
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        // Use MediaDevices API to capture image
+                                        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                                          addNotification('Camera not supported in this browser.', 'error');
+                                          return;
+                                        }
+                                        try {
+                                          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                                          const video = document.createElement('video');
+                                          video.srcObject = stream;
+                                          await video.play();
+                                          const canvas = document.createElement('canvas');
+                                          canvas.width = video.videoWidth;
+                                          canvas.height = video.videoHeight;
+                                          canvas.getContext('2d').drawImage(video, 0, 0);
+                                          stream.getTracks().forEach((track) => track.stop());
+                                          const dataUrl = canvas.toDataURL('image/png');
+                                          setCurrentImage(dataUrl);
+                                          // Convert dataUrl to File for upload
+                                          const res = await fetch(dataUrl);
+                                          const blob = await res.blob();
+                                          const file = new File([blob], 'captured.png', { type: 'image/png' });
+                                          setEditFormData((prev) => ({ ...prev, image: file }));
+                                        } catch (err) {
+                                          addNotification('Failed to capture image: ' + (err.message || 'Unknown error'), 'error');
+                                        }
+                                      }}
+                                      className="w-full p-1 sm:p-2 border rounded-md text-xs sm:text-sm bg-blue-600 text-white mt-1"
+                                      style={{ border: '1px solid var(--color-secondary)' }}
+                                    >
+                                      Capture Image
+                                    </button>
+                                  ) : (
+                                    <input
+                                      type="file"
+                                      name="image"
+                                      onChange={handleEditChange}
+                                      className="w-full p-1 sm:p-2 border rounded-md text-xs sm:text-sm"
+                                      style={{
+                                        border: '1px solid var(--color-secondary)',
+                                        background: 'var(--color-bg)',
+                                        color: 'var(--color-text)'
+                                      }}
+                                    />
+                                  )}
                                 </div>
                               </td>
                               <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2">
@@ -338,10 +375,10 @@ function UserDashboard() {
                                   value={editFormData.title}
                                   onChange={handleEditChange}
                                   className="w-full p-1 sm:p-2 border rounded-md text-xs sm:text-sm"
-                                  style={{ 
-                                    border: '1px solid var(--color-secondary)', 
-                                    background: 'var(--color-bg)', 
-                                    color: 'var(--color-text)' 
+                                  style={{
+                                    border: '1px solid var(--color-secondary)',
+                                    background: 'var(--color-bg)',
+                                    color: 'var(--color-text)'
                                   }}
                                   required
                                 />
@@ -352,10 +389,10 @@ function UserDashboard() {
                                   value={editFormData.status}
                                   onChange={handleEditChange}
                                   className="w-full p-1 sm:p-2 border rounded-md text-xs sm:text-sm"
-                                  style={{ 
-                                    border: '1px solid var(--color-secondary)', 
-                                    background: 'var(--color-bg)', 
-                                    color: 'var(--color-text)' 
+                                  style={{
+                                    border: '1px solid var(--color-secondary)',
+                                    background: 'var(--color-bg)',
+                                    color: 'var(--color-text)'
                                   }}
                                   required
                                 >
@@ -371,10 +408,10 @@ function UserDashboard() {
                                   value={editFormData.category}
                                   onChange={handleEditChange}
                                   className="w-full p-1 sm:p-2 border rounded-md text-xs sm:text-sm"
-                                  style={{ 
-                                    border: '1px solid var(--color-secondary)', 
-                                    background: 'var(--color-bg)', 
-                                    color: 'var(--color-text)' 
+                                  style={{
+                                    border: '1px solid var(--color-secondary)',
+                                    background: 'var(--color-bg)',
+                                    color: 'var(--color-text)'
                                   }}
                                   required
                                 >
@@ -461,10 +498,10 @@ function UserDashboard() {
                                           onChange={(e) => setOtp(e.target.value)}
                                           placeholder="Enter OTP"
                                           className="p-1 sm:p-2 border rounded-md text-xs sm:text-sm w-full sm:w-20 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                          style={{ 
-                                            border: '1px solid var(--color-secondary)', 
-                                            background: 'var(--color-bg)', 
-                                            color: 'var(--color-text)' 
+                                          style={{
+                                            border: '1px solid var(--color-secondary)',
+                                            background: 'var(--color-bg)',
+                                            color: 'var(--color-text)'
                                           }}
                                         />
                                         <button

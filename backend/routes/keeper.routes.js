@@ -14,7 +14,7 @@ const isAdminOrAuthorized = (req, res, next) => {
 };
 
 // Get a list of available keepers
-router.get('/', authMiddleware.authenticate, isAdminOrAuthorized, keeperController.getKeepers);
+router.get('/', authMiddleware.authenticate, keeperController.getKeepers);
 
 // Assign a found item to a keeper
 router.post('/:id/assign-keeper', 

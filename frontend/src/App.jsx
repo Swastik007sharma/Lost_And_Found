@@ -18,6 +18,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import UserDetail from "./pages/UserDetail";
 import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
+import KeepersList from "./pages/KeepersList";
 import VerifyOtp from "./pages/Auth/VerifyOtp"; // Import the VerifyOtp component
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -94,6 +95,14 @@ function App() {
 								element={
 									<ProtectedRoute>
 										<UserDashboard />
+									</ProtectedRoute>
+								}
+							/>
+							<Route
+								path="/keepers"
+								element={
+									<ProtectedRoute>
+										<KeepersList />
 									</ProtectedRoute>
 								}
 							/>

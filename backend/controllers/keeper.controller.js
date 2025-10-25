@@ -4,7 +4,10 @@ const Item = require('../models/item.model');
 // Get a list of available keepers
 exports.getKeepers = async (req, res) => {
   try {
-    const keepers = await User.find({ role: 'keeper' }, 'name email createdAt'); // Select only necessary fields
+    const keepers = await User.find(
+      { role: 'keeper' },
+      'name email createdAt location department description'
+    ); // Select all relevant keeper fields
     res.status(200).json({ keepers });
   } catch (error) {
     console.error('Error fetching keepers:', error);

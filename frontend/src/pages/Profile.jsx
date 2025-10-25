@@ -25,10 +25,13 @@ function Profile() {
     confirmPassword: false,
   });
 
-  // State for name and email update form
+  // State for name, email, and keeper fields
   const [profileForm, setProfileForm] = useState({
     name: user?.name || '',
     email: user?.email || '',
+    location: user?.location || '',
+    department: user?.department || '',
+    description: user?.description || '',
   });
 
   // Toggle states for forms
@@ -39,6 +42,9 @@ function Profile() {
     name: user?.name || '',
     email: user?.email || '',
     role: user?.role || 'user',
+    location: user?.location || '',
+    department: user?.department || '',
+    description: user?.description || '',
   };
 
   useEffect(() => {
@@ -101,10 +107,17 @@ function Profile() {
       }
 
       console.log('Sending profile update:', profileForm, 'Token:', token);
-      const response = await updateUserProfile({
+      // Only send keeper fields if user is a keeper
+      const updatePayload = {
         name: profileForm.name,
         email: profileForm.email,
-      });
+      };
+      if (user?.role === 'keeper') {
+        updatePayload.location = profileForm.location;
+        updatePayload.department = profileForm.department;
+        updatePayload.description = profileForm.description;
+      }
+      const response = await updateUserProfile(updatePayload);
       console.log('API Response:', response);
 
       // Handle backend response structure
@@ -118,7 +131,13 @@ function Profile() {
 
       toast.success('Profile updated successfully!');
       setUser({ ...user, ...updatedUser }); // Update AuthContext
-      setProfileForm({ name: updatedUser.name, email: updatedUser.email }); // Sync form
+      setProfileForm({
+        name: updatedUser.name,
+        email: updatedUser.email,
+        location: updatedUser.location || '',
+        department: updatedUser.department || '',
+        description: updatedUser.description || '',
+      }); // Sync form
     } catch (err) {
       console.error('Profile Update Error:', err);
       const errorMessage = err.response?.data?.error || err.message;
@@ -175,6 +194,13 @@ function Profile() {
               <p className="text-lg sm:text-xl" style={{ color: 'var(--color-text)' }}><strong>Name:</strong> {displayData.name}</p>
               <p className="text-lg sm:text-xl" style={{ color: 'var(--color-text)' }}><strong>Email:</strong> {displayData.email}</p>
               <p className="text-lg sm:text-xl" style={{ color: 'var(--color-text)' }}><strong>Role:</strong> {displayData.role}</p>
+              {displayData.role === 'keeper' && (
+                <>
+                  <p className="text-lg sm:text-xl" style={{ color: 'var(--color-text)' }}><strong>Location:</strong> {displayData.location || <span className="italic text-gray-400">Not set</span>}</p>
+                  <p className="text-lg sm:text-xl" style={{ color: 'var(--color-text)' }}><strong>Department:</strong> {displayData.department || <span className="italic text-gray-400">Not set</span>}</p>
+                  <p className="text-lg sm:text-xl" style={{ color: 'var(--color-text)' }}><strong>Description:</strong> {displayData.description || <span className="italic text-gray-400">Not set</span>}</p>
+                </>
+              )}
             </div>
             <div className="mt-6 flex flex-col sm:flex-row gap-4">
               <Button
@@ -209,11 +235,11 @@ function Profile() {
             </div>
           </div>
 
-          {/* Update Name & Email Form */}
+          {/* Update Name, Email, and Keeper Fields Form */}
           {isFormOpen === 'profile' && (
             <div className="p-6 rounded-lg shadow-md mb-6" style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}>
               <div className="mb-4">
-                <h2 className="text-2xl font-semibold" style={{ color: 'var(--color-text)' }}>Update Name & Email</h2>
+                <h2 className="text-2xl font-semibold" style={{ color: 'var(--color-text)' }}>Update Profile</h2>
               </div>
               <form onSubmit={handleProfileUpdate} className="space-y-4">
                 <div>
@@ -239,6 +265,44 @@ function Profile() {
                     required
                   />
                 </div>
+                {/* Keeper-specific fields */}
+                {user?.role === 'keeper' && (
+                  <>
+                    <div>
+                      <label htmlFor="location" className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}>Location:</label>
+                      <Input
+                        id="location"
+                        label=""
+                        name="location"
+                        value={profileForm.location}
+                        onChange={handleProfileChange}
+                        placeholder="Enter your location"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="department" className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}>Department:</label>
+                      <Input
+                        id="department"
+                        label=""
+                        name="department"
+                        value={profileForm.department}
+                        onChange={handleProfileChange}
+                        placeholder="Enter your department"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="description" className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}>Description:</label>
+                      <Input
+                        id="description"
+                        label=""
+                        name="description"
+                        value={profileForm.description}
+                        onChange={handleProfileChange}
+                        placeholder="Extra details (optional)"
+                      />
+                    </div>
+                  </>
+                )}
                 <div className="flex gap-4">
                   <Button type="submit" disabled={loading} className="w-full py-2 px-4 rounded-md transition-colors" style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}>
                     {loading ? 'Saving...' : 'Save Changes'}

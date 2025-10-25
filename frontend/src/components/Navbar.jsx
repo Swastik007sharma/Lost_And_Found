@@ -21,6 +21,7 @@ function Navbar() {
     { to: '/notifications', label: 'Notifications', icon: <FaBell /> },
     { to: '/items/create', label: 'Post Item', icon: <FaPlus /> },
     { to: '/conversations', label: 'Conversations', icon: <FaComments /> },
+    { to: '/keepers', label: 'Keepers', icon: <FaUser /> },
     { to: '/dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },
   ];
 

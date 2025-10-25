@@ -21,7 +21,10 @@ function ItemCreate() {
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [videoStream, setVideoStream] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(true);
+  const [showFoundSuccess, setShowFoundSuccess] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -64,6 +67,7 @@ function ItemCreate() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -75,6 +79,60 @@ function ItemCreate() {
       setImage(null);
       setImagePreview(null);
     }
+  };
+
+  // Camera logic
+  const handleOpenCamera = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast.error('Camera not supported in this browser.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setVideoStream(stream);
+      setShowCamera(true);
+    } catch (err) {
+      toast.error('Failed to access camera: ' + (err.message || 'Unknown error'));
+    }
+  };
+
+
+  const handleTakePhoto = () => {
+    const video = document.getElementById('item-create-video');
+    if (video) {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      // Flip horizontally to fix mirror effect
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Reset transform for future use (not strictly needed here)
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      if (videoStream) {
+        videoStream.getTracks().forEach((track) => track.stop());
+        setVideoStream(null);
+      }
+      const dataUrl = canvas.toDataURL('image/png');
+      setImagePreview(dataUrl);
+      // Convert dataUrl to File for upload
+      fetch(dataUrl)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], 'captured.png', { type: 'image/png' });
+          setImage(file);
+        });
+      setShowCamera(false);
+    }
+  };
+
+  const handleCloseCamera = () => {
+    if (videoStream) {
+      videoStream.getTracks().forEach((track) => track.stop());
+      setVideoStream(null);
+    }
+    setShowCamera(false);
   };
 
   const handleStatusSelect = (status) => {
@@ -110,24 +168,27 @@ function ItemCreate() {
     }
 
     try {
-      // const response = await createItem(data);
       await createItem(data);
       toast.success('Item created successfully!');
-      setFormData({
-        title: '',
-        description: '',
-        category: '',
-        subCategory: '',
-        status: '',
-        location: '',
-      });
-      setImage(null);
-      setImagePreview(null);
-      setIsModalOpen(true);
-      setTimeout(() => navigate('/dashboard'), 1000);
+      if (formData.status === 'Found') {
+        setShowFoundSuccess(true);
+      } else {
+        setFormData({
+          title: '',
+          description: '',
+          category: '',
+          subCategory: '',
+          status: '',
+          location: '',
+        });
+        setImage(null);
+        setImagePreview(null);
+        setIsModalOpen(true);
+        setTimeout(() => navigate('/dashboard'), 1000);
+      }
     } catch (err) {
       console.log(err);
-      
+
       if (err.response?.data?.error?.type === 'VALIDATION_ERROR') {
         const errorDetails = err.response.data.error.details.map(detail => `${detail.field}: ${detail.message}`).join(', ');
         toast.error(`Failed to create item: ${errorDetails}`);
@@ -152,7 +213,6 @@ function ItemCreate() {
       (formData.status === 'Found' ? image instanceof File : true)
     );
   };
-
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
       <Modal isOpen={isModalOpen} onClose={() => handleStatusSelect('Lost')}>
@@ -187,19 +247,42 @@ function ItemCreate() {
         </div>
       </Modal>
 
-      {!isModalOpen && (
+      {showFoundSuccess ? (
+        <div className="container mx-auto p-4 sm:p-6 lg:p-8 xl:p-10 flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="max-w-xl w-full bg-green-50 dark:bg-green-900 rounded-lg shadow-lg p-8 flex flex-col items-center">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-green-700 dark:text-green-200 text-center">Found Item Submitted!</h2>
+            <p className="mb-6 text-lg text-center text-green-800 dark:text-green-100">
+              You can now submit the item to a keeper for safekeeping, or keep it with yourself until someone claims it.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+              <button
+                className="w-full sm:w-auto px-6 py-3 rounded-md bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition-colors"
+                onClick={() => navigate('/keepers')}
+              >
+                Go to Keeper List
+              </button>
+              <button
+                className="w-full sm:w-auto px-6 py-3 rounded-md bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-semibold shadow hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
+                onClick={() => navigate('/dashboard')}
+              >
+                Keep With Myself
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : !isModalOpen && (
         <div className="container mx-auto p-4 sm:p-6 lg:p-8 xl:p-10">
           <div className="max-w-2xl mx-auto">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-center" style={{ color: 'var(--color-text)' }}>
               Add New Item {formData.status && `(${formData.status === 'Lost' ? '🔴 Lost' : '🟢 Found'})`}
             </h1>
-
             <form
               onSubmit={handleSubmit}
               className="p-6 sm:p-8 md:p-10 rounded-lg shadow-lg"
               encType="multipart/form-data"
               style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}
             >
+              {/* Title */}
               <div className="mb-6">
                 <label htmlFor="title" className="block text-sm sm:text-base md:text-lg font-medium mb-2" style={{ color: 'var(--color-text)' }}>
                   Title
@@ -219,7 +302,7 @@ function ItemCreate() {
                   required
                 />
               </div>
-
+              {/* Description */}
               <div className="mb-6">
                 <label htmlFor="description" className="block text-sm sm:text-base md:text-lg font-medium mb-2" style={{ color: 'var(--color-text)' }}>
                   Description
@@ -239,7 +322,7 @@ function ItemCreate() {
                   required
                 />
               </div>
-
+              {/* Category */}
               <div className="mb-6">
                 <label htmlFor="category" className="block text-sm sm:text-base md:text-lg font-medium mb-2" style={{ color: 'var(--color-text)' }}>
                   Category
@@ -265,7 +348,7 @@ function ItemCreate() {
                   ))}
                 </select>
               </div>
-
+              {/* Subcategory */}
               <div className="mb-6">
                 <label htmlFor="subCategory" className="block text-sm sm:text-base md:text-lg font-medium mb-2" style={{ color: 'var(--color-text)' }}>
                   Subcategory
@@ -297,7 +380,7 @@ function ItemCreate() {
                   </p>
                 )}
               </div>
-
+              {/* Location */}
               <div className="mb-6">
                 <label htmlFor="location" className="block text-sm sm:text-base md:text-lg font-medium mb-2" style={{ color: 'var(--color-text)' }}>
                   Location (Required)
@@ -318,40 +401,94 @@ function ItemCreate() {
                   required
                 />
               </div>
-
+              {/* Image */}
               <div className="mb-6">
                 <label htmlFor="image" className="block text-sm sm:text-base md:text-lg font-medium mb-2" style={{ color: 'var(--color-text)' }}>
                   Image {formData.status === 'Found' ? '(Required)' : '(Optional)'}
                 </label>
                 <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <input
-                    type="file"
-                    id="image"
-                    name="image"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="w-full sm:w-auto p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base shadow-sm hover:shadow-md transition-shadow duration-200"
-                    style={{
-                      border: '1px solid var(--color-secondary)',
-                      background: 'var(--color-bg)',
-                      color: 'var(--color-text)'
-                    }}
-                    required={formData.status === 'Found'}
-                  />
-                  {imagePreview && (
-                    <div className="mt-2 sm:mt-0">
-                      <img src={imagePreview} alt="Preview" className="w-24 h-24 object-cover rounded-lg border shadow-sm" />
-                    </div>
+                  {formData.status === 'Found' ? (
+                    <>
+                      {showCamera ? (
+                        <div className="flex flex-col items-center gap-2 w-full">
+                          <video
+                            id="item-create-video"
+                            autoPlay
+                            playsInline
+                            style={{ width: '240px', height: '180px', borderRadius: '0.5rem', background: '#222' }}
+                            ref={el => {
+                              if (el && videoStream && !el.srcObject) {
+                                el.srcObject = videoStream;
+                              }
+                            }}
+                          />
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              type="button"
+                              className="px-4 py-2 rounded bg-blue-600 text-white font-semibold shadow hover:bg-blue-700"
+                              onClick={handleTakePhoto}
+                            >
+                              Take Photo
+                            </button>
+                            <button
+                              type="button"
+                              className="px-4 py-2 rounded bg-gray-300 text-gray-900 font-semibold shadow hover:bg-gray-400"
+                              onClick={handleCloseCamera}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleOpenCamera}
+                            className="w-full sm:w-auto p-2 border rounded-lg bg-blue-600 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base shadow-sm hover:shadow-md transition-shadow duration-200"
+                            style={{ border: '1px solid var(--color-secondary)' }}
+                          >
+                            {imagePreview ? 'Retake Image' : 'Capture Image'}
+                          </button>
+                          {imagePreview && (
+                            <div className="mt-2 sm:mt-0">
+                              <img src={imagePreview} alt="Preview" className="w-24 h-24 object-cover rounded-lg border shadow-sm" />
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        type="file"
+                        id="image"
+                        name="image"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="w-full sm:w-auto p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base shadow-sm hover:shadow-md transition-shadow duration-200"
+                        style={{
+                          border: '1px solid var(--color-secondary)',
+                          background: 'var(--color-bg)',
+                          color: 'var(--color-text)'
+                        }}
+                        required={formData.status === 'Found'}
+                      />
+                      {imagePreview && (
+                        <div className="mt-2 sm:mt-0">
+                          <img src={imagePreview} alt="Preview" className="w-24 h-24 object-cover rounded-lg border shadow-sm" />
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
                 <p className="mt-2 text-sm" style={{ color: 'var(--color-text)' }}>
                   {formData.status === 'Found'
-                    ? 'Required: please upload an image for verification.'
+                    ? 'Required: please capture an image for verification.'
                     : 'Optional: upload image if available.'}
                 </p>
                 {formData.status === 'Found' && (
                   <p className={`mt-1 text-sm ${image ? 'text-green-600' : 'text-red-600'}`}>
-                    {image ? '✅ Image uploaded successfully.' : '❌ Image is required.'}
+                    {image ? '✅ Image captured successfully.' : '❌ Image is required.'}
                   </p>
                 )}
                 {formData.status === 'Lost' && image && (
@@ -360,7 +497,7 @@ function ItemCreate() {
                   </p>
                 )}
               </div>
-
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading || !isFormValid()}
@@ -381,7 +518,7 @@ function ItemCreate() {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 export default ItemCreate;

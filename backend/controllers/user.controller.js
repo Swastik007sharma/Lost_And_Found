@@ -75,11 +75,18 @@ exports.updateProfile = async (req, res) => {
     const userId = req.user.id; // Use req.user.id instead of req.user._id
     console.log('Updating profile for user ID:', userId);
 
-    const { name, email } = req.body;
+
+    // Only allow keeper-specific fields if user is a keeper
+    const updateFields = { name, email };
+    if (req.user.role === 'keeper') {
+      if (typeof req.body.location === 'string') updateFields.location = req.body.location;
+      if (typeof req.body.department === 'string') updateFields.department = req.body.department;
+      if (typeof req.body.description === 'string') updateFields.description = req.body.description;
+    }
 
     const user = await User.findOneAndUpdate(
       { _id: userId, isActive: true },
-      { name, email },
+      updateFields,
       { new: true, runValidators: true }
     ).select('-password');
 

@@ -47,6 +47,7 @@ const seedCategories = async () => {
         { name: 'Backpacks', description: 'School backpacks' },
         { name: 'Purses', description: 'Handbags and clutches' },
         { name: 'Lunch Bags', description: 'Insulated lunch containers' },
+        { name: 'Bottle', description: 'Any type of bottle' },
       ],
       'Documents & IDs': [
         { name: 'Student IDs', description: 'University identification cards' },
