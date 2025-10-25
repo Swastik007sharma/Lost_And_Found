@@ -83,8 +83,8 @@ const ItemCard = ({
           )}
         </div>
       ) : (
-        <Link to={`/items/${item._id}`}>
-          <div className="p-4 sm:p-5 cursor-pointer flex flex-col gap-2 animate-fade-in-up group hover:shadow-lg transition-all duration-200 rounded-xl" style={{ minHeight: 180 }}>
+        <Link to={`/items/${item._id}`} tabIndex={0} aria-label={`View details for ${item.title}`}>
+          <div className="p-4 sm:p-5 cursor-pointer flex flex-col gap-2 animate-fade-in-up group hover:shadow-lg transition-all duration-200 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-accent" style={{ minHeight: 180 }}>
             <div className="flex items-center gap-2 mb-1">
               {/* Status badge */}
               <span className={`px-2 py-1 rounded-full border text-xs font-semibold ${statusColors[item.status] || 'bg-gray-100 text-gray-700 border-gray-300'}`}>{item.status}</span>
@@ -95,7 +95,7 @@ const ItemCard = ({
               {/* Relative time */}
               <span className="ml-auto text-xs text-gray-500" title={new Date(item.createdAt).toLocaleString()}>{timeAgo(item.createdAt)}</span>
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold mb-1 line-clamp-2 group-hover:text-blue-700 transition-colors" style={{ color: 'var(--color-text)' }}>{item.title}</h3>
+            <h3 className="text-lg sm:text-xl font-semibold mb-1 line-clamp-2 group-hover:text-blue-700 transition-colors" style={{ color: 'var(--color-text)' }} tabIndex={-1}>{item.title}</h3>
             {/* Truncated description */}
             {item.description && (
               <p className="text-sm text-gray-600 line-clamp-2 mb-1">{item.description}</p>
@@ -109,7 +109,7 @@ const ItemCard = ({
               </div>
             )}
             {/* User avatar/initials */}
-            <div className="flex items-center gap-2 mt-auto">
+            <div className="flex items-center gap-2 mt-auto" aria-label="Reported by">
               {item.user?.avatarUrl ? (
                 <img src={item.user.avatarUrl} alt="User avatar" className="w-7 h-7 rounded-full object-cover border border-gray-300" />
               ) : (

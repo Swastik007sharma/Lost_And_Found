@@ -120,14 +120,16 @@ function Home() {
             placeholder="Search by title, description, or tags..."
             value={searchTerm}
             onChange={handleSearch}
-            className="w-full sm:w-1/3 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition duration-200"
+            className="w-full sm:w-1/3 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             style={{ border: '1px solid var(--color-secondary)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
+            aria-label="Search items"
           />
           <select
             value={statusFilter}
             onChange={handleStatusChange}
-            className="w-full sm:w-1/6 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base appearance-none"
+            className="w-full sm:w-1/6 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base appearance-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             style={{ border: '1px solid var(--color-secondary)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
+            aria-label="Filter by status"
           >
             <option value="All">All Statuses</option>
             <option value="Lost">Lost</option>
@@ -138,8 +140,9 @@ function Home() {
           <select
             value={categoryFilter}
             onChange={handleCategoryChange}
-            className="w-full sm:w-1/6 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base appearance-none"
+            className="w-full sm:w-1/6 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base appearance-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             style={{ border: '1px solid var(--color-secondary)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
+            aria-label="Filter by category"
           >
             <option value="All">All Categories</option>
             {categories.map((cat) => (
@@ -149,8 +152,9 @@ function Home() {
           <select
             value={sortBy}
             onChange={handleSortChange}
-            className="w-full sm:w-1/6 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base appearance-none"
+            className="w-full sm:w-1/6 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base appearance-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             style={{ border: '1px solid var(--color-secondary)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
+            aria-label="Sort items"
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
@@ -158,10 +162,11 @@ function Home() {
           </select>
           <button
             onClick={handleClearFilters}
-            className="w-full sm:w-auto px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold shadow transition-colors duration-200"
+            className="w-full sm:w-auto px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold shadow transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             aria-label="Clear all filters"
+            tabIndex={0}
           >
-            Clear
+            Clear <span className="sr-only">filters</span>
           </button>
         </div>
 

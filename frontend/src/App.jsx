@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import "./index.css";
 import { AuthProvider } from "./context/AuthContext";
 import Layout from "./components/Layout";
@@ -26,6 +26,21 @@ import { ThemeProvider } from "./context/ThemeContext";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 
+function PageTransition({ children }) {
+	const location = useLocation();
+	return (
+		<div
+			key={location.pathname}
+			style={{
+				animation: 'fadein 0.5s',
+				minHeight: '100vh',
+			}}
+		>
+			{children}
+		</div>
+	);
+}
+
 function App() {
 	return (
 		<ThemeProvider>
@@ -42,105 +57,107 @@ function App() {
 						draggable
 						pauseOnHover
 					/>
-					<Routes>
-						<Route path="/" element={<Landing />} />
-						<Route path="/login" element={<Login />} />
-						<Route path="/register" element={<Register />} />
-						<Route path="/verify-otp" element={<VerifyOtp />} />
+					<PageTransition>
+						<Routes>
+							<Route path="/" element={<Landing />} />
+							<Route path="/login" element={<Login />} />
+							<Route path="/register" element={<Register />} />
+							<Route path="/verify-otp" element={<VerifyOtp />} />
 							<Route
 								path="/home"
 								element={
 									<ProtectedRoute>
-										<Navbar/>
+										<Navbar />
 										<Home />
 										<Footer />
 									</ProtectedRoute>
 								}
 							/>
-						<Route element={<Layout />}>
-							<Route
-								path="/items/:id"
-								element={
-									<ProtectedRoute>
-										<ItemDetails />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/conversations"
-								element={
-									<ProtectedRoute>
-										<Conversations />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/messages/:conversationId"
-								element={
-									<ProtectedRoute>
-										<Messages />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/notifications"
-								element={
-									<ProtectedRoute>
-										<Notifications />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/dashboard"
-								element={
-									<ProtectedRoute>
-										<UserDashboard />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/keepers"
-								element={
-									<ProtectedRoute>
-										<KeepersList />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/profile"
-								element={
-									<ProtectedRoute>
-										<Profile />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/items/create"
-								element={
-									<ProtectedRoute>
-										<ItemCreate />
-									</ProtectedRoute>
-								}
-							/>
-							<Route
-								path="/admin"
-								element={
-									<AdminRoute>
-										<AdminDashboard />
-									</AdminRoute>
-								}
-							/>
-							<Route
-								path="/users/:id"
-								element={
-									<AdminRoute>
-										<UserDetail />
-									</AdminRoute>
-								}
-							/>
-							<Route path="*" element={<NotFound />} />
-						</Route>
-					</Routes>
+							<Route element={<Layout />}>
+								<Route
+									path="/items/:id"
+									element={
+										<ProtectedRoute>
+											<ItemDetails />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/conversations"
+									element={
+										<ProtectedRoute>
+											<Conversations />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/messages/:conversationId"
+									element={
+										<ProtectedRoute>
+											<Messages />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/notifications"
+									element={
+										<ProtectedRoute>
+											<Notifications />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/dashboard"
+									element={
+										<ProtectedRoute>
+											<UserDashboard />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/keepers"
+									element={
+										<ProtectedRoute>
+											<KeepersList />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/profile"
+									element={
+										<ProtectedRoute>
+											<Profile />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/items/create"
+									element={
+										<ProtectedRoute>
+											<ItemCreate />
+										</ProtectedRoute>
+									}
+								/>
+								<Route
+									path="/admin"
+									element={
+										<AdminRoute>
+											<AdminDashboard />
+										</AdminRoute>
+									}
+								/>
+								<Route
+									path="/users/:id"
+									element={
+										<AdminRoute>
+											<UserDetail />
+										</AdminRoute>
+									}
+								/>
+								<Route path="*" element={<NotFound />} />
+							</Route>
+						</Routes>
+					</PageTransition>
 				</BrowserRouter>
 			</AuthProvider>
 		</ThemeProvider>
