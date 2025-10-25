@@ -1,3 +1,39 @@
+// Batch mark notifications as read
+exports.markAllAsRead = async (req, res) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        code: 'AUTH_REQUIRED'
+      });
+    }
+
+    const { id: userId } = req.user;
+    // Optional: filter only unread notifications
+    const filter = { userId, isRead: false };
+    const update = { $set: { isRead: true, updatedAt: new Date() } };
+
+    const result = await Notification.updateMany(filter, update);
+
+    return res.status(200).json({
+      success: true,
+      data: { matchedCount: result.matchedCount, modifiedCount: result.modifiedCount },
+      message: 'All notifications marked as read',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error marking all notifications as read:', {
+      message: error.message,
+      stack: error.stack,
+      userId: req.user?.id
+    });
+    return res.status(500).json({
+      error: 'Internal server error',
+      code: 'INTERNAL_ERROR',
+      message: 'Failed to mark all notifications as read'
+    });
+  }
+};
 const Notification = require('../models/notification.model');
 
 // Get all notifications for the current user with pagination
@@ -5,9 +41,9 @@ exports.getNotifications = async (req, res) => {
   try {
     // Verify user exists in request
     if (!req.user?.id) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         error: 'Authentication required',
-        code: 'AUTH_REQUIRED' 
+        code: 'AUTH_REQUIRED'
       });
     }
 
@@ -19,7 +55,7 @@ exports.getNotifications = async (req, res) => {
     const limitNumber = Math.min(parseInt(limit, 10), 50); // Cap limit at 50 for performance
 
     if (isNaN(pageNumber) || isNaN(limitNumber) || pageNumber < 1 || limitNumber < 1) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Invalid pagination parameters',
         code: 'INVALID_PAGINATION',
         details: 'Page and limit must be positive numbers'
@@ -103,14 +139,14 @@ exports.markAsRead = async (req, res) => {
 
     // Use findOneAndUpdate for atomic operation
     const notification = await Notification.findOneAndUpdate(
-      { 
-        _id: notificationId, 
-        userId 
+      {
+        _id: notificationId,
+        userId
       },
-      { 
+      {
         $set: { isRead: true, updatedAt: new Date() }
       },
-      { 
+      {
         new: true, // Return updated document
         lean: true,
         select: '_id isRead updatedAt' // Return only necessary fields

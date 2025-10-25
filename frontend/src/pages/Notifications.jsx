@@ -1,12 +1,22 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getNotifications, markNotificationAsRead } from '../services/notificationService';
+import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '../services/notificationService';
 import Loader from '../components/common/Loader';
 import Pagination from '../components/common/Pagination';
 import { toast } from 'react-toastify';
 
 function Notifications() {
+  // Mark all notifications as read
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllNotificationsAsRead();
+      setNotifications((prev) => prev.map((notif) => ({ ...notif, isRead: true })));
+      toast.success('All notifications marked as read!');
+    } catch (err) {
+      toast.error(`Failed to mark all as read: ${err.response?.data?.error || err.message}`);
+    }
+  };
   const { user, loading: authLoading, socket } = useContext(AuthContext);
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
@@ -16,7 +26,7 @@ function Notifications() {
   const limit = 10;
 
   // Fetch notifications with error handling
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!user?.id) {
       navigate('/login');
       return;
@@ -33,7 +43,7 @@ function Notifications() {
     } finally {
       setPageLoading(false);
     }
-  };
+  }, [user, page, limit, navigate]);
 
   // Socket event handling
   useEffect(() => {
@@ -58,7 +68,7 @@ function Notifications() {
       socket.off('newNotification', handleNewNotification);
       socket.off('errorMessage', handleErrorMessage);
     };
-  }, [socket, user, page]);
+  }, [socket, user, page, fetchNotifications]);
 
   // Mark notification as read
   const handleMarkAsRead = async (id) => {
@@ -84,10 +94,20 @@ function Notifications() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-6 min-h-screen" style={{ background: 'var(--color-bg)' }}>
-      <header className="mb-6">
+
+      <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold md:text-3xl lg:text-4xl animate-fade-in-down" style={{ color: 'var(--color-text)' }}>
           Notifications
         </h1>
+        {notifications.some((n) => !n.isRead) && (
+          <button
+            onClick={handleMarkAllAsRead}
+            className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold shadow transition-colors duration-200"
+            aria-label="Mark all notifications as read"
+          >
+            Mark All as Read
+          </button>
+        )}
       </header>
 
       {/* Loading State */}
@@ -101,10 +121,9 @@ function Notifications() {
             {notifications.map((notif) => (
               <li
                 key={notif._id}
-                className={`p-4 transition-colors duration-200 ${
-                  notif.isRead ? '' : ''
-                } animate-fade-in-left`}
-                style={{ 
+                className={`p-4 transition-colors duration-200 ${notif.isRead ? '' : ''
+                  } animate-fade-in-left`}
+                style={{
                   background: notif.isRead ? 'var(--color-secondary)' : 'var(--color-primary)',
                   color: 'var(--color-text)'
                 }}

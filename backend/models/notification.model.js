@@ -35,6 +35,8 @@ const notificationSchema = new Schema({
 });
 
 notificationSchema.index({ userId: 1, createdAt: -1 }); // Sort notifications by time descending
+notificationSchema.index({ userId: 1, isRead: 1 }); // Optimize unread/read queries
+notificationSchema.index({ createdAt: -1 }); // Optimize sorting by time
 notificationSchema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model('Notification', notificationSchema);

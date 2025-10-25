@@ -5,6 +5,13 @@ const notificationController = require('../controllers/notification.controller')
 const { validate } = require('../middlewares/validate.middleware');
 const { markAsReadSchema } = require('../schema/notification.schema');
 
+// Batch mark all notifications as read
+router.put(
+  '/read-all',
+  authMiddleware.authenticate,
+  notificationController.markAllAsRead
+);
+
 // Get all notifications for the current user
 router.get(
   '/',
