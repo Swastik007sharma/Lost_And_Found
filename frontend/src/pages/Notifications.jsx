@@ -6,6 +6,17 @@ import Loader from '../components/common/Loader';
 import Pagination from '../components/common/Pagination';
 import { toast } from 'react-toastify';
 
+// Helper for relative time
+function timeAgo(date) {
+  const now = new Date();
+  const then = new Date(date);
+  const diff = Math.floor((now - then) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return then.toLocaleDateString();
+}
+
 function Notifications() {
   // Mark all notifications as read
   const handleMarkAllAsRead = async () => {
@@ -94,7 +105,6 @@ function Notifications() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-6 min-h-screen" style={{ background: 'var(--color-bg)' }}>
-
       <header className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold md:text-3xl lg:text-4xl animate-fade-in-down" style={{ color: 'var(--color-text)' }}>
           Notifications
@@ -121,40 +131,40 @@ function Notifications() {
             {notifications.map((notif) => (
               <li
                 key={notif._id}
-                className={`p-4 transition-colors duration-200 ${notif.isRead ? '' : ''
-                  } animate-fade-in-left`}
+                className={`group p-4 flex items-start gap-3 transition-all duration-200 rounded-lg mb-2 shadow-sm relative ${notif.isRead ? 'opacity-80' : 'bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500'} hover:shadow-lg`}
                 style={{
-                  background: notif.isRead ? 'var(--color-secondary)' : 'var(--color-primary)',
-                  color: 'var(--color-text)'
+                  background: notif.isRead ? 'var(--color-secondary)' : undefined,
+                  color: 'var(--color-text)',
+                  borderLeft: notif.isRead ? undefined : '4px solid var(--color-accent)',
+                  boxShadow: notif.isRead ? undefined : '0 2px 8px 0 rgba(0,0,0,0.04)'
                 }}
                 role="region"
                 aria-label={`Notification: ${notif.message}`}
               >
-                <div className="flex flex-col space-y-2">
-                  <p className="text-sm md:text-base break-words" style={{ color: 'var(--color-text)' }}>
-                    {notif.message}
-                  </p>
+                {/* Unread dot */}
+                {!notif.isRead && (
+                  <span className="mt-2 w-3 h-3 rounded-full bg-blue-500 animate-pulse shadow" title="Unread" />
+                )}
+                <div className="flex-1 flex flex-col space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className={`text-sm md:text-base break-words font-medium ${notif.isRead ? 'text-gray-600' : 'font-semibold text-blue-900'}`}>{notif.message}</p>
+                  </div>
                   <time
-                    className="text-xs md:text-sm"
-                    style={{ color: 'var(--color-text)' }}
+                    className="text-xs md:text-sm text-gray-500"
                     dateTime={notif.createdAt}
                   >
-                    {new Date(notif.createdAt).toLocaleString([], {
-                      dateStyle: 'medium',
-                      timeStyle: 'short'
-                    })}
+                    {timeAgo(notif.createdAt)}
                   </time>
-                  {!notif.isRead && (
-                    <button
-                      onClick={() => handleMarkAsRead(notif._id)}
-                      className="self-start px-3 py-1 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors duration-200"
-                      style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
-                      aria-label={`Mark notification ${notif.message} as read`}
-                    >
-                      Mark as Read
-                    </button>
-                  )}
                 </div>
+                {!notif.isRead && (
+                  <button
+                    onClick={() => handleMarkAsRead(notif._id)}
+                    className="ml-2 px-3 py-1 text-xs rounded-full bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-colors duration-200"
+                    aria-label={`Mark notification ${notif.message} as read`}
+                  >
+                    Mark as Read
+                  </button>
+                )}
               </li>
             ))}
           </ul>
