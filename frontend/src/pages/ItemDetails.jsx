@@ -1,7 +1,24 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { FaSearch, FaImage } from "react-icons/fa";
+import {
+  FaSearch,
+  FaImage,
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaUser,
+  FaTag,
+  FaEdit,
+  FaShare,
+  FaComments,
+  FaCheckCircle,
+  FaExclamationCircle,
+  FaShieldAlt,
+  FaKey,
+  FaTimes,
+  FaArrowLeft,
+  FaClock
+} from "react-icons/fa";
 import {
   getItemDetails,
   claimItem,
@@ -31,9 +48,19 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div>
-          <p>Something went wrong: {this.state.error.message}</p>
-          <button onClick={() => window.location.reload()}>Reload</button>
+        <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
+          <div className="text-center space-y-4 p-8 rounded-xl shadow-xl" style={{ background: 'var(--color-secondary)' }}>
+            <FaExclamationCircle className="text-6xl mx-auto text-red-500" />
+            <p className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Something went wrong</p>
+            <p style={{ color: 'var(--color-text)', opacity: 0.7 }}>{this.state.error.message}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="py-2 px-6 rounded-lg transition-all duration-200 hover:scale-105 shadow-md"
+              style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
+            >
+              Reload Page
+            </button>
+          </div>
         </div>
       );
     }
@@ -48,8 +75,8 @@ function ItemDetails() {
   const location = useLocation();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [claimLoading, setClaimLoading] = useState(false); // Separate loading for claim
-  const [conversationLoading, setConversationLoading] = useState(false); // Separate loading for conversation
+  const [claimLoading, setClaimLoading] = useState(false);
+  const [conversationLoading, setConversationLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     title: "",
@@ -142,7 +169,7 @@ function ItemDetails() {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    setClaimLoading(true); // Use claimLoading for edit action
+    setClaimLoading(true);
     const data = new FormData();
     data.append("title", editFormData.title);
     data.append("description", editFormData.description);
@@ -312,7 +339,6 @@ function ItemDetails() {
 
   const isOwner = user && String(user.id) === String(item?.postedBy?._id);
   const isKeeper = user && String(user.id) === String(item?.keeperId);
-  // const isClaimant = user && user.id === item?.claimedById;
   const isPosterOrKeeper =
     user &&
     (String(user.id) === String(item?.postedBy?._id) ||
@@ -321,7 +347,10 @@ function ItemDetails() {
   if (loading) {
     return (
       <div className="container mx-auto p-6 min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
-        <p className="text-lg animate-pulse" style={{ color: 'var(--color-text)' }}>Loading...</p>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4" style={{ borderColor: 'var(--color-primary)' }}></div>
+          <p className="text-lg font-medium animate-pulse" style={{ color: 'var(--color-text)' }}>Loading item details...</p>
+        </div>
       </div>
     );
   }
@@ -329,252 +358,356 @@ function ItemDetails() {
   if (!item || Object.keys(item).length === 0) {
     return (
       <div className="container mx-auto p-6 min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
-        <p className="text-lg font-medium" style={{ color: 'var(--color-text)' }}>
-          Item not found or failed to load.
-        </p>
-        <button
-          onClick={handleManualFetch}
-          className="ml-4 py-2 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
-          style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
-        >
-          Retry Fetch
-        </button>
+        <div className="text-center space-y-4">
+          <FaExclamationCircle className="text-6xl mx-auto" style={{ color: 'var(--color-accent)' }} />
+          <p className="text-xl font-medium" style={{ color: 'var(--color-text)' }}>
+            Item not found or failed to load.
+          </p>
+          <button
+            onClick={handleManualFetch}
+            className="py-2 px-6 rounded-lg transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg hover:scale-105"
+            style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
+          >
+            Retry Fetch
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <ErrorBoundary>
-      <div className="container mx-auto p-6 min-h-screen" style={{ background: 'var(--color-bg)' }}>
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold mb-6 border-b-2 pb-2" style={{ color: 'var(--color-text)', borderColor: 'var(--color-secondary)' }}>
-            {item.title}
-          </h1>
+      <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
+        <div className="container mx-auto p-4 md:p-6 max-w-7xl">
+          {/* Back Button */}
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center space-x-2 mb-6 py-2 px-4 rounded-lg transition-all duration-200 hover:scale-105 shadow-md hover:shadow-lg"
+            style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}
+          >
+            <FaArrowLeft />
+            <span className="font-medium">Back</span>
+          </button>
 
           {!isEditing ? (
-            <div className="rounded-lg shadow-lg p-6" style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}>
-              <div className="mb-6">
-                {item.image ? (
-                  <div
-                    className="relative w-full h-64 rounded-lg overflow-hidden shadow-md cursor-pointer"
-                    onClick={() => setIsImageModalOpen(true)}
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                      <p className="text-white text-sm font-medium">
-                        Click to enlarge
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full h-64 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center group hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 ease-in-out">
-                    <div className="flex flex-col items-center space-y-3 p-6 rounded-lg bg-white bg-opacity-80 backdrop-blur-sm shadow-sm group-hover:shadow-md transition-all duration-300">
-                      <div className="relative">
-                        <FaSearch className="text-gray-400 text-4xl group-hover:text-blue-400 transition-colors duration-300" />
-                        <FaImage className="text-gray-300 text-2xl absolute -bottom-1 -right-1 group-hover:text-blue-300 transition-colors duration-300" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-gray-500 text-sm font-medium group-hover:text-gray-600 transition-colors duration-300">
-                          No Image Available
-                        </p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Image and Details */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Title and Image Section */}
+                <div className="rounded-xl shadow-lg overflow-hidden" style={{ background: 'var(--color-secondary)' }}>
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h1 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: 'var(--color-text)' }}>
+                          {item.title}
+                        </h1>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className={`status-badge ${item.status?.toLowerCase()} px-4 py-2 rounded-full text-sm font-semibold shadow-md`}>
+                            {item.status}
+                          </span>
+                          <div className="flex items-center space-x-2" style={{ color: 'var(--color-text)' }}>
+                            <FaTag className="text-sm" style={{ color: 'var(--color-accent)' }} />
+                            <span className="text-sm font-medium">{item.category?.name || "N/A"}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h2 className="text-xl font-semibold mb-4 border-b pb-2" style={{ color: 'var(--color-text)', borderColor: 'var(--color-secondary)' }}>
-                    Item Details
-                  </h2>
-                  <div className="space-y-3">
-                    <p style={{ color: 'var(--color-text)' }}>
-                      <span className="font-medium" style={{ color: 'var(--color-text)' }}>
-                        Description:
-                      </span>{" "}
-                      {item.description}
-                    </p>
-                    <p style={{ color: 'var(--color-text)' }}>
-                      <span className="font-medium" style={{ color: 'var(--color-text)' }}>Status:</span>{" "}
-                      <span className={`status-badge ${item.status?.toLowerCase()}`}>
-                        {item.status}
-                      </span>
-                    </p>
-                    <p style={{ color: 'var(--color-text)' }}>
-                      <span className="font-medium" style={{ color: 'var(--color-text)' }}>Category:</span>{" "}
-                      {item.category?.name || "N/A"}
-                    </p>
-                    <p style={{ color: 'var(--color-text)' }}>
-                      <span className="font-medium" style={{ color: 'var(--color-text)' }}>Location:</span>{" "}
-                      {item.location}
-                    </p>
-                    <p style={{ color: 'var(--color-text)' }}>
-                      <span className="font-medium" style={{ color: 'var(--color-text)' }}>Posted By:</span>{" "}
-                      {item.postedBy?.name || "Unknown"}
-                    </p>
-                    <p style={{ color: 'var(--color-text)' }}>
-                      <span className="font-medium" style={{ color: 'var(--color-text)' }}>Posted On:</span>{" "}
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </p>
-                    <p style={{ color: 'var(--color-text)' }}>
-                      <span className="font-medium" style={{ color: 'var(--color-text)' }}>Keeper:</span>{" "}
-                      {item.keeperName || "Not Assigned"}
-                    </p>
-                    <p style={{ color: 'var(--color-text)' }}>
-                      <span className="font-medium" style={{ color: 'var(--color-text)' }}>Claimed By:</span>{" "}
-                      {item.claimedByName || "Not Claimed"}
-                    </p>
+                  {/* Image */}
+                  <div>
+                    {item.image ? (
+                      <div
+                        className="relative w-full h-96 cursor-pointer group overflow-hidden"
+                        onClick={() => setIsImageModalOpen(true)}
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="absolute bottom-6 left-6 right-6">
+                            <p className="text-white text-lg font-semibold flex items-center space-x-2">
+                              <FaSearch className="text-xl" />
+                              <span>Click to view full size</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-96 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center group">
+                        <div className="flex flex-col items-center space-y-4 p-8 rounded-xl bg-white/50 dark:bg-black/30 backdrop-blur-sm">
+                          <div className="relative">
+                            <FaImage className="text-gray-400 dark:text-gray-500 text-6xl group-hover:text-blue-400 transition-colors duration-300" />
+                            <FaSearch className="text-gray-300 dark:text-gray-600 text-3xl absolute -bottom-2 -right-2 group-hover:text-blue-300 transition-colors duration-300" />
+                          </div>
+                          <p className="text-gray-600 dark:text-gray-400 text-lg font-medium">
+                            No Image Available
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div>
-                  <h2 className="text-xl font-semibold mb-4 border-b pb-2" style={{ color: 'var(--color-text)', borderColor: 'var(--color-secondary)' }}>
-                    Actions
+                {/* Description Section */}
+                <div className="rounded-xl shadow-lg p-6" style={{ background: 'var(--color-secondary)' }}>
+                  <h2 className="text-2xl font-bold mb-4 flex items-center space-x-2" style={{ color: 'var(--color-text)' }}>
+                    <FaExclamationCircle style={{ color: 'var(--color-accent)' }} />
+                    <span>Description</span>
                   </h2>
-                  <div className="space-y-4">
-                    {isOwner ? (
-                      <div className="space-y-3">
-                        <button
-                          onClick={handleEdit}
-                          className="w-full py-2 px-4 rounded-md transition-colors duration-200 font-medium text-sm shadow-md hover:shadow-lg"
-                          style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
-                        >
-                          Edit Item
-                        </button>
+                  <p className="text-base leading-relaxed" style={{ color: 'var(--color-text)', opacity: 0.9 }}>
+                    {item.description}
+                  </p>
+                </div>
+
+                {/* Additional Details */}
+                <div className="rounded-xl shadow-lg p-6" style={{ background: 'var(--color-secondary)' }}>
+                  <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-text)' }}>
+                    Item Information
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 hover:shadow-md" style={{ background: 'var(--color-bg)' }}>
+                      <FaMapMarkerAlt className="text-xl mt-1 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                      <div>
+                        <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--color-text)', opacity: 0.6 }}>
+                          Location
+                        </p>
+                        <p className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>
+                          {item.location}
+                        </p>
                       </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {!isOwner && !isKeeper && (
-                          <button
-                            onClick={handleClaim}
-                            disabled={claimLoading || item.status === "Claimed"}
-                            className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${claimLoading || item.status === "Claimed"
-                              ? "opacity-50 cursor-not-allowed"
-                              : ""
-                              }`}
-                            style={{
-                              background: claimLoading || item.status === "Claimed" ? '#6b7280' : 'var(--color-primary)',
-                              color: claimLoading || item.status === "Claimed" ? '#ffffff' : 'var(--color-bg)'
-                            }}
-                          >
-                            {claimLoading
-                              ? "Processing..."
-                              : item.status === "Claimed"
-                                ? "Already Claimed"
-                                : "Claim Item"}
-                          </button>
-                        )}
-                        <button
-                          onClick={handleStartConversation}
-                          disabled={conversationLoading}
-                          className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${conversationLoading
-                            ? "opacity-50 cursor-not-allowed"
-                            : ""
-                            }`}
-                          style={{
-                            background: conversationLoading ? 'var(--color-secondary)' : 'var(--color-primary)',
-                            color: 'var(--color-bg)'
-                          }}
-                        >
-                          {conversationLoading ? "Processing..." : "Message Owner"}
-                        </button>
+                    </div>
+
+                    <div className="flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 hover:shadow-md" style={{ background: 'var(--color-bg)' }}>
+                      <FaCalendarAlt className="text-xl mt-1 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                      <div>
+                        <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--color-text)', opacity: 0.6 }}>
+                          Posted On
+                        </p>
+                        <p className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>
+                          {new Date(item.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 hover:shadow-md" style={{ background: 'var(--color-bg)' }}>
+                      <FaUser className="text-xl mt-1 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                      <div>
+                        <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--color-text)', opacity: 0.6 }}>
+                          Posted By
+                        </p>
+                        <p className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>
+                          {item.postedBy?.name || "Unknown"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 hover:shadow-md" style={{ background: 'var(--color-bg)' }}>
+                      <FaShieldAlt className="text-xl mt-1 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                      <div>
+                        <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--color-text)', opacity: 0.6 }}>
+                          Keeper
+                        </p>
+                        <p className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>
+                          {item.keeperName || "Not Assigned"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {item.claimedByName && (
+                      <div className="flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 hover:shadow-md md:col-span-2" style={{ background: 'var(--color-bg)' }}>
+                        <FaCheckCircle className="text-xl mt-1 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                        <div>
+                          <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--color-text)', opacity: 0.6 }}>
+                            Claimed By
+                          </p>
+                          <p className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>
+                            {item.claimedByName}
+                          </p>
+                        </div>
                       </div>
                     )}
-                    {user && user.role === "keeper" && !item.keeperId && (
-                      <div className="space-y-3">
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Actions Sidebar */}
+              <div className="lg:col-span-1">
+                <div className="sticky top-6 space-y-4">
+                  <div className="rounded-xl shadow-lg p-6" style={{ background: 'var(--color-secondary)' }}>
+                    <h2 className="text-xl font-bold mb-5" style={{ color: 'var(--color-text)' }}>
+                      Quick Actions
+                    </h2>
+                    <div className="space-y-3">
+                      {isOwner ? (
+                        <button
+                          onClick={handleEdit}
+                          className="w-full py-3 px-4 rounded-lg transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-xl hover:scale-105 flex items-center justify-center space-x-2"
+                          style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
+                        >
+                          <FaEdit />
+                          <span>Edit Item</span>
+                        </button>
+                      ) : (
+                        <>
+                          {!isOwner && !isKeeper && (
+                            <button
+                              onClick={handleClaim}
+                              disabled={claimLoading || item.status === "Claimed"}
+                              className={`w-full py-3 px-4 rounded-lg text-white text-sm font-semibold shadow-md hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 ${claimLoading || item.status === "Claimed"
+                                ? "opacity-50 cursor-not-allowed"
+                                : "hover:scale-105"
+                                }`}
+                              style={{
+                                background: claimLoading || item.status === "Claimed" ? '#6b7280' : 'var(--color-primary)',
+                              }}
+                            >
+                              <FaCheckCircle />
+                              <span>
+                                {claimLoading
+                                  ? "Processing..."
+                                  : item.status === "Claimed"
+                                    ? "Already Claimed"
+                                    : "Claim This Item"}
+                              </span>
+                            </button>
+                          )}
+                          <button
+                            onClick={handleStartConversation}
+                            disabled={conversationLoading}
+                            className={`w-full py-3 px-4 rounded-lg text-white text-sm font-semibold shadow-md hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 ${conversationLoading
+                              ? "opacity-50 cursor-not-allowed"
+                              : "hover:scale-105"
+                              }`}
+                            style={{
+                              background: conversationLoading ? 'var(--color-secondary)' : 'var(--color-primary)',
+                              color: 'var(--color-bg)'
+                            }}
+                          >
+                            <FaComments />
+                            <span>{conversationLoading ? "Processing..." : "Contact Owner"}</span>
+                          </button>
+                        </>
+                      )}
+
+                      {user && user.role === "keeper" && !item.keeperId && (
                         <button
                           onClick={handleAssignKeeper}
                           disabled={claimLoading}
-                          className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${claimLoading
+                          className={`w-full py-3 px-4 rounded-lg text-white text-sm font-semibold shadow-md hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 ${claimLoading
                             ? "opacity-50 cursor-not-allowed"
-                            : ""
+                            : "hover:scale-105"
                             }`}
                           style={{
                             background: claimLoading ? 'var(--color-secondary)' : 'var(--color-accent)',
                             color: 'var(--color-bg)'
                           }}
                         >
-                          {claimLoading
-                            ? "Processing..."
-                            : "Assign Myself as Keeper"}
+                          <FaShieldAlt />
+                          <span>{claimLoading ? "Processing..." : "Become Keeper"}</span>
                         </button>
-                      </div>
-                    )}
-                    {isPosterOrKeeper && item.status === "Claimed" && (
-                      <div className="space-y-3">
+                      )}
+
+                      {isPosterOrKeeper && item.status === "Claimed" && (
                         <button
                           onClick={handleGenerateOTP}
                           disabled={claimLoading}
-                          className={`w-full py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${claimLoading
+                          className={`w-full py-3 px-4 rounded-lg text-white text-sm font-semibold shadow-md hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 ${claimLoading
                             ? "opacity-50 cursor-not-allowed"
-                            : ""
+                            : "hover:scale-105"
                             }`}
                           style={{
                             background: claimLoading ? 'var(--color-secondary)' : 'var(--color-accent)',
                             color: 'var(--color-bg)'
                           }}
                         >
-                          {claimLoading ? "Processing..." : "Generate OTP"}
+                          <FaKey />
+                          <span>{claimLoading ? "Processing..." : "Generate OTP"}</span>
                         </button>
+                      )}
+
+                      {otpItemId === id && isPosterOrKeeper && (
+                        <div className="space-y-2 p-4 rounded-lg" style={{ background: 'var(--color-bg)' }}>
+                          <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text)', opacity: 0.7 }}>
+                            Verify OTP
+                          </label>
+                          <input
+                            type="text"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            placeholder="Enter 6-digit OTP"
+                            className="w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 text-sm font-medium text-center tracking-widest"
+                            style={{
+                              border: '2px solid var(--color-accent)',
+                              background: 'var(--color-secondary)',
+                              color: 'var(--color-text)'
+                            }}
+                            maxLength={6}
+                          />
+                          <button
+                            onClick={handleVerifyOTP}
+                            disabled={claimLoading}
+                            className={`w-full py-3 px-4 rounded-lg text-white text-sm font-semibold shadow-md hover:shadow-xl transition-all duration-200 flex items-center justify-center space-x-2 ${claimLoading
+                              ? "opacity-50 cursor-not-allowed"
+                              : "hover:scale-105"
+                              }`}
+                            style={{
+                              background: claimLoading ? 'var(--color-secondary)' : 'var(--color-accent)',
+                              color: 'var(--color-bg)'
+                            }}
+                          >
+                            <FaCheckCircle />
+                            <span>{claimLoading ? "Verifying..." : "Mark Returned"}</span>
+                          </button>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={handleShare}
+                        className="w-full py-3 px-4 rounded-lg transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-xl hover:scale-105 flex items-center justify-center space-x-2"
+                        style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
+                      >
+                        <FaShare />
+                        <span>Share Link</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Info Card */}
+                  <div className="rounded-xl shadow-lg p-5" style={{ background: 'var(--color-secondary)' }}>
+                    <div className="flex items-start space-x-3">
+                      <FaClock className="text-xl mt-1" style={{ color: 'var(--color-accent)' }} />
+                      <div>
+                        <h3 className="font-bold mb-2" style={{ color: 'var(--color-text)' }}>Need Help?</h3>
+                        <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text)', opacity: 0.7 }}>
+                          Contact the owner if you have questions about this item or need more information.
+                        </p>
                       </div>
-                    )}
-                    {otpItemId === id && isPosterOrKeeper && (
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          value={otp}
-                          onChange={(e) => setOtp(e.target.value)}
-                          placeholder="Enter OTP to mark as returned"
-                          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                          style={{
-                            border: '1px solid var(--color-secondary)',
-                            background: 'var(--color-bg)',
-                            color: 'var(--color-text)'
-                          }}
-                        />
-                        <button
-                          onClick={handleVerifyOTP}
-                          disabled={claimLoading}
-                          className={`py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${claimLoading
-                            ? "opacity-50 cursor-not-allowed"
-                            : ""
-                            }`}
-                          style={{
-                            background: claimLoading ? 'var(--color-secondary)' : 'var(--color-accent)',
-                            color: 'var(--color-bg)'
-                          }}
-                        >
-                          {claimLoading ? "Verifying..." : "Mark as Returned"}
-                        </button>
-                      </div>
-                    )}
-                    <button
-                      onClick={handleShare}
-                      className="w-full py-2 px-4 rounded-md transition-colors duration-200 font-medium text-sm shadow-md hover:shadow-lg"
-                      style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
-                    >
-                      Share Item
-                    </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
+            // Edit Form (keeping original for now)
             <form
               onSubmit={handleEditSubmit}
-              className="rounded-lg shadow-lg p-6"
+              className="max-w-4xl mx-auto rounded-xl shadow-xl p-8"
               encType="multipart/form-data"
               style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}
             >
+              <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-text)' }}>Edit Item</h2>
+
               <div className="mb-6">
-                {item.image ? (
+                {item.image && (
                   <div
-                    className="relative w-full h-64 rounded-lg overflow-hidden shadow-md mb-2 cursor-pointer"
+                    className="relative w-full h-64 rounded-xl overflow-hidden shadow-md mb-3 cursor-pointer"
                     onClick={() => setIsImageModalOpen(true)}
                   >
                     <img
@@ -582,214 +715,218 @@ function ItemDetails() {
                       alt={item.title}
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                      <p className="text-white text-sm font-medium">
+                    <div className="absolute top-4 right-4">
+                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-800">
                         Current Image
-                      </p>
+                      </span>
                     </div>
                   </div>
-                ) : (
-                  <div className="w-full h-64 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center mb-2">
-                    <p className="text-gray-500 dark:text-gray-400 text-lg">No image available</p>
-                  </div>
                 )}
-                <div className="flex items-center space-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                   <input
                     type="file"
                     id="image"
                     name="image"
                     accept="image/*"
                     onChange={handleEditChange}
-                    className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="flex-1 p-3 border-2 rounded-lg focus:outline-none focus:ring-2 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all"
                     style={{
-                      border: '1px solid var(--color-secondary)',
+                      border: '2px solid var(--color-accent)',
                       background: 'var(--color-bg)',
                       color: 'var(--color-text)'
                     }}
                   />
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="removeImage"
-                      checked={removeImage}
-                      onChange={handleEditChange}
-                      className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="text-sm" style={{ color: 'var(--color-text)' }}>Remove Image</span>
+                  {item.image && (
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="removeImage"
+                        checked={removeImage}
+                        onChange={handleEditChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>Remove Image</span>
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label
+                    htmlFor="title"
+                    className="block text-sm font-semibold mb-2"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    Title *
                   </label>
+                  <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    value={editFormData.title}
+                    onChange={handleEditChange}
+                    className="w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 text-sm"
+                    style={{
+                      border: '2px solid var(--color-accent)',
+                      background: 'var(--color-bg)',
+                      color: 'var(--color-text)'
+                    }}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="category"
+                    className="block text-sm font-semibold mb-2"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    Category *
+                  </label>
+                  <input
+                    type="text"
+                    id="category"
+                    name="category"
+                    value={editFormData.category}
+                    onChange={handleEditChange}
+                    className="w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 text-sm"
+                    style={{
+                      border: '2px solid var(--color-accent)',
+                      background: 'var(--color-bg)',
+                      color: 'var(--color-text)'
+                    }}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="status"
+                    className="block text-sm font-semibold mb-2"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    Status *
+                  </label>
+                  <select
+                    id="status"
+                    name="status"
+                    value={editFormData.status}
+                    onChange={handleEditChange}
+                    className="w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 text-sm"
+                    style={{
+                      border: '2px solid var(--color-accent)',
+                      background: 'var(--color-bg)',
+                      color: 'var(--color-text)'
+                    }}
+                    required
+                  >
+                    <option value="Lost">Lost</option>
+                    <option value="Found">Found</option>
+                    <option value="Claimed">Claimed</option>
+                    <option value="Returned">Returned</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="location"
+                    className="block text-sm font-semibold mb-2"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    Location *
+                  </label>
+                  <input
+                    type="text"
+                    id="location"
+                    name="location"
+                    value={editFormData.location}
+                    onChange={handleEditChange}
+                    className="w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 text-sm"
+                    style={{
+                      border: '2px solid var(--color-accent)',
+                      background: 'var(--color-bg)',
+                      color: 'var(--color-text)'
+                    }}
+                    required
+                  />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="title"
-                      className="block text-sm font-medium mb-1"
-                      style={{ color: 'var(--color-text)' }}
-                    >
-                      Title
-                    </label>
-                    <input
-                      type="text"
-                      id="title"
-                      name="title"
-                      value={editFormData.title}
-                      onChange={handleEditChange}
-                      className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      style={{
-                        border: '1px solid var(--color-secondary)',
-                        background: 'var(--color-bg)',
-                        color: 'var(--color-text)'
-                      }}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="description"
-                      className="block text-sm font-medium mb-1"
-                      style={{ color: 'var(--color-text)' }}
-                    >
-                      Description
-                    </label>
-                    <textarea
-                      id="description"
-                      name="description"
-                      value={editFormData.description}
-                      onChange={handleEditChange}
-                      className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm h-24 resize-y"
-                      style={{
-                        border: '1px solid var(--color-secondary)',
-                        background: 'var(--color-bg)',
-                        color: 'var(--color-text)'
-                      }}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="category"
-                      className="block text-sm font-medium mb-1"
-                      style={{ color: 'var(--color-text)' }}
-                    >
-                      Category
-                    </label>
-                    <input
-                      type="text"
-                      id="category"
-                      name="category"
-                      value={editFormData.category}
-                      onChange={handleEditChange}
-                      className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      style={{
-                        border: '1px solid var(--color-secondary)',
-                        background: 'var(--color-bg)',
-                        color: 'var(--color-text)'
-                      }}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="status"
-                      className="block text-sm font-medium mb-1"
-                      style={{ color: 'var(--color-text)' }}
-                    >
-                      Status
-                    </label>
-                    <select
-                      id="status"
-                      name="status"
-                      value={editFormData.status}
-                      onChange={handleEditChange}
-                      className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      style={{
-                        border: '1px solid var(--color-secondary)',
-                        background: 'var(--color-bg)',
-                        color: 'var(--color-text)'
-                      }}
-                      required
-                    >
-                      <option value="Lost">Lost</option>
-                      <option value="Found">Found</option>
-                      <option value="Claimed">Claimed</option>
-                      <option value="Returned">Returned</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="location"
-                      className="block text-sm font-medium mb-1"
-                      style={{ color: 'var(--color-text)' }}
-                    >
-                      Location
-                    </label>
-                    <input
-                      type="text"
-                      id="location"
-                      name="location"
-                      value={editFormData.location}
-                      onChange={handleEditChange}
-                      className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      style={{
-                        border: '1px solid var(--color-secondary)',
-                        background: 'var(--color-bg)',
-                        color: 'var(--color-text)'
-                      }}
-                      required
-                    />
-                  </div>
-                </div>
+              <div className="mb-6">
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-semibold mb-2"
+                  style={{ color: 'var(--color-text)' }}
+                >
+                  Description *
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={editFormData.description}
+                  onChange={handleEditChange}
+                  className="w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 text-sm h-32 resize-y"
+                  style={{
+                    border: '2px solid var(--color-accent)',
+                    background: 'var(--color-bg)',
+                    color: 'var(--color-text)'
+                  }}
+                  required
+                />
               </div>
 
-              <div className="mt-6 flex justify-end space-x-4">
+              <div className="flex justify-end space-x-4">
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="py-2 px-4 rounded-md transition-colors duration-200 text-sm font-medium shadow-md hover:shadow-lg"
-                  style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}
+                  className="py-3 px-6 rounded-lg transition-all duration-200 text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 flex items-center space-x-2"
+                  style={{ background: 'var(--color-bg)', color: 'var(--color-text)', border: '2px solid var(--color-accent)' }}
                 >
-                  Cancel
+                  <FaTimes />
+                  <span>Cancel</span>
                 </button>
                 <button
                   type="submit"
                   disabled={claimLoading}
-                  className={`py-2 px-4 rounded-md text-white text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 ${claimLoading
+                  className={`py-3 px-6 rounded-lg text-white text-sm font-semibold shadow-md hover:shadow-xl transition-all duration-200 flex items-center space-x-2 ${claimLoading
                     ? "opacity-50 cursor-not-allowed"
-                    : ""
+                    : "hover:scale-105"
                     }`}
                   style={{
                     background: claimLoading ? 'var(--color-secondary)' : 'var(--color-primary)',
                     color: 'var(--color-bg)'
                   }}
                 >
-                  {claimLoading ? "Saving..." : "Save Changes"}
+                  <FaCheckCircle />
+                  <span>{claimLoading ? "Saving..." : "Save Changes"}</span>
                 </button>
               </div>
             </form>
           )}
         </div>
 
+        {/* Image Modal */}
         {isImageModalOpen && item.image && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
             onClick={() => setIsImageModalOpen(false)}
           >
-            <div className="relative max-w-4xl w-full h-[80vh] rounded-lg overflow-hidden shadow-2xl" style={{ background: 'var(--color-secondary)' }}>
+            <div className="relative max-w-7xl w-full h-[90vh]" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={() => setIsImageModalOpen(false)}
-                className="absolute top-4 right-4 text-white bg-red-500 rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                className="absolute -top-12 right-0 text-white bg-red-500 rounded-full w-10 h-10 flex items-center justify-center hover:bg-red-600 transition-colors duration-200 shadow-lg z-10"
               >
-                ×
+                <FaTimes className="text-xl" />
               </button>
-              <img
-                src={item.image}
-                alt={item.title}
-                className="w-full h-full object-contain"
-              />
+              <div className="w-full h-full rounded-xl overflow-hidden shadow-2xl">
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="w-full h-full object-contain"
+                  style={{ background: 'var(--color-bg)' }}
+                />
+              </div>
             </div>
           </div>
         )}
