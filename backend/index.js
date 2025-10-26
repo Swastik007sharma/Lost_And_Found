@@ -1,4 +1,12 @@
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
+
+// Ensure logs directory exists
+const logDir = path.join(__dirname, 'logs');
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir);
+}
 const http = require('http');
 const connectDB = require('./config/db');
 const mainRouter = require('./routes/index.routes');
