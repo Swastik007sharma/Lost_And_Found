@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import Loader from "../components/common/Loader";
 import {
   FaSearch,
   FaImage,
@@ -346,11 +347,8 @@ function ItemDetails() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6 min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4" style={{ borderColor: 'var(--color-primary)' }}></div>
-          <p className="text-lg font-medium animate-pulse" style={{ color: 'var(--color-text)' }}>Loading item details...</p>
-        </div>
+      <div style={{ background: 'var(--color-bg)' }}>
+        <Loader size="lg" text="Loading item details..." />
       </div>
     );
   }
