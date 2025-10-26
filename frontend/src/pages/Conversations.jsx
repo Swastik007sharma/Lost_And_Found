@@ -35,7 +35,7 @@ function Conversations() {
   }, [user, navigate]);
 
   // Format date for better readability
-  const formatDate = (date) => 
+  const formatDate = (date) =>
     new Date(date).toLocaleString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -57,7 +57,7 @@ function Conversations() {
           </div>
         )}
         {loading ? (
-          <Loader className="text-blue-600" />
+          <Loader size="sm" variant="dots" text="Loading conversations..." />
         ) : conversations.length > 0 ? (
           <div className="p-6 rounded-lg shadow-md space-y-4" style={{ background: 'var(--color-secondary)' }}>
             {conversations.map((conv) => (
@@ -68,7 +68,7 @@ function Conversations() {
                 style={{ borderColor: 'var(--color-secondary)', color: 'var(--color-text)' }}
               >
                 <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-                  For: {conv.item?.title || 'Untitled'} ({conv.item?.status || 'Unknown'}) - 
+                  For: {conv.item?.title || 'Untitled'} ({conv.item?.status || 'Unknown'}) -
                   {conv.participants[1]?.name || 'Unknown'}
                 </p>
                 <p className="text-xs mt-1" style={{ color: 'var(--color-text)' }}>

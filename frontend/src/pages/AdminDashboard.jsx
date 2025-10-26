@@ -130,10 +130,10 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 						setPage((prev) => ({ ...prev, users: 1 }));
 					}}
 					className="w-full sm:w-1/3 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
-					style={{ 
-						border: '1px solid var(--color-secondary)', 
-						background: 'var(--color-bg)', 
-						color: 'var(--color-text)' 
+					style={{
+						border: '1px solid var(--color-secondary)',
+						background: 'var(--color-bg)',
+						color: 'var(--color-text)'
 					}}
 				/>
 				<select
@@ -143,10 +143,10 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 						setPage((prev) => ({ ...prev, users: 1 }));
 					}}
 					className="w-full sm:w-1/3 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
-					style={{ 
-						border: '1px solid var(--color-secondary)', 
-						background: 'var(--color-bg)', 
-						color: 'var(--color-text)' 
+					style={{
+						border: '1px solid var(--color-secondary)',
+						background: 'var(--color-bg)',
+						color: 'var(--color-text)'
 					}}
 				>
 					<option value="name">Name</option>
@@ -160,10 +160,10 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 						setPage((prev) => ({ ...prev, users: 1 }));
 					}}
 					className="w-full sm:w-1/3 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
-					style={{ 
-						border: '1px solid var(--color-secondary)', 
-						background: 'var(--color-bg)', 
-						color: 'var(--color-text)' 
+					style={{
+						border: '1px solid var(--color-secondary)',
+						background: 'var(--color-bg)',
+						color: 'var(--color-text)'
 					}}
 				>
 					<option value="asc">Ascending</option>
@@ -193,7 +193,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 				</div>
 			)}
 			{loading ? (
-				<Loader />
+				<Loader size="lg" variant="bars" text="Loading users..." />
 			) : (
 				<>
 					<div className="overflow-x-auto rounded-lg shadow-sm">
@@ -236,7 +236,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 													? "opacity-50 cursor-not-allowed"
 													: ""
 													}`}
-												style={{ 
+												style={{
 													background: u.isActive ? 'var(--color-accent)' : 'var(--color-primary)',
 													color: 'var(--color-bg)'
 												}}
@@ -428,10 +428,10 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 						setPage((prev) => ({ ...prev, items: 1 }));
 					}}
 					className="w-full sm:w-1/3 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
-					style={{ 
-						border: '1px solid var(--color-secondary)', 
-						background: 'var(--color-bg)', 
-						color: 'var(--color-text)' 
+					style={{
+						border: '1px solid var(--color-secondary)',
+						background: 'var(--color-bg)',
+						color: 'var(--color-text)'
 					}}
 				/>
 				<select
@@ -441,10 +441,10 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 						setPage((prev) => ({ ...prev, items: 1 }));
 					}}
 					className="w-full sm:w-1/3 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
-					style={{ 
-						border: '1px solid var(--color-secondary)', 
-						background: 'var(--color-bg)', 
-						color: 'var(--color-text)' 
+					style={{
+						border: '1px solid var(--color-secondary)',
+						background: 'var(--color-bg)',
+						color: 'var(--color-text)'
 					}}
 				>
 					<option value="title">Title</option>
@@ -458,10 +458,10 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 						setPage((prev) => ({ ...prev, items: 1 }));
 					}}
 					className="w-full sm:w-1/3 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
-					style={{ 
-						border: '1px solid var(--color-secondary)', 
-						background: 'var(--color-bg)', 
-						color: 'var(--color-text)' 
+					style={{
+						border: '1px solid var(--color-secondary)',
+						background: 'var(--color-bg)',
+						color: 'var(--color-text)'
 					}}
 				>
 					<option value="asc">Ascending</option>
@@ -491,7 +491,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 				</div>
 			)}
 			{loading ? (
-				<Loader />
+				<Loader size="lg" variant="dots" text="Loading items..." />
 			) : (
 				<>
 					<div className="overflow-x-auto rounded-lg shadow-sm">
@@ -547,7 +547,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 													handleToggleItemActivation(item._id, item.isActive)
 												}
 												className="px-4 py-2 rounded-lg text-sm transition-colors duration-200 shadow-sm"
-												style={{ 
+												style={{
 													background: item.isActive ? 'var(--color-accent)' : 'var(--color-primary)',
 													color: 'var(--color-bg)'
 												}}
@@ -558,10 +558,10 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
 												value={selectedKeeperIds[item._id] || ""}
 												onChange={(e) => handleKeeperChange(item._id, e)}
 												className="p-2 border rounded-lg text-sm"
-												style={{ 
-													border: '1px solid var(--color-secondary)', 
-													background: 'var(--color-bg)', 
-													color: 'var(--color-text)' 
+												style={{
+													border: '1px solid var(--color-secondary)',
+													background: 'var(--color-bg)',
+													color: 'var(--color-text)'
 												}}
 											>
 												<option value="">Select Keeper</option>
@@ -938,7 +938,7 @@ function AdminDashboard() {
 			</div>
 
 			{loading ? (
-				<Loader />
+				<Loader size="lg" variant="pulse" text="Loading statistics..." />
 			) : (
 				<div className="space-y-6">
 					{activeTab === "overview" && (
@@ -1056,11 +1056,10 @@ function AdminDashboard() {
 											<li
 												key={conv._id}
 												onClick={() => handleConversationClick(conv)}
-												className={`p-3 rounded-lg cursor-pointer text-sm transition-colors duration-200 ${
-													selectedConversation?._id === conv._id
+												className={`p-3 rounded-lg cursor-pointer text-sm transition-colors duration-200 ${selectedConversation?._id === conv._id
 														? ""
 														: ""
-												}`}
+													}`}
 												style={{
 													background: selectedConversation?._id === conv._id ? 'var(--color-primary)' : 'var(--color-secondary)',
 													color: selectedConversation?._id === conv._id ? 'var(--color-bg)' : 'var(--color-text)'
@@ -1173,10 +1172,10 @@ function AdminDashboard() {
 												})
 											}
 											className="mt-1 block w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
-											style={{ 
-												border: '1px solid var(--color-secondary)', 
-												background: 'var(--color-bg)', 
-												color: 'var(--color-text)' 
+											style={{
+												border: '1px solid var(--color-secondary)',
+												background: 'var(--color-bg)',
+												color: 'var(--color-text)'
 											}}
 											required
 										/>
@@ -1199,10 +1198,10 @@ function AdminDashboard() {
 												})
 											}
 											className="mt-1 block w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
-											style={{ 
-												border: '1px solid var(--color-secondary)', 
-												background: 'var(--color-bg)', 
-												color: 'var(--color-text)' 
+											style={{
+												border: '1px solid var(--color-secondary)',
+												background: 'var(--color-bg)',
+												color: 'var(--color-text)'
 											}}
 											rows="3"
 										/>
@@ -1264,8 +1263,7 @@ function AdminDashboard() {
 															</button>
 															<button
 																onClick={() => handleDeleteCategory(category._id)}
-																className={`px-4 py-2 rounded-lg text-sm transition-colors duration-200 shadow-sm ${
-																	!category.isActive
+																className={`px-4 py-2 rounded-lg text-sm transition-colors duration-200 shadow-sm ${!category.isActive
 																		? "opacity-50 cursor-not-allowed"
 																		: ""
 																	}`}
@@ -1353,10 +1351,10 @@ function AdminDashboard() {
 												})
 											}
 											className="mt-1 block w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
-											style={{ 
-												border: '1px solid var(--color-secondary)', 
-												background: 'var(--color-bg)', 
-												color: 'var(--color-text)' 
+											style={{
+												border: '1px solid var(--color-secondary)',
+												background: 'var(--color-bg)',
+												color: 'var(--color-text)'
 											}}
 											required
 										/>
@@ -1379,10 +1377,10 @@ function AdminDashboard() {
 												})
 											}
 											className="mt-1 block w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm"
-											style={{ 
-												border: '1px solid var(--color-secondary)', 
-												background: 'var(--color-bg)', 
-												color: 'var(--color-text)' 
+											style={{
+												border: '1px solid var(--color-secondary)',
+												background: 'var(--color-bg)',
+												color: 'var(--color-text)'
 											}}
 											rows="3"
 										/>
@@ -1471,10 +1469,10 @@ function AdminDashboard() {
 											setAccountForm({ ...accountForm, name: e.target.value })
 										}
 										className="mt-1 block w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50"
-										style={{ 
-											border: '1px solid var(--color-secondary)', 
-											background: 'var(--color-bg)', 
-											color: 'var(--color-text)' 
+										style={{
+											border: '1px solid var(--color-secondary)',
+											background: 'var(--color-bg)',
+											color: 'var(--color-text)'
 										}}
 										required
 										disabled={loading}
@@ -1496,10 +1494,10 @@ function AdminDashboard() {
 											setAccountForm({ ...accountForm, email: e.target.value })
 										}
 										className="mt-1 block w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50"
-										style={{ 
-											border: '1px solid var(--color-secondary)', 
-											background: 'var(--color-bg)', 
-											color: 'var(--color-text)' 
+										style={{
+											border: '1px solid var(--color-secondary)',
+											background: 'var(--color-bg)',
+											color: 'var(--color-text)'
 										}}
 										required
 										disabled={loading}
@@ -1524,10 +1522,10 @@ function AdminDashboard() {
 											})
 										}
 										className="mt-1 block w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50 pr-12"
-										style={{ 
-											border: '1px solid var(--color-secondary)', 
-											background: 'var(--color-bg)', 
-											color: 'var(--color-text)' 
+										style={{
+											border: '1px solid var(--color-secondary)',
+											background: 'var(--color-bg)',
+											color: 'var(--color-text)'
 										}}
 										required
 										disabled={loading}
@@ -1565,10 +1563,10 @@ function AdminDashboard() {
 											})
 										}
 										className="mt-1 block w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 shadow-sm disabled:opacity-50 pr-12"
-										style={{ 
-											border: '1px solid var(--color-secondary)', 
-											background: 'var(--color-bg)', 
-											color: 'var(--color-text)' 
+										style={{
+											border: '1px solid var(--color-secondary)',
+											background: 'var(--color-bg)',
+											color: 'var(--color-text)'
 										}}
 										required
 										disabled={loading}
@@ -1630,12 +1628,11 @@ function AdminDashboard() {
 								</div>
 								<button
 									type="submit"
-									className={`w-full py-3 rounded-lg text-sm font-semibold text-white transition-all duration-200 shadow-md ${
-										loading
+									className={`w-full py-3 rounded-lg text-sm font-semibold text-white transition-all duration-200 shadow-md ${loading
 											? "opacity-50 cursor-not-allowed"
 											: ""
 										}`}
-									style={{ 
+									style={{
 										background: loading ? 'var(--color-secondary)' : 'var(--color-primary)',
 										color: 'var(--color-bg)'
 									}}

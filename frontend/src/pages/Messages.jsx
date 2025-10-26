@@ -42,7 +42,7 @@ function Messages() {
   // Handle incoming messages via the shared socket
   useEffect(() => {
     if (!socket || !conversationId) return;
-  
+
     const handleReceiveMessage = (message) => {
       if (message.conversation === conversationId) {
         setMessages((prev) => {
@@ -52,7 +52,7 @@ function Messages() {
         setError(''); // Clear error on successful receive
       }
     };
-  
+
     const handleErrorMessage = (errorMsg) => {
       console.error('Message error:', errorMsg);
       // Only set error if the last sent message isn’t received
@@ -61,12 +61,12 @@ function Messages() {
         setError(errorMsg || 'Failed to send message');
       }
     };
-  
+
     socket.on('receiveMessage', handleReceiveMessage);
     socket.on('errorMessage', handleErrorMessage);
-  
+
     socket.emit('joinConversation', conversationId);
-  
+
     return () => {
       socket.off('receiveMessage', handleReceiveMessage);
       socket.off('errorMessage', handleErrorMessage);
@@ -99,10 +99,10 @@ function Messages() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newMessage.content.trim() || !conversationId || !user?.id || !socket) return;
-  
+
     setLoading(true);
     setError('');
-  
+
     const tempMessageId = Date.now().toString();
     const tempMessage = {
       _id: tempMessageId,
@@ -113,17 +113,17 @@ function Messages() {
       isRead: false,
       isActive: true,
     };
-  
+
     setMessages((prev) => [tempMessage, ...prev]);
     setNewMessage({ content: '' });
     socket.lastMessageId = tempMessageId; // Track last sent message
-  
+
     try {
       const response = await sendMessageInConversation(conversationId, {
         sender: user.id,
         content: tempMessage.content,
       });
-  
+
       socket.emit('sendMessage', {
         conversationId,
         senderId: user.id,
@@ -131,7 +131,7 @@ function Messages() {
         _id: response.data.message._id,
         createdAt: response.data.message.createdAt,
       });
-  
+
       await fetchMessages();
     } catch (err) {
       setError('Failed to send message: ' + err.message);
@@ -165,20 +165,19 @@ function Messages() {
             rows="4"
             required
             className="w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500"
-            style={{ 
-              border: '1px solid var(--color-secondary)', 
-              background: 'var(--color-bg)', 
-              color: 'var(--color-text)' 
+            style={{
+              border: '1px solid var(--color-secondary)',
+              background: 'var(--color-bg)',
+              color: 'var(--color-text)'
             }}
             disabled={loading}
           />
           <Button
             type="submit"
             disabled={loading || !newMessage.content.trim()}
-            className={`w-full mt-4 p-3 rounded-md transition duration-200 ${
-              loading || !newMessage.content.trim() ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            style={{ 
+            className={`w-full mt-4 p-3 rounded-md transition duration-200 ${loading || !newMessage.content.trim() ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            style={{
               background: loading || !newMessage.content.trim() ? 'var(--color-secondary)' : 'var(--color-primary)',
               color: 'var(--color-bg)'
             }}
@@ -188,7 +187,7 @@ function Messages() {
         </form>
         <div className="flex-1 overflow-y-auto max-h-[calc(100vh-300px)] p-4 rounded-lg shadow-lg" style={{ background: 'var(--color-secondary)' }}>
           {loading && messages.length === 0 ? (
-            <Loader className="text-blue-600" />
+            <Loader size="sm" variant="dots" text="Loading messages..." />
           ) : messages.length > 0 ? (
             <div className="space-y-4">
               {messages.map((msg) => {
@@ -199,9 +198,8 @@ function Messages() {
                     className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[70%] p-3 rounded-lg shadow-md ${
-                        isCurrentUser ? 'text-blue-900' : 'text-gray-900'
-                      }`}
+                      className={`max-w-[70%] p-3 rounded-lg shadow-md ${isCurrentUser ? 'text-blue-900' : 'text-gray-900'
+                        }`}
                       style={{
                         background: isCurrentUser ? 'var(--color-primary)' : 'var(--color-bg)',
                         color: isCurrentUser ? 'var(--color-bg)' : 'var(--color-text)'

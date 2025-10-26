@@ -122,9 +122,7 @@ function Notifications() {
 
       {/* Loading State */}
       {pageLoading && notifications.length === 0 ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader />
-        </div>
+        <Loader size="md" variant="pulse" text="Loading notifications..." />
       ) : notifications.length > 0 ? (
         <section className="rounded-xl shadow-md overflow-hidden animate-fade-in-down" style={{ background: 'var(--color-secondary)' }}>
           <ul className="divide-y" style={{ borderColor: 'var(--color-secondary)' }}>
