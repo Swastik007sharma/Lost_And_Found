@@ -11,6 +11,7 @@ import {
   FaCheckCircle,
   FaExclamationCircle,
   FaEye,
+  FaTimes,
   FaCalendarAlt
 } from 'react-icons/fa';
 
@@ -36,7 +37,11 @@ const ItemCard = ({
   onEditChange,
   onEditSubmit,
   onCancelEdit,
+  currentUserId,
 }) => {
+  // Check if current user is the owner
+  const isOwner = currentUserId && (currentUserId === item.postedBy?._id || currentUserId === item.user?._id || currentUserId === item.keeperId);
+
   // Determine status color scheme
   const getStatusStyle = (status) => {
     switch (status) {
@@ -90,76 +95,92 @@ const ItemCard = ({
       }}
     >
       {/* Image area */}
-      <Link to={`/items/${item._id}`} tabIndex={0} aria-label={`View details for ${item.title}`}>
-        <div
-          className="relative w-full h-56 flex items-center justify-center overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, var(--color-bg) 0%, var(--color-secondary) 100%)',
-          }}
-        >
-          {item.image ? (
-            <>
-              <img
-                src={item.image}
-                alt={item.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                loading="lazy"
-              />
-              {/* Gradient overlay on hover */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-              {/* View Details overlay on hover */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="bg-white/90 dark:bg-gray-800/90 px-6 py-3 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 flex items-center space-x-2">
-                  <FaEye className="text-blue-600 dark:text-blue-400" />
-                  <span className="font-bold text-gray-800 dark:text-gray-200">View Details</span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center w-full h-full">
-              <FaImage className="text-6xl mb-3 opacity-30" style={{ color: 'var(--color-border, #d1d5db)' }} />
-              <span className="text-sm font-medium opacity-50" style={{ color: 'var(--color-muted, #9ca3af)' }}>No Image Available</span>
-            </div>
-          )}
-
-          {/* Status badge with modern design */}
+      <div className="relative">
+        <Link to={`/items/${item._id}`} tabIndex={0} aria-label={`View details for ${item.title}`}>
           <div
-            className="absolute top-3 left-3 flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg backdrop-blur-sm border-2 font-bold text-sm"
+            className="relative w-full h-56 flex items-center justify-center overflow-hidden"
             style={{
-              background: statusStyle.bg,
-              color: statusStyle.text,
-              borderColor: statusStyle.border
+              background: 'linear-gradient(135deg, var(--color-bg) 0%, var(--color-secondary) 100%)',
             }}
-            aria-label={`Status: ${item.status}`}
           >
-            {statusStyle.icon}
-            <span>{item.status}</span>
-          </div>
+            {item.image ? (
+              <>
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  loading="lazy"
+                />
+                {/* Gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-          {/* Action buttons (desktop) */}
-          {showActions && (
-            <div className="absolute top-3 right-3 flex gap-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <button
-                onClick={e => { e.preventDefault(); onEdit && onEdit(); }}
-                className="text-white bg-blue-600 hover:bg-blue-700 p-3 rounded-xl transition-all duration-200 hover:scale-110 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
-                aria-label="Edit item"
-                tabIndex={0}
-              >
-                <FaEdit size={18} />
-              </button>
-              <button
-                onClick={e => { e.preventDefault(); onDelete && onDelete(); }}
-                className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-xl transition-all duration-200 hover:scale-110 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-red-400"
-                aria-label="Delete item"
-                tabIndex={0}
-              >
-                <FaTrash size={18} />
-              </button>
+                {/* View Details overlay on hover */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="bg-white/90 dark:bg-gray-800/90 px-6 py-3 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 flex items-center space-x-2">
+                    <FaEye className="text-blue-600 dark:text-blue-400" />
+                    <span className="font-bold text-gray-800 dark:text-gray-200">View Details</span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center w-full h-full">
+                <FaImage className="text-6xl mb-3 opacity-30" style={{ color: 'var(--color-border, #d1d5db)' }} />
+                <span className="text-sm font-medium opacity-50" style={{ color: 'var(--color-muted, #9ca3af)' }}>No Image Available</span>
+              </div>
+            )}
+
+            {/* Status badge with modern design */}
+            <div
+              className="absolute top-3 left-3 flex items-center gap-2 px-3 py-2 rounded-xl shadow-lg backdrop-blur-sm border-2 font-bold text-sm"
+              style={{
+                background: statusStyle.bg,
+                color: statusStyle.text,
+                borderColor: statusStyle.border
+              }}
+              aria-label={`Status: ${item.status}`}
+            >
+              {statusStyle.icon}
+              <span>{item.status}</span>
             </div>
-          )}
-        </div>
-      </Link>
+          </div>
+        </Link>
+
+        {/* Action buttons - now outside Link, always visible for owner */}
+        {showActions && (
+          <div className={`absolute top-3 right-3 flex gap-2 z-20 transition-opacity duration-300 ${isOwner ? 'opacity-100' : 'opacity-0 md:group-hover:opacity-100'}`}>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (onEdit) {
+                  onEdit();
+                }
+              }}
+              type="button"
+              className="text-white bg-blue-600 hover:bg-blue-700 p-2 sm:p-3 rounded-xl transition-all duration-200 hover:scale-110 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+              aria-label="Edit item"
+              tabIndex={0}
+            >
+              <FaEdit className="text-sm sm:text-base" size={18} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (onDelete) {
+                  onDelete();
+                }
+              }}
+              type="button"
+              className="bg-red-600 hover:bg-red-700 text-white p-2 sm:p-3 rounded-xl transition-all duration-200 hover:scale-110 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-red-400"
+              aria-label="Delete item"
+              tabIndex={0}
+            >
+              <FaTrash className="text-sm sm:text-base" size={18} />
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Card content */}
       <div
@@ -311,10 +332,27 @@ const ItemCard = ({
             borderColor: 'var(--color-accent)'
           }}
         >
-          <div className="space-y-4">
+          <div className="space-y-5">
+            {/* Info banner */}
+            <div
+              className="rounded-xl border px-4 py-3 flex items-start gap-3"
+              style={{
+                borderColor: 'var(--color-accent)',
+                background: 'linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary) 70%, var(--color-primary) 120%)',
+                color: 'var(--color-text)'
+              }}
+            >
+              <span className="mt-1 text-lg font-semibold" aria-hidden="true" style={{ color: 'var(--color-accent)' }}>ℹ️</span>
+              <p className="text-sm leading-relaxed">
+                You can update only the <span className="font-semibold">title</span> and <span className="font-semibold">description</span> here. Other item details are locked for consistency and will remain unchanged when you save.
+              </p>
+            </div>
+
+            {/* Title - Editable */}
             <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
+              <label className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
                 Title
+                <span className="text-xs font-medium px-2 py-1 rounded-full" style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}>Editable</span>
               </label>
               <input
                 type="text"
@@ -331,9 +369,11 @@ const ItemCard = ({
               />
             </div>
 
+            {/* Description - Editable */}
             <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
+              <label className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
                 Description
+                <span className="text-xs font-medium px-2 py-1 rounded-full" style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}>Editable</span>
               </label>
               <textarea
                 name="description"
@@ -349,84 +389,42 @@ const ItemCard = ({
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
-                Status
-              </label>
-              <select
-                name="status"
-                value={editFormData.status}
-                onChange={onEditChange}
-                className="w-full p-3 border-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
-                style={{
-                  borderColor: 'var(--color-border, #d1d5db)',
-                  background: 'var(--color-secondary)',
-                  color: 'var(--color-text)'
-                }}
-                required
-              >
-                <option value="Lost">Lost</option>
-                <option value="Found">Found</option>
-                <option value="Claimed">Claimed</option>
-                <option value="Returned">Returned</option>
-              </select>
+            {/* Read-only fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Category</p>
+                <p className="text-sm px-3 py-2 rounded-xl border" style={{ borderColor: 'var(--color-border, #d1d5db)', background: 'var(--color-secondary)', color: 'var(--color-text)' }}>
+                  {item.category?.name || 'Not specified'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Status</p>
+                <p className="text-sm px-3 py-2 rounded-xl border capitalize" style={{ borderColor: 'var(--color-border, #d1d5db)', background: 'var(--color-secondary)', color: 'var(--color-text)' }}>
+                  {item.status || 'Not specified'}
+                </p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Location</p>
+                <p className="text-sm px-3 py-2 rounded-xl border" style={{ borderColor: 'var(--color-border, #d1d5db)', background: 'var(--color-secondary)', color: 'var(--color-text)' }}>
+                  {item.location || 'Not specified'}
+                </p>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
-                Category
-              </label>
-              <input
-                type="text"
-                name="category"
-                value={editFormData.category}
-                onChange={onEditChange}
-                className="w-full p-3 border-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
-                style={{
-                  borderColor: 'var(--color-border, #d1d5db)',
-                  background: 'var(--color-secondary)',
-                  color: 'var(--color-text)'
-                }}
-                required
-              />
-            </div>
+            {/* Current Image Display */}
+            {item.image && (
+              <div>
+                <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Current Image</p>
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="w-full h-40 object-cover rounded-xl border"
+                  style={{ borderColor: 'var(--color-border, #d1d5db)' }}
+                />
+              </div>
+            )}
 
-            <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
-                Location
-              </label>
-              <input
-                type="text"
-                name="location"
-                value={editFormData.location}
-                onChange={onEditChange}
-                className="w-full p-3 border-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
-                style={{
-                  borderColor: 'var(--color-border, #d1d5db)',
-                  background: 'var(--color-secondary)',
-                  color: 'var(--color-text)'
-                }}
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
-                Image
-              </label>
-              <input
-                type="file"
-                name="image"
-                onChange={onEditChange}
-                className="w-full p-3 border-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
-                style={{
-                  borderColor: 'var(--color-border, #d1d5db)',
-                  background: 'var(--color-secondary)',
-                  color: 'var(--color-text)'
-                }}
-              />
-            </div>
-
+            {/* Action buttons */}
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t" style={{ borderColor: 'var(--color-border, #e5e7eb)' }}>
               <button
                 onClick={onCancelEdit}

@@ -550,6 +550,7 @@ function UserDashboard() {
                     <ItemCard
                       key={item._id}
                       item={item}
+                      currentUserId={user?.id}
                       onEdit={() => handleEdit(item)}
                       onDelete={() => handleDelete(item._id)}
                       showActions={editingItemId !== item._id}

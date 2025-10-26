@@ -85,9 +85,7 @@ function ItemDetails() {
     category: "",
     status: "",
     location: "",
-    image: null,
   });
-  const [removeImage, setRemoveImage] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [otp, setOtp] = useState("");
   const [otpItemId, setOtpItemId] = useState(null);
@@ -111,7 +109,6 @@ function ItemDetails() {
         category: response.data.item?.category?.name || "",
         status: response.data.item?.status || "",
         location: response.data.item?.location || "",
-        image: null,
       });
     } catch (err) {
       console.error(
@@ -158,12 +155,8 @@ function ItemDetails() {
   };
 
   const handleEditChange = (e) => {
-    const { name, value, files, type } = e.target;
-    if (name === "image" && type === "file") {
-      setEditFormData((prev) => ({ ...prev, image: files[0] }));
-    } else if (name === "removeImage") {
-      setRemoveImage(e.target.checked);
-    } else {
+    const { name, value } = e.target;
+    if (name === "title" || name === "description") {
       setEditFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
@@ -177,11 +170,6 @@ function ItemDetails() {
     data.append("category", editFormData.category);
     data.append("status", editFormData.status);
     data.append("location", editFormData.location);
-    if (editFormData.image) {
-      data.append("image", editFormData.image);
-    } else if (removeImage) {
-      data.append("image", "");
-    }
 
     try {
       await updateItem(id, data);
@@ -700,7 +688,20 @@ function ItemDetails() {
               encType="multipart/form-data"
               style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}
             >
-              <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--color-text)' }}>Edit Item</h2>
+              <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--color-text)' }}>Edit Item</h2>
+              <div
+                className="mb-6 rounded-xl border px-4 py-3 flex items-start gap-3"
+                style={{
+                  borderColor: 'var(--color-accent)',
+                  background: 'linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary) 65%, var(--color-primary) 120%)',
+                  color: 'var(--color-text)'
+                }}
+              >
+                <span className="mt-1 text-lg font-semibold" aria-hidden="true" style={{ color: 'var(--color-accent)' }}>ℹ️</span>
+                <p className="text-sm leading-relaxed">
+                  Only the <span className="font-semibold">title</span> and <span className="font-semibold">description</span> can be updated from this page. All other details are shown for your reference and will stay the same after saving.
+                </p>
+              </div>
 
               <div className="mb-6">
                 {item.image && (
@@ -720,43 +721,20 @@ function ItemDetails() {
                     </div>
                   </div>
                 )}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                  <input
-                    type="file"
-                    id="image"
-                    name="image"
-                    accept="image/*"
-                    onChange={handleEditChange}
-                    className="flex-1 p-3 border-2 rounded-lg focus:outline-none focus:ring-2 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all"
-                    style={{
-                      border: '2px solid var(--color-accent)',
-                      background: 'var(--color-bg)',
-                      color: 'var(--color-text)'
-                    }}
-                  />
-                  {item.image && (
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="removeImage"
-                        checked={removeImage}
-                        onChange={handleEditChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>Remove Image</span>
-                    </label>
-                  )}
-                </div>
+                <p className="text-sm" style={{ color: 'var(--color-text)', opacity: 0.7 }}>
+                  Only the title and description can be updated from this page. Other details remain unchanged.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                   <label
                     htmlFor="title"
-                    className="block text-sm font-semibold mb-2"
+                    className="flex items-center gap-2 text-sm font-semibold mb-2"
                     style={{ color: 'var(--color-text)' }}
                   >
                     Title *
+                    <span className="text-xs font-medium px-2 py-1 rounded-full" style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}>Editable</span>
                   </label>
                   <input
                     type="text"
@@ -775,89 +753,35 @@ function ItemDetails() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="category"
-                    className="block text-sm font-semibold mb-2"
-                    style={{ color: 'var(--color-text)' }}
-                  >
-                    Category *
-                  </label>
-                  <input
-                    type="text"
-                    id="category"
-                    name="category"
-                    value={editFormData.category}
-                    onChange={handleEditChange}
-                    className="w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 text-sm"
-                    style={{
-                      border: '2px solid var(--color-accent)',
-                      background: 'var(--color-bg)',
-                      color: 'var(--color-text)'
-                    }}
-                    required
-                  />
+                  <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Category</p>
+                  <p className="text-sm px-3 py-2 rounded-lg border" style={{ border: '2px solid var(--color-accent)', color: 'var(--color-text)', background: 'var(--color-bg)' }}>
+                    {item?.category?.name || "Not specified"}
+                  </p>
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="status"
-                    className="block text-sm font-semibold mb-2"
-                    style={{ color: 'var(--color-text)' }}
-                  >
-                    Status *
-                  </label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={editFormData.status}
-                    onChange={handleEditChange}
-                    className="w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 text-sm"
-                    style={{
-                      border: '2px solid var(--color-accent)',
-                      background: 'var(--color-bg)',
-                      color: 'var(--color-text)'
-                    }}
-                    required
-                  >
-                    <option value="Lost">Lost</option>
-                    <option value="Found">Found</option>
-                    <option value="Claimed">Claimed</option>
-                    <option value="Returned">Returned</option>
-                  </select>
+                  <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Status</p>
+                  <p className="text-sm px-3 py-2 rounded-lg border capitalize" style={{ border: '2px solid var(--color-accent)', color: 'var(--color-text)', background: 'var(--color-bg)' }}>
+                    {item?.status || "Not specified"}
+                  </p>
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="location"
-                    className="block text-sm font-semibold mb-2"
-                    style={{ color: 'var(--color-text)' }}
-                  >
-                    Location *
-                  </label>
-                  <input
-                    type="text"
-                    id="location"
-                    name="location"
-                    value={editFormData.location}
-                    onChange={handleEditChange}
-                    className="w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 text-sm"
-                    style={{
-                      border: '2px solid var(--color-accent)',
-                      background: 'var(--color-bg)',
-                      color: 'var(--color-text)'
-                    }}
-                    required
-                  />
+                  <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Location</p>
+                  <p className="text-sm px-3 py-2 rounded-lg border" style={{ border: '2px solid var(--color-accent)', color: 'var(--color-text)', background: 'var(--color-bg)' }}>
+                    {item?.location || "Not specified"}
+                  </p>
                 </div>
               </div>
 
               <div className="mb-6">
                 <label
                   htmlFor="description"
-                  className="block text-sm font-semibold mb-2"
+                  className="flex items-center gap-2 text-sm font-semibold mb-2"
                   style={{ color: 'var(--color-text)' }}
                 >
                   Description *
+                  <span className="text-xs font-medium px-2 py-1 rounded-full" style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}>Editable</span>
                 </label>
                 <textarea
                   id="description"
