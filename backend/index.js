@@ -1,18 +1,10 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-
-// Ensure logs directory exists
-const logDir = path.join(__dirname, 'logs');
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir);
-}
 const http = require('http');
 const connectDB = require('./config/db');
 const mainRouter = require('./routes/index.routes');
 const express = require('express');
-const path = require('path');
-const fs = require('fs');
 const seed = require('./utils/seedCategory');
 const initSocket = require('./utils/socket');
 const swaggerui = require('swagger-ui-express')
@@ -23,6 +15,12 @@ const loggerMiddleware = require('./middlewares/logger.middleware');
 const { corsConfig } = require('./middlewares/cors.middleware');
 const { notFound } = require('./middlewares/notFound.middleware');
 const { rateLimiter } = require('./middlewares/rateLimit.middleware');
+
+// Ensure logs directory exists
+const logDir = path.join(__dirname, 'logs');
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir);
+}
 
 const requiredEnvVars = ['PORT', 'FRONTEND_URL', 'MONGODB_URI', 'JWT_SECRET'];
 const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
