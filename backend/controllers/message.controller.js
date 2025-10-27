@@ -107,3 +107,45 @@ exports.sendMessage = async (req, res) => {
     res.status(500).json({ error: 'Failed to send message', details: error.message });
   }
 };
+
+exports.markMessagesAsRead = async (req, res) => {
+  try {
+    const { id } = req.params; // conversation ID
+    const validatedId = idSchema.shape.id.parse(id);
+
+    // Verify conversation exists and user is a participant
+    const conversation = await Conversation.findById(validatedId);
+    if (!conversation) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+
+    if (!conversation.participants.includes(req.user.id)) {
+      return res.status(403).json({ error: 'You are not authorized to access this conversation' });
+    }
+
+    // Mark all unread messages in this conversation as read (except messages sent by the current user)
+    const result = await Message.updateMany(
+      {
+        conversation: validatedId,
+        isRead: false,
+        sender: { $ne: req.user.id } // Don't mark own messages as read
+      },
+      {
+        $set: { isRead: true }
+      }
+    );
+
+    console.log(`Marked ${result.modifiedCount} messages as read in conversation ${validatedId}`);
+
+    res.status(200).json({
+      message: 'Messages marked as read',
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('Error marking messages as read:', error.message);
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ error: 'Validation failed', details: error.errors });
+    }
+    res.status(500).json({ error: 'Failed to mark messages as read' });
+  }
+};

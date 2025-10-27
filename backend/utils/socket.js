@@ -108,50 +108,47 @@ module.exports = (server) => {
           return;
         }
 
-        const claimant = conversation.participants.find(p => p._id.toString() === senderId);
-        if (!claimant) {
-          console.warn('Claimant not found in participants');
+        const sender = conversation.participants.find(p => p._id.toString() === senderId);
+        if (!sender) {
+          console.warn('Sender not found in participants');
           return;
         }
 
-        const exchangeLocation = 'Your exchange location here'; // Replace with dynamic data
-        await sendEmail(
-          claimant.email,
-          'Claim Notification',
-          'claimNotification',
-          {
-            name: claimant.name,
-            itemTitle: conversation.item ? conversation.item.title : 'Unknown Item',
-            exchangeLocation,
+        // Wait 5 seconds before sending notification (allows time for message to be read)
+        setTimeout(async () => {
+          try {
+            // Check if message is still unread after 5 seconds
+            const Message = require('../models/message.model');
+            const messageDoc = await Message.findById(_id);
+
+            if (!messageDoc || messageDoc.isRead) {
+              console.log(`Message ${_id} was read within 5 seconds, skipping notification`);
+              return;
+            }
+
+            // Send notifications only to recipients (not the sender)
+            const recipients = conversation.participants.filter(p => p._id.toString() !== senderId);
+            for (const recipient of recipients) {
+              const itemTitle = conversation.item?.title;
+              const notificationMessage = itemTitle
+                ? `New message from ${sender.name} about "${itemTitle}"`
+                : `New message from ${sender.name}`;
+
+              const recipientNotification = new Notification({
+                userId: recipient._id,
+                message: notificationMessage,
+                type: 'conversation',
+                isRead: false,
+                itemId: conversation.item ? conversation.item._id : undefined,
+              });
+              await recipientNotification.save();
+              io.to(recipient._id.toString()).emit('newNotification', recipientNotification);
+            }
+          } catch (delayError) {
+            console.error('Error in delayed notification check:', delayError.message);
           }
-        );
+        }, 5000); // 5 second delay
 
-        const notificationData = {
-          userId: claimant._id,
-          message: `Your claim for ${conversation.item ? conversation.item.title : 'an item'} has been noted. Exchange at ${exchangeLocation}.`,
-          type: 'conversation',
-          isRead: false,
-        };
-        if (conversation.item) {
-          notificationData.itemId = conversation.item._id;
-        }
-
-        const notification = new Notification(notificationData);
-        await notification.save();
-        io.to(claimant._id.toString()).emit('newNotification', notification);
-
-        const recipients = conversation.participants.filter(p => p._id.toString() !== senderId);
-        for (const recipient of recipients) {
-          const recipientNotification = new Notification({
-            userId: recipient._id,
-            message: `A new message from ${claimant.name} in conversation ${conversationId}`,
-            type: 'conversation',
-            isRead: false,
-            itemId: conversation.item ? conversation.item._id : undefined,
-          });
-          await recipientNotification.save();
-          io.to(recipient._id.toString()).emit('newNotification', recipientNotification);
-        }
       } catch (error) {
         console.error('Error in sendMessage:', error.message, error.stack);
         socket.emit('errorMessage', 'Failed to process message, email, or notification');
