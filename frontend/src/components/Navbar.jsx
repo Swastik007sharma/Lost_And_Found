@@ -17,12 +17,14 @@ import {
 } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthContext';
 import ThemeToggle from './common/ThemeToggle';
+import { getNotifications } from '../services/notificationService';
 
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const { user, token, logout, loading } = useContext(AuthContext);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const { user, token, logout, loading, socket } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
   const profileRef = useRef(null);
@@ -53,6 +55,50 @@ function Navbar() {
   const handleProfileClick = () => {
     setProfileOpen(!profileOpen);
   };
+
+  // Fetch unread notifications count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (!token) return;
+      try {
+        const response = await getNotifications({ limit: 50 });
+
+        // Handle different possible response structures
+        let notifications = [];
+        if (Array.isArray(response.data.notifications)) {
+          notifications = response.data.notifications;
+        } else if (response.data.data?.notifications) {
+          notifications = response.data.data.notifications;
+        } else if (response.data.notifications?.docs) {
+          notifications = response.data.notifications.docs;
+        }
+
+        const unread = notifications.filter(n => n && !n.isRead);
+        setUnreadCount(unread.length);
+      } catch (error) {
+        console.error('Failed to fetch unread notifications:', error);
+      }
+    };
+
+    fetchUnreadCount();
+
+    // Refresh count when navigating to/from notifications page
+    if (location.pathname === '/notifications') {
+      const timeoutId = setTimeout(fetchUnreadCount, 500);
+      return () => clearTimeout(timeoutId);
+    }
+
+    // Listen for new notifications via socket
+    if (socket) {
+      const handleNewNotification = () => {
+        fetchUnreadCount();
+      };
+      socket.on('newNotification', handleNewNotification);
+      return () => {
+        socket.off('newNotification', handleNewNotification);
+      };
+    }
+  }, [token, socket, location.pathname]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -111,20 +157,28 @@ function Navbar() {
               <div className="space-y-1">
                 {navLinks.map((link) => {
                   const isActive = location.pathname === link.to;
+                  const isNotificationLink = link.to === '/notifications';
                   return (
                     <Link
                       key={link.to}
                       to={link.to}
                       onClick={() => setMenuOpen(false)}
                       className={`
-                          flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 font-medium
+                          flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 font-medium relative
                           ${isActive
                           ? 'bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white shadow-md border-l-4 border-white'
                           : 'text-[var(--color-text)] hover:bg-[var(--color-muted)]'
                         }
                         `}
                     >
-                      <span className="text-lg">{link.icon}</span>
+                      <span className="text-lg relative">
+                        {link.icon}
+                        {isNotificationLink && unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </span>
+                        )}
+                      </span>
                       <span>{link.label}</span>
                     </Link>
                   );
@@ -194,6 +248,7 @@ function Navbar() {
           <div className="hidden md:flex md:gap-3 lg:gap-4 items-center">
             {token && navLinks.map((link) => {
               const isActive = location.pathname === link.to;
+              const isNotificationLink = link.to === '/notifications';
               return (
                 <Link
                   key={link.to}
@@ -207,8 +262,13 @@ function Navbar() {
                   `}
                 >
                   <span className="text-base hidden lg:inline">{link.icon}</span>
-                  <span className="hidden md:inline text-sm">
+                  <span className="hidden md:inline text-sm relative">
                     {link.label}
+                    {isNotificationLink && unreadCount > 0 && (
+                      <span className="absolute -top-2 -right-3 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
                   </span>
                 </Link>
               );
@@ -293,8 +353,25 @@ function Navbar() {
               </div>
             )}
 
-            {/* Theme toggle + Hamburger */}
+            {/* Theme toggle + Notification icon (mobile) + Hamburger */}
             <ThemeToggle className="ml-2 w-8 h-8 p-1" />
+
+            {/* Mobile Notification Icon */}
+            {token && (
+              <button
+                onClick={() => navigate('/notifications')}
+                className="md:hidden relative w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[var(--color-muted)] transition-all duration-200"
+                aria-label="Notifications"
+              >
+                <FaBell className="w-5 h-5 text-[var(--color-text)]" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+            )}
+
             <button
               className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[var(--color-muted)] transition-all duration-200"
               onClick={() => setMenuOpen(!menuOpen)}
