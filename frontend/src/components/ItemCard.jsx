@@ -87,7 +87,7 @@ const ItemCard = ({
 
   return (
     <div
-      className="rounded-2xl shadow-lg overflow-hidden border hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:scale-[1.02] group"
+      className="rounded-2xl shadow-lg overflow-hidden border hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:scale-[1.02] group h-full flex flex-col"
       style={{
         background: 'var(--color-secondary)',
         borderColor: 'var(--color-border, #e5e7eb)',
@@ -95,7 +95,7 @@ const ItemCard = ({
       }}
     >
       {/* Image area */}
-      <div className="relative">
+      <div className="relative flex-shrink-0">
         <Link to={`/items/${item._id}`} tabIndex={0} aria-label={`View details for ${item.title}`}>
           <div
             className="relative w-full h-56 flex items-center justify-center overflow-hidden"
@@ -184,7 +184,7 @@ const ItemCard = ({
 
       {/* Card content */}
       <div
-        className="p-5 flex flex-col gap-3"
+        className="p-5 flex flex-col gap-3 flex-grow"
         style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}
       >
         {/* Title */}
@@ -195,15 +195,17 @@ const ItemCard = ({
           {item.title}
         </h3>
 
-        {/* Description */}
-        {item.description && (
-          <p
-            className="text-sm line-clamp-3 leading-relaxed"
-            style={{ color: 'var(--color-muted, #6b7280)' }}
-          >
-            {item.description}
-          </p>
-        )}
+        {/* Description - Fixed height to maintain consistency */}
+        <div className="min-h-[1.5rem]">
+          {item.description && (
+            <p
+              className="text-sm line-clamp-1 leading-relaxed"
+              style={{ color: 'var(--color-muted, #6b7280)' }}
+            >
+              {item.description}
+            </p>
+          )}
+        </div>
 
         {/* Category and Location info cards */}
         <div className="grid grid-cols-1 gap-2 mt-2">
