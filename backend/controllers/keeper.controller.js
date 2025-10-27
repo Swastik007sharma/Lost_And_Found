@@ -5,7 +5,7 @@ const Item = require('../models/item.model');
 exports.getKeepers = async (req, res) => {
   try {
     const keepers = await User.find(
-      { role: 'keeper' },
+      { role: 'keeper', isActive: true },
       'name email createdAt location department description'
     ); // Select all relevant keeper fields
     res.status(200).json({ keepers });
