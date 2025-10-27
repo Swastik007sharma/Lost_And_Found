@@ -1,6 +1,20 @@
 import { useState, useContext, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaBars, FaTimes, FaUser, FaSignOutAlt, FaHome, FaBell, FaPlus, FaComments, FaTachometerAlt, FaShieldAlt } from 'react-icons/fa';
+import {
+  FaBars,
+  FaTimes,
+  FaUser,
+  FaUsers,
+  FaSignOutAlt,
+  FaHome,
+  FaBell,
+  FaPlus,
+  FaComments,
+  FaTachometerAlt,
+  FaShieldAlt,
+  FaSearch,
+} from 'react-icons/fa';
 import { AuthContext } from '../context/AuthContext';
 import ThemeToggle from './common/ThemeToggle';
 
@@ -21,7 +35,7 @@ function Navbar() {
     { to: '/notifications', label: 'Notifications', icon: <FaBell /> },
     { to: '/items/create', label: 'Post Item', icon: <FaPlus /> },
     { to: '/conversations', label: 'Conversations', icon: <FaComments /> },
-    { to: '/keepers', label: 'Keepers', icon: <FaUser /> },
+    { to: '/keepers', label: 'Keepers', icon: <FaUsers /> },
     { to: '/dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },
   ];
 
@@ -51,141 +65,249 @@ function Navbar() {
   }, []);
 
   if (loading) {
-    return <div className="bg-blue-600 text-white p-4 animate-pulse">Loading...</div>;
-  }
-
-  return (
-    <nav className="sticky bg-blue-700 text-white  shadow-md top-0 left-0 w-full z-50">
-      <div className="max-w-screen-xl mx-auto py-4 px-4 flex justify-between items-center">
-
-        {/* Logo */}
-        <Link to="/" className="text-2xl font-bold">Lost & Found</Link>
-
-        {/* Desktop Nav Links */}
-        <div className="hidden md:flex md:gap-3 lg:gap-4 items-center">
-          {token && navLinks.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className={`group flex items-center gap-2 hover:text-blue-200 transition relative px-2 py-1 rounded ${location.pathname === link.to ? 'underline font-semibold' : ''}`}
-            >
-              <span className="text-lg hidden lg:inline">{link.icon}</span>
-              <span className="hidden md:inline transition duration-200 text-sm">
-                {link.label}
-              </span>
-            </Link>
-          ))}
-        </div>
-
-        {/* Right Side */}
-        <div className="flex items-center gap-3">
-
-          {token ? (
-            <>
-              {/* Profile button */}
-              <div className="relative hidden md:block" ref={profileRef}>
-                <button
-                  onClick={handleProfileClick}
-                  className="w-10 h-10 bg-blue-800 rounded-full text-white font-bold flex items-center justify-center hover:ring-2 hover:ring-blue-300 transition"
-                >
-                  {userInitial}
-                </button>
-
-                {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-40 bg-white text-black rounded shadow-lg z-50">
-                    <button
-                      onClick={() => {
-                        navigate('/profile');
-                        setProfileOpen(false);
-                      }}
-                      className="w-full px-4 py-2 hover:bg-gray-100 text-sm flex items-center gap-2"
-                    >
-                      <FaUser /> Profile
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full px-4 py-2 hover:bg-gray-100 text-sm flex items-center gap-2"
-                    >
-                      <FaSignOutAlt /> Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className='hidden md:flex gap-4 items-center'>
-              <Link to="/login" className="px-3 py-1 text-sm rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800">Login</Link>
-              <Link to="/register" className="px-3 py-1 text-sm rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800">Register</Link>
+    return (
+      <div className="sticky top-0 left-0 w-full z-50 bg-[var(--color-bg)] backdrop-blur-xl border-b border-[var(--color-border)] shadow-md">
+        <div className="max-w-screen-xl mx-auto px-4 py-4">
+          <div className="animate-pulse flex justify-between items-center">
+            <div className="h-8 w-32 bg-[var(--color-muted)] rounded-lg"></div>
+            <div className="flex gap-4">
+              <div className="h-8 w-20 bg-[var(--color-muted)] rounded-lg"></div>
+              <div className="h-8 w-20 bg-[var(--color-muted)] rounded-lg"></div>
             </div>
-          )}
-
-          {/* Theme toggle + Hamburger */}
-          <ThemeToggle className="ml-2 w-8 h-8 p-1" />
-          <button
-            className="md:hidden"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle Menu"
-          >
-            {menuOpen ? <FaTimes className="w-6 h-6" /> : <FaBars className="w-6 h-6" />}
-          </button>
+          </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Mobile Menu Overlay */}
-      {menuOpen && <div className="fixed inset-0 bg-gray-800/50 z-40 md:hidden" onClick={() => setMenuOpen(false)}></div>}
+  const mobileMenu = menuOpen
+    ? createPortal(
+      <>
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1200] md:hidden"
+          onClick={() => setMenuOpen(false)}
+        ></div>
+        <aside
+          className="fixed top-0 left-0 h-full w-full max-w-xs bg-[var(--color-sidebar)] border-r border-[var(--color-border)] shadow-2xl z-[1201] md:hidden flex flex-col"
+          style={{ backgroundColor: 'var(--color-sidebar)', backgroundImage: 'none' }}
+        >
+          <div className="p-4 flex justify-between items-center border-b border-[var(--color-border)] bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)]">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-md">
+                <FaSearch className="text-white text-sm" />
+              </div>
+              <h2 className="text-lg font-bold text-white">Lost & Found</h2>
+            </div>
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-200"
+            >
+              <FaTimes className="text-white" />
+            </button>
+          </div>
 
-      {/* Mobile Menu */}
-      <div className={`fixed top-0 left-0 h-full w-64 bg-blue-700 text-white transform ${menuOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out z-50 md:hidden shadow-2xl backdrop-filter backdrop-blur-md`}>
-        {/* Header */}
-        <div className="p-4 flex justify-between items-center border-b border-blue-600">
-          <h2 className="text-xl font-bold">CampusTrack</h2>
-        </div>
+          <div className="flex flex-col flex-1" style={{ backgroundColor: 'var(--color-sidebar)' }}>
+            <div className="p-4">
+              <div className="space-y-1">
+                {navLinks.map((link) => {
+                  const isActive = location.pathname === link.to;
+                  return (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      onClick={() => setMenuOpen(false)}
+                      className={`
+                          flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 font-medium
+                          ${isActive
+                          ? 'bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white shadow-md border-l-4 border-white'
+                          : 'text-[var(--color-text)] hover:bg-[var(--color-muted)]'
+                        }
+                        `}
+                    >
+                      <span className="text-lg">{link.icon}</span>
+                      <span>{link.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
 
-        {/* Main Content Area */}
-        <div className="flex flex-col h-full">
-          {/* Navigation Links */}
-          <div className="p-4">
-            <div className="space-y-1">
-              {navLinks.map((link) => (
+            {token ? (
+              <div className="mt-auto w-full border-t border-[var(--color-border)] p-4 space-y-2">
+                <Link
+                  to="/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2 hover:bg-[var(--color-muted)] rounded-lg transition-all duration-200 text-sm text-[var(--color-text)]"
+                >
+                  <FaUser className="text-base" />
+                  <span>Profile</span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="cursor-pointer w-full flex items-center gap-3 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-all duration-200 text-sm font-medium text-red-600"
+                >
+                  <FaSignOutAlt className="text-base" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <div className="mt-auto w-full border-t border-[var(--color-border)] p-4 space-y-2">
+                <Link
+                  to="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="block w-full px-3 py-3 rounded-lg text-center font-medium text-[var(--color-text)] hover:bg-[var(--color-muted)] transition-all duration-200"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setMenuOpen(false)}
+                  className="block w-full px-3 py-3 rounded-lg text-center font-medium bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white shadow-md hover:shadow-lg transition-all duration-200"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+          </div>
+        </aside>
+      </>,
+      document.body
+    )
+    : null;
+
+  return (
+    <>
+      <nav className="sticky bg-[var(--color-bg)] backdrop-blur-xl border-b border-[var(--color-border)] shadow-lg top-0 left-0 w-full z-50">
+        <div className="max-w-screen-xl mx-auto py-4 px-4 flex justify-between items-center">
+
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-200">
+              <FaSearch className="text-white text-sm" />
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] bg-clip-text text-transparent">
+              Lost & Found
+            </span>
+          </Link>
+
+          {/* Desktop Nav Links */}
+          <div className="hidden md:flex md:gap-3 lg:gap-4 items-center">
+            {token && navLinks.map((link) => {
+              const isActive = location.pathname === link.to;
+              return (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 hover:bg-blue-600 ${location.pathname === link.to ? 'bg-blue-600 shadow-md border-l-4 border-blue-300' : ''}`}
-                  onClick={() => setMenuOpen(false)}
+                  className={`
+                    group flex items-center gap-2 transition-all duration-200 relative px-3 py-2 rounded-lg font-medium
+                    ${isActive
+                      ? 'bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white shadow-md'
+                      : 'text-[var(--color-text)] hover:bg-[var(--color-muted)] hover:scale-105'
+                    }
+                  `}
                 >
-                  <span className="text-lg">{link.icon}</span>
-                  <span className="font-medium">{link.label}</span>
+                  <span className="text-base hidden lg:inline">{link.icon}</span>
+                  <span className="hidden md:inline text-sm">
+                    {link.label}
+                  </span>
                 </Link>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
-          {/* Bottom Section - User Actions */}
-          {token && (
-            <div className="bottom-0 absolute w-full border-t border-blue-600 p-4 space-y-2">
-              {/* Profile Button */}
-              <Link
-                to="/profile"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2 hover:bg-blue-600 rounded-lg transition-all duration-200 text-sm"
-              >
-                <FaUser className="text-base" />
-                <span>Profile</span>
-              </Link>
+          {/* Right Side */}
+          <div className="flex items-center gap-3">
 
-              {/* Logout Button */}
-              <button
-                onClick={handleLogout}
-                className="cursor-pointer w-full flex items-center gap-3 px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-200 text-sm font-medium"
-              >
-                <FaSignOutAlt className="text-base" />
-                <span>Logout</span>
-              </button>
-            </div>
-          )}
+            {token ? (
+              <>
+                {/* Profile button */}
+                <div className="relative hidden md:block" ref={profileRef}>
+                  <button
+                    onClick={handleProfileClick}
+                    className={`
+                      w-10 h-10 rounded-lg text-white font-bold flex items-center justify-center transition-all duration-200 shadow-md
+                      ${profileOpen
+                        ? 'bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] ring-4 ring-[var(--color-primary)]/20 scale-105'
+                        : 'bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] hover:scale-110 hover:shadow-lg'
+                      }
+                    `}
+                  >
+                    {user?.profilePicture ? (
+                      <img
+                        src={user.profilePicture}
+                        alt={user.name}
+                        className="w-full h-full rounded-lg object-cover"
+                      />
+                    ) : (
+                      userInitial
+                    )}
+                  </button>
+
+                  {profileOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setProfileOpen(false)}
+                      ></div>
+                      <div className="absolute right-0 mt-2 w-48 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <div className="p-2 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)]">
+                          <p className="text-white font-semibold text-sm truncate">{user?.name || 'User'}</p>
+                          <p className="text-white/80 text-xs truncate">{user?.email || ''}</p>
+                        </div>
+                        <div className="p-1">
+                          <button
+                            onClick={() => {
+                              navigate('/profile');
+                              setProfileOpen(false);
+                            }}
+                            className="w-full px-3 py-2 hover:bg-[var(--color-muted)] rounded-lg text-sm flex items-center gap-2 text-[var(--color-text)] transition-all duration-200"
+                          >
+                            <FaUser /> Profile
+                          </button>
+                          <button
+                            onClick={handleLogout}
+                            className="w-full px-3 py-2 hover:bg-red-500/10 rounded-lg text-sm flex items-center gap-2 text-red-600 transition-all duration-200 font-medium"
+                          >
+                            <FaSignOutAlt /> Logout
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className='hidden md:flex gap-2 items-center'>
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-sm rounded-lg font-medium text-[var(--color-text)] hover:bg-[var(--color-muted)] transition-all duration-200"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-4 py-2 text-sm rounded-lg font-medium bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white hover:shadow-lg hover:scale-105 transition-all duration-200"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+
+            {/* Theme toggle + Hamburger */}
+            <ThemeToggle className="ml-2 w-8 h-8 p-1" />
+            <button
+              className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[var(--color-muted)] transition-all duration-200"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Toggle Menu"
+            >
+              {menuOpen ? <FaTimes className="w-6 h-6 text-[var(--color-text)]" /> : <FaBars className="w-6 h-6 text-[var(--color-text)]" />}
+            </button>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {mobileMenu}
+    </>
   );
 }
 
