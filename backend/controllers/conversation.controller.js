@@ -76,7 +76,7 @@ exports.getConversations = async (req, res) => {
       populate: [
         { path: 'item', select: 'title status' },
         { path: 'participants', select: 'name email' },
-        { path: 'lastMessage', select: 'content createdAt isRead' },
+        { path: 'lastMessage', select: 'content createdAt isRead sender' },
       ],
       sort: { updatedAt: -1 },
     };
