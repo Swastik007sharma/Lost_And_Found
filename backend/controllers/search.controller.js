@@ -44,7 +44,7 @@ exports.assignKeeper = async (req, res) => {
 // Search for items with optional filters
 exports.searchItems = async (req, res) => {
   try {
-    const { page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search = '', status } = req.query;
+    const { page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search = '', status, category } = req.query;
     const skip = (page - 1) * limit;
 
     const pipeline = [];
@@ -88,6 +88,10 @@ exports.searchItems = async (req, res) => {
     if (status && status !== 'All' && ['Lost', 'Found', 'Claimed', 'Returned'].includes(status)) {
       matchConditions.status = status;
     }
+    if (category && category !== 'All') {
+      // Filter by category name
+      matchConditions['categoryData.name'] = category;
+    }
     if (search) {
       const searchRegex = { $regex: search, $options: 'i' };
       matchConditions.$or = [
@@ -106,12 +110,12 @@ exports.searchItems = async (req, res) => {
     const countPipeline = [...pipeline, { $count: 'total' }];
     const totalResultsAgg = await Item.aggregate(countPipeline);
     const totalResults = totalResultsAgg.length > 0 ? totalResultsAgg[0].total : 0;
-    
+
     // Sort, skip, and limit for fetching results
     pipeline.push({ $sort: { [sortBy]: order === 'asc' ? 1 : -1 } });
     pipeline.push({ $skip: skip });
     pipeline.push({ $limit: parseInt(limit, 10) });
-    
+
     // --- Final Project Stage ---
     pipeline.push({
       $project: {
