@@ -39,8 +39,8 @@ const ItemCard = ({
   onCancelEdit,
   currentUserId,
 }) => {
-  // Check if current user is the owner
-  const isOwner = currentUserId && (currentUserId === item.postedBy?._id || currentUserId === item.user?._id || currentUserId === item.keeperId);
+  // Check if current user is the owner (only the person who posted it)
+  const isOwner = currentUserId && currentUserId === item.postedBy?._id;
 
   // Determine status color scheme
   const getStatusStyle = (status) => {
@@ -145,9 +145,9 @@ const ItemCard = ({
           </div>
         </Link>
 
-        {/* Action buttons - now outside Link, always visible for owner */}
-        {showActions && (
-          <div className={`absolute top-3 right-3 flex gap-2 z-20 transition-opacity duration-300 ${isOwner ? 'opacity-100' : 'opacity-0 md:group-hover:opacity-100'}`}>
+        {/* Action buttons - only visible to the person who posted it */}
+        {showActions && isOwner && (
+          <div className="absolute top-3 right-3 flex gap-2 z-20 transition-opacity duration-300 opacity-100">
             <button
               onClick={(e) => {
                 e.preventDefault();
