@@ -8,11 +8,31 @@ import ItemCard from '../components/ItemCard';
 import Pagination from '../components/common/Pagination';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../context/ThemeContext';
+import {
+  FiGrid,
+  FiList,
+  FiPlus,
+  FiUser,
+  FiBell,
+  FiPackage,
+  FiTrendingUp,
+  FiClock,
+  FiAlertCircle,
+  FiEye,
+  FiEdit,
+  FiTrash,
+  FiKey,
+  FiCheck,
+  FiX
+} from 'react-icons/fi';
 
 function UserDashboard() {
   const { user, addNotification } = useContext(AuthContext);
+  const { theme } = useTheme();
   const { socket } = useOutletContext();
-  const [viewType, setViewType] = useState(() => localStorage.getItem('userDashboardViewType') || 'list');
+  const [viewType, setViewType] = useState(() => localStorage.getItem('userDashboardViewType') || 'card');
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -231,16 +251,36 @@ function UserDashboard() {
   const isClaimant = useMemo(() => user.id === items.find((item) => item._id === editingItemId)?.claimedById, [user.id, items, editingItemId]);
   const isPosterOrKeeper = useMemo(() => user.id === items.find((item) => item._id === editingItemId)?.postedBy._id || user.id === items.find((item) => item._id === editingItemId)?.keeperId, [user.id, items, editingItemId]);
 
+  // Calculate stats
+  const stats = useMemo(() => {
+    const total = items.length;
+    const lost = items.filter(item => item.status === 'Lost').length;
+    const found = items.filter(item => item.status === 'Found').length;
+    const claimed = items.filter(item => item.status === 'Claimed').length;
+    const returned = items.filter(item => item.status === 'Returned').length;
+
+    return { total, lost, found, claimed, returned };
+  }, [items]);
+
   if (!user) {
     return (
-      <div className="container mx-auto p-2 sm:p-4 md:p-6 min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
-        <p className="text-sm sm:text-lg md:text-xl font-medium" style={{ color: 'var(--color-text)' }}>Please log in to view your dashboard.</p>
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
+        }`}>
+        <div className={`text-center p-8 rounded-2xl shadow-xl ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+          }`}>
+          <FiAlertCircle className={`text-5xl mx-auto mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+            }`} />
+          <p className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+            }`}>
+            Please log in to view your dashboard.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ background: 'var(--color-bg)', color: 'var(--color-text)', minHeight: '100vh' }}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -251,66 +291,362 @@ function UserDashboard() {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        limit={1} // Limit to 3 toasts at a time
+        limit={3}
       />
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 md:mb-8">
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-0" style={{ color: 'var(--color-text)' }}>User Dashboard</h1>
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 md:space-x-4">
-            <Link
-              to="/items/create"
-              className="py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
-              style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
+
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
+        {/* Header Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+            <div>
+              <h1 className={`text-3xl sm:text-4xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                }`}>
+                My Dashboard
+              </h1>
+              <p className={`text-sm sm:text-base ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                Manage your lost and found items
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/items/create"
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl ${theme === 'dark'
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  }`}
+              >
+                <FiPlus className="text-lg" />
+                <span>Add Item</span>
+              </Link>
+              <Link
+                to="/profile"
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${theme === 'dark'
+                    ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
+                    : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-md hover:shadow-lg'
+                  }`}
+              >
+                <FiUser className="text-lg" />
+                <span>Profile</span>
+              </Link>
+              <Link
+                to="/notifications"
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${theme === 'dark'
+                    ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
+                    : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-md hover:shadow-lg'
+                  }`}
+              >
+                <FiBell className="text-lg" />
+                <span>Notifications</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className={`p-4 sm:p-6 rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                }`}
             >
-              Add New Item
-            </Link>
-            <Link
-              to="/profile"
-              className="py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
-              style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
+              <div className="flex items-center justify-between mb-2">
+                <FiPackage className={`text-2xl ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                  }`} />
+              </div>
+              <p className={`text-3xl font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                }`}>
+                {stats.total}
+              </p>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                Total Items
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              className={`p-4 sm:p-6 rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                }`}
             >
-              Profile
-            </Link>
-            <Link
-              to="/notifications"
-              className="py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
-              style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
+              <div className="flex items-center justify-between mb-2">
+                <FiAlertCircle className="text-2xl text-red-500" />
+              </div>
+              <p className={`text-3xl font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                }`}>
+                {stats.lost}
+              </p>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                Lost
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
+              className={`p-4 sm:p-6 rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                }`}
             >
-              Notifications
-            </Link>
+              <div className="flex items-center justify-between mb-2">
+                <FiPackage className="text-2xl text-green-500" />
+              </div>
+              <p className={`text-3xl font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                }`}>
+                {stats.found}
+              </p>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                Found
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.4 }}
+              className={`p-4 sm:p-6 rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <FiClock className="text-2xl text-yellow-500" />
+              </div>
+              <p className={`text-3xl font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                }`}>
+                {stats.claimed}
+              </p>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                Claimed
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: 0.5 }}
+              className={`p-4 sm:p-6 rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <FiTrendingUp className="text-2xl text-purple-500" />
+              </div>
+              <p className={`text-3xl font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                }`}>
+                {stats.returned}
+              </p>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                Returned
+              </p>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* View Toggle */}
+        <div className={`flex items-center justify-between mb-6 p-4 rounded-xl ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+          } shadow-lg`}>
+          <div>
+            <h2 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+              }`}>
+              My Items
+            </h2>
+            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+              {items.length} item{items.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+
+          <div className="flex gap-2">
             <button
-              onClick={() => setViewType(viewType === 'list' ? 'card' : 'list')}
-              className="py-1 sm:py-2 px-2 sm:px-3 md:px-4 rounded-md transition-colors duration-200 text-xs sm:text-sm md:text-base font-medium shadow-md hover:shadow-lg w-full sm:w-auto text-center"
-              style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}
+              onClick={() => setViewType('card')}
+              className={`p-2.5 rounded-lg transition-all ${viewType === 'card'
+                  ? theme === 'dark'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-blue-500 text-white'
+                  : theme === 'dark'
+                    ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
             >
-              Switch to {viewType === 'list' ? 'Card' : 'List'} View
+              <FiGrid className="text-lg" />
+            </button>
+            <button
+              onClick={() => setViewType('list')}
+              className={`p-2.5 rounded-lg transition-all ${viewType === 'list'
+                  ? theme === 'dark'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-blue-500 text-white'
+                  : theme === 'dark'
+                    ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+            >
+              <FiList className="text-lg" />
             </button>
           </div>
         </div>
 
+        {/* Items Section */}
         {loading ? (
-          <div className="flex justify-center items-center h-32 sm:h-48 md:h-64">
-            <p className="text-sm sm:text-lg md:text-xl animate-pulse" style={{ color: 'var(--color-text)' }}>Loading...</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-20"
+          >
+            <div className="relative">
+              <div className={`w-16 h-16 rounded-full border-4 border-t-transparent animate-spin ${theme === 'dark' ? 'border-blue-500' : 'border-blue-600'
+                }`}></div>
+              <FiPackage className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                }`} />
+            </div>
+            <p className={`mt-4 text-lg font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+              Loading your items...
+            </p>
+          </motion.div>
+        ) : items.length === 0 ? (
+          /* Empty State */
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className={`text-center py-16 sm:py-20 rounded-2xl ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+              } shadow-xl`}
+          >
+            <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mx-auto mb-6 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+              }`}>
+              <FiPackage className={`text-4xl sm:text-5xl ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'
+                }`} />
+            </div>
+            <h3 className={`text-xl sm:text-2xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+              }`}>
+              No Items Yet
+            </h3>
+            <p className={`text-sm sm:text-base mb-6 max-w-md mx-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+              Start by adding your first lost or found item to get started.
+            </p>
+            <Link
+              to="/items/create"
+              className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl ${theme === 'dark'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+            >
+              <FiPlus className="text-lg" />
+              <span>Add Your First Item</span>
+            </Link>
+          </motion.div>
         ) : (
           <div>
-            {viewType === 'list' ? (
-              <div className="rounded-lg shadow-lg p-2 sm:p-4" style={{ background: 'var(--color-secondary)' }}>
+            {viewType === 'card' ? (
+              /* Card View */
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
+              >
+                {items.map((item, index) => {
+                  const isClaimant = user.id === item.claimedById;
+                  const isPosterOrKeeper = user.id === item.postedBy._id || user.id === item.keeperId;
+
+                  return (
+                    <motion.div
+                      key={item._id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                    >
+                      <ItemCard
+                        item={item}
+                        currentUserId={user?.id}
+                        onEdit={() => handleEdit(item)}
+                        onDelete={() => handleDelete(item._id)}
+                        showActions={editingItemId !== item._id}
+                        isEditing={editingItemId === item._id}
+                        editFormData={editingItemId === item._id ? editFormData : null}
+                        onEditChange={handleEditChange}
+                        onEditSubmit={() => handleEditSubmit(item._id)}
+                        onCancelEdit={() => {
+                          setEditingItemId(null);
+                          setCurrentImage('');
+                        }}
+                        onGenerateOTP={item.status === 'Claimed' && !isClaimant && isPosterOrKeeper ? () => handleGenerateOTP(item._id) : null}
+                        onVerifyOTP={item.status === 'Claimed' && showOtpVerification && otpItemId === item._id && !isClaimant ? () => handleVerifyOTP(item._id) : null}
+                        otp={showOtpVerification && otpItemId === item._id && !isClaimant ? otp : ''}
+                        setOtp={showOtpVerification && otpItemId === item._id && !isClaimant ? setOtp : null}
+                        onCancelOTP={showOtpVerification && otpItemId === item._id && !isClaimant ? handleCancelOTP : null}
+                      />
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            ) : (
+              /* List View */
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className={`rounded-xl shadow-lg overflow-hidden ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                  }`}
+              >
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y" style={{ borderColor: 'var(--color-secondary)' }}>
-                    <thead style={{ background: 'var(--color-bg)' }}>
+                  <table className="min-w-full">
+                    <thead className={`${theme === 'dark' ? 'bg-gray-900/50' : 'bg-gray-50'
+                      }`}>
                       <tr>
-                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Image</th>
-                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Title</th>
-                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Status</th>
-                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Category</th>
-                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Posted On</th>
-                        <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-xs sm:text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Actions</th>
+                        <th className={`px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
+                          Image
+                        </th>
+                        <th className={`px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
+                          Title
+                        </th>
+                        <th className={`px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
+                          Status
+                        </th>
+                        <th className={`px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
+                          Category
+                        </th>
+                        <th className={`px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
+                          Posted On
+                        </th>
+                        <th className={`px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
+                          Actions
+                        </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y" style={{ borderColor: 'var(--color-secondary)' }}>
-                      {items.map((item) => (
-                        <tr key={item._id} className="transition-colors" style={{ background: 'var(--color-secondary)' }}>
+                    <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-200'
+                      }`}>
+                      {items.map((item, index) => (
+                        <motion.tr
+                          key={item._id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.05 }}
+                          className={`transition-colors ${theme === 'dark'
+                              ? 'hover:bg-gray-700/50'
+                              : 'hover:bg-gray-50'
+                            }`}
+                        >
                           {editingItemId === item._id ? (
                             <>
                               <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2">
@@ -446,92 +782,138 @@ function UserDashboard() {
                             </>
                           ) : (
                             <>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2">
-                                {item.image && <img src={item.image} alt={item.title} className="w-8 sm:w-12 md:w-16 h-8 sm:h-12 md:h-16 object-cover rounded-md" />}
+                              <td className="px-4 py-4">
+                                {item.image ? (
+                                  <img
+                                    src={item.image}
+                                    alt={item.title}
+                                    className="w-16 h-16 object-cover rounded-lg shadow-md"
+                                  />
+                                ) : (
+                                  <div className={`w-16 h-16 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'
+                                    }`}>
+                                    <FiPackage className={`text-2xl ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'
+                                      }`} />
+                                  </div>
+                                )}
                               </td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium">{item.title}</td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm">
-                                <span className={`status-badge ${item.status?.toLowerCase()}`}>
+                              <td className={`px-4 py-4 text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                                }`}>
+                                {item.title}
+                              </td>
+                              <td className="px-4 py-4">
+                                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${item.status === 'Lost'
+                                    ? 'bg-red-100 text-red-700'
+                                    : item.status === 'Found'
+                                      ? 'bg-green-100 text-green-700'
+                                      : item.status === 'Claimed'
+                                        ? 'bg-yellow-100 text-yellow-700'
+                                        : 'bg-purple-100 text-purple-700'
+                                  }`}>
                                   {item.status}
                                 </span>
                               </td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm">{item.category?.name || 'N/A'}</td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-xs sm:text-sm">{new Date(item.createdAt).toLocaleDateString()}</td>
-                              <td className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 flex flex-col sm:flex-row gap-1 sm:gap-2 flex-wrap">
-                                <Link
-                                  to={`/items/${item._id}`}
-                                  className="px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm transition-colors w-full sm:w-auto"
-                                  style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
-                                >
-                                  View
-                                </Link>
-                                <button
-                                  onClick={() => handleEdit(item)}
-                                  className="px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm transition-colors w-full sm:w-auto mt-1 sm:mt-0"
-                                  style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(item._id)}
-                                  className="px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm transition-colors w-full sm:w-auto mt-1 sm:mt-0"
-                                  style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
-                                >
-                                  Delete
-                                </button>
-                                {item.status === 'Claimed' && !isClaimant && (
-                                  <>
-                                    {isPosterOrKeeper && (
-                                      <button
-                                        onClick={() => handleGenerateOTP(item._id)}
-                                        className="px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm transition-colors w-full sm:w-auto mt-1 sm:mt-0"
-                                        style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
-                                      >
-                                        Generate OTP
-                                      </button>
-                                    )}
-                                    {showOtpVerification && otpItemId === item._id && (
-                                      <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2 w-full">
-                                        <input
-                                          type="text"
-                                          value={otp}
-                                          onChange={(e) => setOtp(e.target.value)}
-                                          placeholder="Enter OTP"
-                                          className="p-1 sm:p-2 border rounded-md text-xs sm:text-sm w-full sm:w-20 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                          style={{
-                                            border: '1px solid var(--color-secondary)',
-                                            background: 'var(--color-bg)',
-                                            color: 'var(--color-text)'
-                                          }}
-                                        />
+                              <td className={`px-4 py-4 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                                }`}>
+                                {item.category?.name || 'N/A'}
+                              </td>
+                              <td className={`px-4 py-4 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                                }`}>
+                                {new Date(item.createdAt).toLocaleDateString()}
+                              </td>
+                              <td className="px-4 py-4">
+                                <div className="flex flex-wrap gap-2">
+                                  <Link
+                                    to={`/items/${item._id}`}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${theme === 'dark'
+                                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                        : 'bg-blue-500 hover:bg-blue-600 text-white'
+                                      }`}
+                                  >
+                                    <FiEye className="text-sm" />
+                                    View
+                                  </Link>
+                                  <button
+                                    onClick={() => handleEdit(item)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${theme === 'dark'
+                                        ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                        : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                                      }`}
+                                  >
+                                    <FiEdit className="text-sm" />
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(item._id)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${theme === 'dark'
+                                        ? 'bg-red-600 hover:bg-red-700 text-white'
+                                        : 'bg-red-500 hover:bg-red-600 text-white'
+                                      }`}
+                                  >
+                                    <FiTrash className="text-sm" />
+                                    Delete
+                                  </button>
+                                  {item.status === 'Claimed' && !isClaimant && (
+                                    <>
+                                      {isPosterOrKeeper && (
                                         <button
-                                          onClick={() => handleVerifyOTP(item._id)}
-                                          className="px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm transition-colors w-full sm:w-auto mt-1 sm:mt-0"
-                                          style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
+                                          onClick={() => handleGenerateOTP(item._id)}
+                                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${theme === 'dark'
+                                              ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                              : 'bg-purple-500 hover:bg-purple-600 text-white'
+                                            }`}
                                         >
-                                          Verify
+                                          <FiKey className="text-sm" />
+                                          Generate OTP
                                         </button>
-                                        <button
-                                          onClick={handleCancelOTP}
-                                          className="px-1 sm:px-2 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm transition-colors w-full sm:w-auto mt-1 sm:mt-0"
-                                          style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}
-                                        >
-                                          Cancel
-                                        </button>
-                                      </div>
-                                    )}
-                                  </>
-                                )}
+                                      )}
+                                      {showOtpVerification && otpItemId === item._id && (
+                                        <div className="flex items-center gap-2 w-full mt-2">
+                                          <input
+                                            type="text"
+                                            value={otp}
+                                            onChange={(e) => setOtp(e.target.value)}
+                                            placeholder="Enter OTP"
+                                            className={`px-3 py-2 border rounded-lg text-sm w-32 focus:ring-2 focus:ring-purple-500 ${theme === 'dark'
+                                                ? 'bg-gray-700 border-gray-600 text-white'
+                                                : 'bg-white border-gray-300 text-gray-900'
+                                              }`}
+                                          />
+                                          <button
+                                            onClick={() => handleVerifyOTP(item._id)}
+                                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${theme === 'dark'
+                                                ? 'bg-green-600 hover:bg-green-700 text-white'
+                                                : 'bg-green-500 hover:bg-green-600 text-white'
+                                              }`}
+                                          >
+                                            <FiCheck className="text-sm" />
+                                            Verify
+                                          </button>
+                                          <button
+                                            onClick={handleCancelOTP}
+                                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${theme === 'dark'
+                                                ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                                : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                                              }`}
+                                          >
+                                            <FiX className="text-sm" />
+                                            Cancel
+                                          </button>
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
                               </td>
                             </>
                           )}
-                        </tr>
+                        </motion.tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
                 {items.length > 0 && (
-                  <div className="mt-2 sm:mt-4 md:mt-6">
+                  <div className="mt-6 px-4 pb-4">
                     <Pagination
                       currentPage={itemsPage}
                       totalPages={itemsTotalPages}
@@ -539,50 +921,17 @@ function UserDashboard() {
                     />
                   </div>
                 )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
-                {items.map((item) => {
-                  const isClaimant = user.id === item.claimedById;
-                  const isPosterOrKeeper = user.id === item.postedBy._id || user.id === item.keeperId;
-
-                  return (
-                    <ItemCard
-                      key={item._id}
-                      item={item}
-                      currentUserId={user?.id}
-                      onEdit={() => handleEdit(item)}
-                      onDelete={() => handleDelete(item._id)}
-                      showActions={editingItemId !== item._id}
-                      isEditing={editingItemId === item._id}
-                      editFormData={editingItemId === item._id ? editFormData : null}
-                      onEditChange={handleEditChange}
-                      onEditSubmit={() => handleEditSubmit(item._id)}
-                      onCancelEdit={() => {
-                        setEditingItemId(null);
-                        setCurrentImage('');
-                      }}
-                      // Hide Generate OTP and Verify OTP for claimant
-                      onGenerateOTP={item.status === 'Claimed' && !isClaimant && isPosterOrKeeper ? () => handleGenerateOTP(item._id) : null}
-                      onVerifyOTP={item.status === 'Claimed' && showOtpVerification && otpItemId === item._id && !isClaimant ? () => handleVerifyOTP(item._id) : null}
-                      otp={showOtpVerification && otpItemId === item._id && !isClaimant ? otp : ''}
-                      setOtp={showOtpVerification && otpItemId === item._id && !isClaimant ? setOtp : null}
-                      onCancelOTP={showOtpVerification && otpItemId === item._id && !isClaimant ? handleCancelOTP : null}
-                    />
-                  );
-                })}
-              </div>
+              </motion.div>
             )}
-            {items.length === 0 && (
-              <div className="rounded-lg shadow-lg p-2 sm:p-4 text-center" style={{ background: 'var(--color-secondary)' }}>
-                <p className="text-sm sm:text-lg md:text-xl" style={{ color: 'var(--color-text)' }}>No items found. Start by adding a new item!</p>
-                <Link
-                  to="/items/create"
-                  className="mt-2 sm:mt-4 inline-block py-1 sm:py-2 px-2 sm:px-4 rounded-md transition-colors duration-200 text-sm sm:text-base font-medium shadow-md hover:shadow-lg"
-                  style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
-                >
-                  Add New Item
-                </Link>
+
+            {/* Pagination for Card View */}
+            {viewType === 'card' && items.length > 0 && (
+              <div className="mt-6">
+                <Pagination
+                  currentPage={itemsPage}
+                  totalPages={itemsTotalPages}
+                  onPageChange={(page) => setItemsPage(page)}
+                />
               </div>
             )}
           </div>
