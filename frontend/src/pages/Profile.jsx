@@ -6,10 +6,27 @@ import Loader from '../components/common/Loader';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import {
+  FiUser,
+  FiMail,
+  FiShield,
+  FiMapPin,
+  FiBookmark,
+  FiFileText,
+  FiEdit,
+  FiLock,
+  FiHome,
+  FiTrash2,
+  FiCheck,
+  FiX
+} from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import { useTheme } from '../context/ThemeContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function Profile() {
   const { user, setUser, token } = useContext(AuthContext);
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -107,10 +124,9 @@ function Profile() {
       }
 
       console.log('Sending profile update:', profileForm, 'Token:', token);
-      // Only send keeper fields if user is a keeper
+      // Build update payload - don't send email as it cannot be changed
       const updatePayload = {
         name: profileForm.name,
-        email: profileForm.email,
       };
       if (user?.role === 'keeper') {
         updatePayload.location = profileForm.location;
@@ -181,226 +197,507 @@ function Profile() {
   if (!user && !token) return <Loader />;
 
   return (
-    <div style={{ background: 'var(--color-bg)', color: 'var(--color-text)', minHeight: '100vh' }}>
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'
+      }`}>
       <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="mb-6">
-            <h1 className="text-3xl sm:text-4xl font-bold text-center" style={{ color: 'var(--color-text)' }}>User Profile</h1>
-          </div>
-
-          {/* Read-Only User Details */}
-          <div className="p-6 rounded-lg shadow-md mb-6" style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}>
-            <div className="space-y-4">
-              <p className="text-lg sm:text-xl" style={{ color: 'var(--color-text)' }}><strong>Name:</strong> {displayData.name}</p>
-              <p className="text-lg sm:text-xl" style={{ color: 'var(--color-text)' }}><strong>Email:</strong> {displayData.email}</p>
-              <p className="text-lg sm:text-xl" style={{ color: 'var(--color-text)' }}><strong>Role:</strong> {displayData.role}</p>
-              {displayData.role === 'keeper' && (
-                <>
-                  <p className="text-lg sm:text-xl" style={{ color: 'var(--color-text)' }}><strong>Location:</strong> {displayData.location || <span className="italic text-gray-400">Not set</span>}</p>
-                  <p className="text-lg sm:text-xl" style={{ color: 'var(--color-text)' }}><strong>Department:</strong> {displayData.department || <span className="italic text-gray-400">Not set</span>}</p>
-                  <p className="text-lg sm:text-xl" style={{ color: 'var(--color-text)' }}><strong>Description:</strong> {displayData.description || <span className="italic text-gray-400">Not set</span>}</p>
-                </>
-              )}
-            </div>
-            <div className="mt-6 flex flex-col sm:flex-row gap-4">
-              <Button
-                onClick={() => toggleForm('profile')}
-                className="w-full sm:w-auto py-2 px-4 rounded-md transition-colors"
-                style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
-              >
-                Update Name & Email
-              </Button>
-              <Button
-                onClick={() => toggleForm('password')}
-                className="w-full sm:w-auto py-2 px-4 rounded-md transition-colors"
-                style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
-              >
-                Update Password
-              </Button>
-              <Button
+        <div className="max-w-4xl mx-auto">
+          {/* Header Section */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-8"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className={`text-4xl sm:text-5xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>
+                  My Profile
+                </h1>
+                <p className={`mt-2 text-lg ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                  Manage your account settings and preferences
+                </p>
+              </div>
+              <button
                 onClick={() => navigate('/dashboard')}
-                className="w-full sm:w-auto py-2 px-4 rounded-md transition-colors"
-                style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${theme === 'dark'
+                    ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                    : 'bg-white hover:bg-gray-50 text-gray-700 shadow-md'
+                  }`}
               >
-                Go to Dashboard
-              </Button>
-              <Button
-                onClick={handleDeleteAccount}
-                disabled={loading}
-                className="w-full sm:w-auto py-2 px-4 rounded-md transition-colors"
-                style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
-              >
-                {loading ? 'Deleting...' : 'Delete Account'}
-              </Button>
+                <FiHome className="text-lg" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </button>
             </div>
-          </div>
+          </motion.div>
+
+          {/* Profile Card */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className={`rounded-2xl shadow-xl overflow-hidden mb-6 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+              }`}
+          >
+            {/* Profile Header with Avatar */}
+            <div className={`relative h-32 ${theme === 'dark'
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600'
+                : 'bg-gradient-to-r from-blue-500 to-purple-500'
+              }`}>
+              <div className="absolute -bottom-16 left-8">
+                <div className={`w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold shadow-xl ${theme === 'dark'
+                    ? 'bg-gray-700 text-white border-4 border-gray-800'
+                    : 'bg-white text-blue-600 border-4 border-white'
+                  }`}>
+                  {displayData.name ? displayData.name[0].toUpperCase() : <FiUser />}
+                </div>
+              </div>
+            </div>
+
+            {/* Profile Details */}
+            <div className="pt-20 px-8 pb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                <div>
+                  <h2 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                    }`}>
+                    {displayData.name}
+                  </h2>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold ${displayData.role === 'keeper'
+                        ? 'bg-purple-100 text-purple-700'
+                        : displayData.role === 'admin'
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}>
+                      <FiShield className="text-xs" />
+                      {displayData.role.charAt(0).toUpperCase() + displayData.role.slice(1)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Information Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className={`flex items-start gap-3 p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
+                  }`}>
+                  <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-blue-600/20' : 'bg-blue-100'
+                    }`}>
+                    <FiMail className={`text-xl ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                      }`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-medium uppercase tracking-wider ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                      }`}>
+                      Email Address
+                    </p>
+                    <p className={`text-sm font-semibold truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                      }`}>
+                      {displayData.email}
+                    </p>
+                  </div>
+                </div>
+
+                {displayData.role === 'keeper' && displayData.location && (
+                  <div className={`flex items-start gap-3 p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
+                    }`}>
+                    <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-green-600/20' : 'bg-green-100'
+                      }`}>
+                      <FiMapPin className={`text-xl ${theme === 'dark' ? 'text-green-400' : 'text-green-600'
+                        }`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs font-medium uppercase tracking-wider ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                        Location
+                      </p>
+                      <p className={`text-sm font-semibold truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                        }`}>
+                        {displayData.location}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {displayData.role === 'keeper' && displayData.department && (
+                  <div className={`flex items-start gap-3 p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
+                    }`}>
+                    <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-purple-600/20' : 'bg-purple-100'
+                      }`}>
+                      <FiBookmark className={`text-xl ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                        }`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs font-medium uppercase tracking-wider ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                        Department
+                      </p>
+                      <p className={`text-sm font-semibold truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                        }`}>
+                        {displayData.department}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {displayData.role === 'keeper' && displayData.description && (
+                  <div className={`flex items-start gap-3 p-4 rounded-lg md:col-span-2 ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
+                    }`}>
+                    <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-yellow-600/20' : 'bg-yellow-100'
+                      }`}>
+                      <FiFileText className={`text-xl ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'
+                        }`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className={`text-xs font-medium uppercase tracking-wider ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                        Description
+                      </p>
+                      <p className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                        }`}>
+                        {displayData.description}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <button
+                  onClick={() => toggleForm('profile')}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                    }`}
+                >
+                  <FiEdit className="text-lg" />
+                  Edit Profile
+                </button>
+                <button
+                  onClick={() => toggleForm('password')}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                      : 'bg-purple-500 hover:bg-purple-600 text-white'
+                    }`}
+                >
+                  <FiLock className="text-lg" />
+                  Change Password
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={loading}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
+                      ? 'bg-red-600 hover:bg-red-700 text-white'
+                      : 'bg-red-500 hover:bg-red-600 text-white'
+                    } sm:col-span-2 lg:col-span-1`}
+                >
+                  <FiTrash2 className="text-lg" />
+                  {loading ? 'Deleting...' : 'Delete Account'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Update Name, Email, and Keeper Fields Form */}
-          {isFormOpen === 'profile' && (
-            <div className="p-6 rounded-lg shadow-md mb-6" style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}>
-              <div className="mb-4">
-                <h2 className="text-2xl font-semibold" style={{ color: 'var(--color-text)' }}>Update Profile</h2>
-              </div>
-              <form onSubmit={handleProfileUpdate} className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}>Name:</label>
-                  <Input
-                    id="name"
-                    label=""
-                    name="name"
-                    value={profileForm.name}
-                    onChange={handleProfileChange}
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}>Email:</label>
-                  <Input
-                    id="email"
-                    label=""
-                    name="email"
-                    type="email"
-                    value={profileForm.email}
-                    onChange={handleProfileChange}
-                    required
-                  />
-                </div>
-                {/* Keeper-specific fields */}
-                {user?.role === 'keeper' && (
-                  <>
+          <AnimatePresence>
+            {isFormOpen === 'profile' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className={`rounded-2xl shadow-xl overflow-hidden mb-6 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                  }`}
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                      }`}>
+                      Edit Profile
+                    </h2>
+                    <button
+                      onClick={() => setIsFormOpen(null)}
+                      className={`p-2 rounded-lg transition-colors ${theme === 'dark'
+                          ? 'hover:bg-gray-700 text-gray-400'
+                          : 'hover:bg-gray-100 text-gray-600'
+                        }`}
+                    >
+                      <FiX className="text-xl" />
+                    </button>
+                  </div>
+                  <form onSubmit={handleProfileUpdate} className="space-y-5">
                     <div>
-                      <label htmlFor="location" className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}>Location:</label>
+                      <label htmlFor="name" className={`flex items-center gap-2 text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                        <FiUser />
+                        Name
+                      </label>
                       <Input
-                        id="location"
+                        id="name"
                         label=""
-                        name="location"
-                        value={profileForm.location}
+                        name="name"
+                        value={profileForm.name}
                         onChange={handleProfileChange}
-                        placeholder="Enter your location"
+                        required
+                        className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                          }`}
                       />
                     </div>
                     <div>
-                      <label htmlFor="department" className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}>Department:</label>
+                      <label htmlFor="email" className={`flex items-center gap-2 text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                        <FiMail />
+                        Email (Cannot be changed)
+                      </label>
                       <Input
-                        id="department"
+                        id="email"
                         label=""
-                        name="department"
-                        value={profileForm.department}
+                        name="email"
+                        type="email"
+                        value={profileForm.email}
                         onChange={handleProfileChange}
-                        placeholder="Enter your department"
+                        disabled
+                        required
+                        className={`w-full px-4 py-3 rounded-lg border cursor-not-allowed ${theme === 'dark'
+                            ? 'bg-gray-700/50 border-gray-600 text-gray-400'
+                            : 'bg-gray-100 border-gray-300 text-gray-500'
+                          }`}
                       />
                     </div>
-                    <div>
-                      <label htmlFor="description" className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}>Description:</label>
-                      <Input
-                        id="description"
-                        label=""
-                        name="description"
-                        value={profileForm.description}
-                        onChange={handleProfileChange}
-                        placeholder="Extra details (optional)"
-                      />
+                    {/* Keeper-specific fields */}
+                    {user?.role === 'keeper' && (
+                      <>
+                        <div>
+                          <label htmlFor="location" className={`flex items-center gap-2 text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                            }`}>
+                            <FiMapPin />
+                            Location
+                          </label>
+                          <Input
+                            id="location"
+                            label=""
+                            name="location"
+                            value={profileForm.location}
+                            onChange={handleProfileChange}
+                            placeholder="Enter your location"
+                            className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
+                                ? 'bg-gray-700 border-gray-600 text-white'
+                                : 'bg-white border-gray-300 text-gray-900'
+                              }`}
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="department" className={`flex items-center gap-2 text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                            }`}>
+                            <FiBookmark />
+                            Department
+                          </label>
+                          <Input
+                            id="department"
+                            label=""
+                            name="department"
+                            value={profileForm.department}
+                            onChange={handleProfileChange}
+                            placeholder="Enter your department"
+                            className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
+                                ? 'bg-gray-700 border-gray-600 text-white'
+                                : 'bg-white border-gray-300 text-gray-900'
+                              }`}
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="description" className={`flex items-center gap-2 text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                            }`}>
+                            <FiFileText />
+                            Description
+                          </label>
+                          <Input
+                            id="description"
+                            label=""
+                            name="description"
+                            value={profileForm.description}
+                            onChange={handleProfileChange}
+                            placeholder="Extra details (optional)"
+                            className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
+                                ? 'bg-gray-700 border-gray-600 text-white'
+                                : 'bg-white border-gray-300 text-gray-900'
+                              }`}
+                          />
+                        </div>
+                      </>
+                    )}
+                    <div className="flex gap-3 pt-4">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                            : 'bg-blue-500 hover:bg-blue-600 text-white'
+                          }`}
+                      >
+                        <FiCheck />
+                        {loading ? 'Saving...' : 'Save Changes'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsFormOpen(null)}
+                        className={`px-6 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
+                            ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                          }`}
+                      >
+                        Cancel
+                      </button>
                     </div>
-                  </>
-                )}
-                <div className="flex gap-4">
-                  <Button type="submit" disabled={loading} className="w-full py-2 px-4 rounded-md transition-colors" style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}>
-                    {loading ? 'Saving...' : 'Save Changes'}
-                  </Button>
-                  <Button
-                    onClick={() => setIsFormOpen(null)}
-                    className="w-full py-2 px-4 rounded-md transition-colors"
-                    style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}
-                  >
-                    Cancel
-                  </Button>
+                  </form>
                 </div>
-              </form>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Update Password Form */}
-          {isFormOpen === 'password' && (
-            <div className="p-6 rounded-lg shadow-md mb-6" style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}>
-              <div className="mb-4">
-                <h2 className="text-2xl font-semibold" style={{ color: 'var(--color-text)' }}>Update Password</h2>
-              </div>
-              <form onSubmit={handlePasswordUpdate} className="space-y-4">
-                <div className="relative">
-                  <label htmlFor="currentPassword" className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}>Current Password:</label>
-                  <Input
-                    id="currentPassword"
-                    label=""
-                    name="currentPassword"
-                    type={showPassword.currentPassword ? 'text' : 'password'}
-                    value={passwordForm.currentPassword}
-                    onChange={handlePasswordChange}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => togglePasswordVisibility('currentPassword')}
-                    className="absolute top-8 right-2"
-                    style={{ color: 'var(--color-accent)' }}
-                  >
-                    {showPassword.currentPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
+          <AnimatePresence>
+            {isFormOpen === 'password' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className={`rounded-2xl shadow-xl overflow-hidden mb-6 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
+                  }`}
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                      }`}>
+                      Change Password
+                    </h2>
+                    <button
+                      onClick={() => setIsFormOpen(null)}
+                      className={`p-2 rounded-lg transition-colors ${theme === 'dark'
+                          ? 'hover:bg-gray-700 text-gray-400'
+                          : 'hover:bg-gray-100 text-gray-600'
+                        }`}
+                    >
+                      <FiX className="text-xl" />
+                    </button>
+                  </div>
+                  <form onSubmit={handlePasswordUpdate} className="space-y-5">
+                    <div className="relative">
+                      <label htmlFor="currentPassword" className={`flex items-center gap-2 text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                        <FiLock />
+                        Current Password
+                      </label>
+                      <Input
+                        id="currentPassword"
+                        label=""
+                        name="currentPassword"
+                        type={showPassword.currentPassword ? 'text' : 'password'}
+                        value={passwordForm.currentPassword}
+                        onChange={handlePasswordChange}
+                        required
+                        className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                          }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility('currentPassword')}
+                        className={`absolute right-3 top-10 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                      >
+                        {showPassword.currentPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <label htmlFor="newPassword" className={`flex items-center gap-2 text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                        <FiLock />
+                        New Password
+                      </label>
+                      <Input
+                        id="newPassword"
+                        label=""
+                        name="newPassword"
+                        type={showPassword.newPassword ? 'text' : 'password'}
+                        value={passwordForm.newPassword}
+                        onChange={handlePasswordChange}
+                        required
+                        className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                          }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility('newPassword')}
+                        className={`absolute right-3 top-10 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                      >
+                        {showPassword.newPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <label htmlFor="confirmPassword" className={`flex items-center gap-2 text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        }`}>
+                        <FiLock />
+                        Confirm Password
+                      </label>
+                      <Input
+                        id="confirmPassword"
+                        label=""
+                        name="confirmPassword"
+                        type={showPassword.confirmPassword ? 'text' : 'password'}
+                        value={passwordForm.confirmPassword}
+                        onChange={handlePasswordChange}
+                        required
+                        className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
+                            ? 'bg-gray-700 border-gray-600 text-white'
+                            : 'bg-white border-gray-300 text-gray-900'
+                          }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility('confirmPassword')}
+                        className={`absolute right-3 top-10 ${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                      >
+                        {showPassword.confirmPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                      </button>
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
+                            ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                            : 'bg-purple-500 hover:bg-purple-600 text-white'
+                          }`}
+                      >
+                        <FiCheck />
+                        {loading ? 'Updating...' : 'Update Password'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsFormOpen(null)}
+                        className={`px-6 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
+                            ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                          }`}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
                 </div>
-                <div className="relative">
-                  <label htmlFor="newPassword" className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}>New Password:</label>
-                  <Input
-                    id="newPassword"
-                    label=""
-                    name="newPassword"
-                    type={showPassword.newPassword ? 'text' : 'password'}
-                    value={passwordForm.newPassword}
-                    onChange={handlePasswordChange}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => togglePasswordVisibility('newPassword')}
-                    className="absolute top-8 right-2"
-                    style={{ color: 'var(--color-accent)' }}
-                  >
-                    {showPassword.newPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                </div>
-                <div className="relative">
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}>Confirm Password:</label>
-                  <Input
-                    id="confirmPassword"
-                    label=""
-                    name="confirmPassword"
-                    type={showPassword.confirmPassword ? 'text' : 'password'}
-                    value={passwordForm.confirmPassword}
-                    onChange={handlePasswordChange}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => togglePasswordVisibility('confirmPassword')}
-                    className="absolute top-8 right-2"
-                    style={{ color: 'var(--color-accent)' }}
-                  >
-                    {showPassword.confirmPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
-                </div>
-                <div className="flex gap-4">
-                  <Button type="submit" disabled={loading} className="w-full py-2 px-4 rounded-md transition-colors" style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}>
-                    {loading ? 'Saving...' : 'Update Password'}
-                  </Button>
-                  <Button
-                    onClick={() => setIsFormOpen(null)}
-                    className="w-full py-2 px-4 rounded-md transition-colors"
-                    style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
