@@ -82,7 +82,19 @@ exports.createItem = async (req, res) => {
     let imageUrl = null;
 
     if (req.file) {
-      const filePath = req.file.path;
+      // Validate file path to prevent path traversal
+      const UPLOAD_DIR = path.resolve(__dirname, '../uploads');
+      const filePath = path.resolve(req.file.path);
+
+      // Ensure the file is within the upload directory
+      if (!filePath.startsWith(UPLOAD_DIR)) {
+        console.error('Path traversal attempt detected:', filePath);
+        return res.status(400).json({
+          message: 'Invalid file path',
+          code: 'INVALID_FILE_PATH'
+        });
+      }
+
       console.log('Processing file:', filePath);
 
       try {
@@ -342,7 +354,19 @@ exports.updateItem = async (req, res) => {
 
     let imageUrl = item.image;
     if (req.file) {
-      const filePath = req.file.path;
+      // Validate file path to prevent path traversal
+      const UPLOAD_DIR = path.resolve(__dirname, '../uploads');
+      const filePath = path.resolve(req.file.path);
+
+      // Ensure the file is within the upload directory
+      if (!filePath.startsWith(UPLOAD_DIR)) {
+        console.error('Path traversal attempt detected:', filePath);
+        return res.status(400).json({
+          message: 'Invalid file path',
+          code: 'INVALID_FILE_PATH'
+        });
+      }
+
       console.log('Uploading new image to Cloudinary:', filePath);
       try {
         if (item.image) {
@@ -637,8 +661,8 @@ exports.deleteItem = async (req, res) => {
       return res.status(403).json({ message: 'You are not authorized to delete this item', code: 'FORBIDDEN' });
     }
 
-    item.isActive = false;
-    await item.save();
+    // Use findByIdAndUpdate to bypass validation issues
+    await Item.findByIdAndUpdate(id, { isActive: false }, { runValidators: false });
 
     res.status(200).json({ message: 'Item deleted successfully' });
   } catch (error) {

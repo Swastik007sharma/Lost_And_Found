@@ -27,15 +27,31 @@ exports.getSubCategories = async (req, res) => {
 // Get all subcategories for admin (both active and inactive)
 exports.getAllSubCategoriesForAdmin = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, categoryId, search } = req.query;
+
+    // Build query object for filtering
+    const query = {};
+
+    // Filter by category if categoryId is provided
+    if (categoryId) {
+      query.category = categoryId;
+    }
+
+    // Search in name and description if search query is provided
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
 
     // We can populate the parent category's name for a better admin view
-    const subCategories = await SubCategory.find()
+    const subCategories = await SubCategory.find(query)
       .populate('category', 'name') // Only get the 'name' field from the Category
       .sort({ name: 1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
-    const total = await SubCategory.countDocuments();
+    const total = await SubCategory.countDocuments(query);
 
     res.status(200).json({
       message: 'All subcategories fetched successfully for admin',
@@ -59,7 +75,7 @@ exports.addSubCategory = async (req, res) => {
       return res.status(404).json({ message: 'Parent category not found', code: 'CATEGORY_NOT_FOUND' });
     }
     if (!parentCategory.isActive) {
-        return res.status(400).json({ message: 'Cannot add subcategory to an inactive category', code: 'CATEGORY_INACTIVE' });
+      return res.status(400).json({ message: 'Cannot add subcategory to an inactive category', code: 'CATEGORY_INACTIVE' });
     }
 
     // Check for duplicate subcategory name within the same parent category

@@ -5,7 +5,7 @@ const router = express.Router();
 const authMiddleware = require('../middlewares/auth.middleware');
 const subCategoryController = require('../controllers/subCategory.controller');
 const { validate } = require('../middlewares/validate.middleware');
-const { categoryIdSchema } = require('../schema/common.schema.js');
+const { idSchema, categoryIdSchema } = require('../schema/common.schema.js');
 const { addSubCategorySchema, updateSubCategorySchema } = require('../schema/subCategory.schema'); // You'll need to create these schemas
 
 // Middleware to check admin role (can be a shared middleware)
@@ -28,9 +28,9 @@ router.get('/by-category/:categoryId', validate(categoryIdSchema, 'params'), sub
 router.get('/admin', authMiddleware.authenticate, isAdmin, subCategoryController.getAllSubCategoriesForAdmin);
 
 // 4. Update a subcategory (admin-only)
-router.put('/:id', authMiddleware.authenticate, isAdmin, validate(categoryIdSchema, 'params'), validate(updateSubCategorySchema), subCategoryController.updateSubCategory);
+router.put('/:id', authMiddleware.authenticate, isAdmin, validate(idSchema, 'params'), validate(updateSubCategorySchema), subCategoryController.updateSubCategory);
 
 // 5. Delete a subcategory (admin-only, soft delete)
-router.delete('/:id', authMiddleware.authenticate, isAdmin, validate(categoryIdSchema, 'params'), subCategoryController.deleteSubCategory);
+router.delete('/:id', authMiddleware.authenticate, isAdmin, validate(idSchema, 'params'), subCategoryController.deleteSubCategory);
 
 module.exports = router;
