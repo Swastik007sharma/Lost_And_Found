@@ -1,5 +1,6 @@
 const User = require('../models/user.model');
 const Item = require('../models/item.model');
+const mongoose = require('mongoose');
 
 // Get a list of available keepers
 exports.getKeepers = async (req, res) => {
@@ -20,6 +21,14 @@ exports.assignKeeper = async (req, res) => {
   try {
     const { id } = req.params; // Item ID
     const { keeperId } = req.body; // Keeper's user ID
+
+    // Validate ObjectIds
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid item ID' });
+    }
+    if (!mongoose.Types.ObjectId.isValid(keeperId)) {
+      return res.status(400).json({ error: 'Invalid keeper ID' });
+    }
 
     // Find the item
     const item = await Item.findById(id);
