@@ -75,9 +75,14 @@ exports.updateProfile = async (req, res) => {
     const userId = req.user.id; // Use req.user.id instead of req.user._id
     console.log('Updating profile for user ID:', userId);
 
+    // Extract name from request body
+    const { name } = req.body;
+
+    // Build update fields - only name can be updated for all users
+    const updateFields = {};
+    if (name) updateFields.name = name;
 
     // Only allow keeper-specific fields if user is a keeper
-    const updateFields = { name, email };
     if (req.user.role === 'keeper') {
       if (typeof req.body.location === 'string') updateFields.location = req.body.location;
       if (typeof req.body.department === 'string') updateFields.department = req.body.department;
