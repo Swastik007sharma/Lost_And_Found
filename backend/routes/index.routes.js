@@ -13,6 +13,7 @@ const notificationRoutes = require('./notification.routes');
 const searchRoutes = require('./search.routes');
 const keeperRoutes = require('./keeper.routes');
 const adminRoutes = require('./admin.routes');
+const reportRoutes = require('./report.routes');
 
 // Mount routes
 router.use('/auth', authRoutes);
@@ -26,5 +27,6 @@ router.use('/notifications', notificationRoutes);
 router.use('/search', searchRoutes);
 router.use('/keepers', keeperRoutes);
 router.use('/admin', adminRoutes);
+router.use('/reports', reportRoutes);
 
 module.exports = router;

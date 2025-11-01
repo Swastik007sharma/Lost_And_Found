@@ -12,7 +12,7 @@ exports.getAllUsers = async (req, res) => {
 
     // Build the aggregation pipeline
     const pipeline = [];
-    const matchConditions = { }; // Default to active users
+    const matchConditions = {}; // Default to active users
 
     if (search) {
       matchConditions.$or = [
@@ -332,12 +332,14 @@ exports.getAdminDashboardStats = async (req, res) => {
 // Get conversations and messages (admin-only)
 exports.getConversationsAndMessages = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, sortOrder = 'desc' } = req.query;
+    const sortValue = sortOrder === 'asc' ? 1 : -1;
 
     const conversations = await Conversation.find({ isActive: true })
       .populate('participants', 'name email')
       .populate('item', 'title status')
       .populate('lastMessage', 'content sender createdAt isRead')
+      .sort({ createdAt: sortValue })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
