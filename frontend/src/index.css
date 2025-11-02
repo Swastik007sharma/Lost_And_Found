@@ -36,8 +36,6 @@ html {
 
 @import "tailwindcss";
 
-@tailwind utilities;
-
 /* Status Badge Styles */
 .status-badge {
   display: inline-flex;
