@@ -14,7 +14,7 @@ const { errorHandler } = require('./middlewares/error.middleware');
 const loggerMiddleware = require('./middlewares/logger.middleware');
 const { corsConfig } = require('./middlewares/cors.middleware');
 const { notFound } = require('./middlewares/notFound.middleware');
-const { rateLimiter } = require('./middlewares/rateLimit.middleware');
+const { generalLimiter } = require('./middlewares/rateLimit.middleware');
 
 // Ensure logs directory exists
 const logDir = path.join(__dirname, 'logs');
@@ -35,7 +35,7 @@ const server = http.createServer(app);
 app.use(loggerMiddleware);
 app.use(corsConfig);
 app.use(express.json());
-app.use(rateLimiter);
+app.use(generalLimiter); // Global rate limiting with environment variable support
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {

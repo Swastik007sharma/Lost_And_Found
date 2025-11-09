@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/auth.controller");
 const { validate } = require("../middlewares/validate.middleware");
+const { authLimiter } = require("../middlewares/rateLimit.middleware");
 const {
   registerSchema,
   loginSchema,
@@ -140,7 +141,7 @@ const {
  *       500:
  *         description: Server error
  */
-router.post("/register", validate(registerSchema), authController.register);
+router.post("/register", authLimiter, validate(registerSchema), authController.register);
 
 /**
  * @swagger
@@ -166,7 +167,7 @@ router.post("/register", validate(registerSchema), authController.register);
  *       500:
  *         description: Server error
  */
-router.post("/login", validate(loginSchema), authController.login);
+router.post("/login", authLimiter, validate(loginSchema), authController.login);
 
 /**
  * @swagger
@@ -188,7 +189,7 @@ router.post("/login", validate(loginSchema), authController.login);
  *       500:
  *         description: Server error
  */
-router.post("/forgot-password", validate(forgotPasswordSchema), authController.forgotPassword);
+router.post("/forgot-password", authLimiter, validate(forgotPasswordSchema), authController.forgotPassword);
 
 /**
  * @swagger
@@ -216,7 +217,7 @@ router.post("/forgot-password", validate(forgotPasswordSchema), authController.f
  *       500:
  *         description: Server error
  */
-router.post("/verify-otp", validate(verifyOtpSchema), authController.verifyOtp);
+router.post("/verify-otp", authLimiter, validate(verifyOtpSchema), authController.verifyOtp);
 
 /**
  * @swagger
@@ -238,6 +239,6 @@ router.post("/verify-otp", validate(verifyOtpSchema), authController.verifyOtp);
  *       500:
  *         description: Server error
  */
-router.post("/reset-password", validate(resetPasswordSchema), authController.resetPassword);
+router.post("/reset-password", authLimiter, validate(resetPasswordSchema), authController.resetPassword);
 
 module.exports = router;

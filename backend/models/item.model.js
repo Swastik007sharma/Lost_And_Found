@@ -27,13 +27,13 @@ const itemSchema = new Schema({
     required: [true, 'Sub Category is required'],
     index: true,
   },
-  tags: [{
-    type: String,
-    validate: {
-      validator: (tag) => typeof tag === 'string' && tag.trim().length > 0,
-      message: 'Tags must be non-empty strings.',
-    },
-  }],
+  // tags: [{
+  //   type: String,
+  //   validate: {
+  //     validator: (tag) => typeof tag === 'string' && tag.trim().length > 0,
+  //     message: 'Tags must be non-empty strings.',
+  //   },
+  // }],
   status: {
     type: String,
     enum: ['Lost', 'Found', 'Claimed', 'Returned'],
@@ -71,8 +71,8 @@ const itemSchema = new Schema({
     ref: 'User',
     index: true,
   },
-  qrCode: { type: String },
-  qrCodeExpiresAt: { type: Date },
+  // qrCode: { type: String },
+  // qrCodeExpiresAt: { type: Date },
   claimOTP: { type: String },
   otpExpiresAt: { type: Date },
   isClaimed: { type: Boolean, default: false },

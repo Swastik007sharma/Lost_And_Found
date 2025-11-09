@@ -6,7 +6,7 @@ const { validate } = require('../middlewares/validate.middleware');
 const { createItemSchema, updateItemSchema} = require('../schema/item.schema');
 const { checkOwnership } = require('../middlewares/checkOwner.middleware');
 const fileUploadMiddleware = require('../middlewares/fileUpload.middleware');
-const { rateLimiter } = require('../middlewares/rateLimit.middleware');
+const { strictLimiter } = require('../middlewares/rateLimit.middleware');
 const { idSchema } = require('../schema/common.schema');
 
 /** 
@@ -489,8 +489,8 @@ router.delete('/:id', authMiddleware.authenticate, validate(idSchema, 'params'),
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-// Claim an item (with rate limiting)
-router.post('/:id/claim', authMiddleware.authenticate, validate(idSchema, 'params'), rateLimiter, itemController.claimItem);
+// Claim an item (with strict rate limiting to prevent abuse)
+router.post('/:id/claim', authMiddleware.authenticate, validate(idSchema, 'params'), strictLimiter, itemController.claimItem);
 
 /** 
  * @swagger
@@ -690,8 +690,8 @@ router.post('/:id/scan-qr', authMiddleware.authenticate, validate(idSchema, 'par
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-// Generate an OTP for the claimant (with rate limiting)
-router.post('/:id/generate-otp', authMiddleware.authenticate, validate(idSchema, 'params'), rateLimiter, itemController.generateOTP);
+// Generate an OTP for the claimant (with strict rate limiting to prevent OTP spam)
+router.post('/:id/generate-otp', authMiddleware.authenticate, validate(idSchema, 'params'), strictLimiter, itemController.generateOTP);
 
 /** 
  * @swagger
@@ -766,8 +766,8 @@ router.post('/:id/generate-otp', authMiddleware.authenticate, validate(idSchema,
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-// Verify the OTP entered by the claimant (with rate limiting)
-router.post('/:id/verify-otp', authMiddleware.authenticate, validate(idSchema, 'params'), rateLimiter, itemController.verifyOTP);
+// Verify the OTP entered by the claimant (with strict rate limiting to prevent brute force)
+router.post('/:id/verify-otp', authMiddleware.authenticate, validate(idSchema, 'params'), strictLimiter, itemController.verifyOTP);
 
 /** 
  * @swagger
