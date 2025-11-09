@@ -137,6 +137,11 @@ const startServer = async () => {
   try {
     await connectDB();
     await seed(); //Seeds Category and subCategory data
+
+    // Start cleanup scheduler for automatic deletion
+    const { startScheduler } = require('./services/scheduler');
+    startScheduler();
+
     server.on('error', (err) => {
       console.error('Server error:', err.message);
     });

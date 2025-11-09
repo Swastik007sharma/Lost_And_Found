@@ -28,7 +28,8 @@ import {
 	FaTags,
 	FaUserPlus,
 	FaChartBar,
-	FaCrown
+	FaCrown,
+	FaTrash
 } from "react-icons/fa";
 import Loader from "../components/common/Loader";
 import { toast } from "react-toastify";
@@ -42,6 +43,7 @@ import ConversationsTab from "../components/admin/ConversationsTab";
 import CategoriesTab from "../components/admin/CategoriesTab";
 import CreateAccountTab from "../components/admin/CreateAccountTab";
 import ReportsTab from "../components/admin/ReportsTab";
+import DeletionReportsTab from "../components/admin/DeletionReportsTab";
 
 // Main AdminDashboard Component
 function AdminDashboard() {
@@ -442,13 +444,14 @@ function AdminDashboard() {
 			{/* Enhanced Tab Navigation */}
 			<div className="flex flex-wrap gap-2 sm:gap-3 mb-8 p-4 rounded-xl shadow-md" style={{ background: 'var(--color-secondary)' }}>
 				{[
-					{ key: "overview", label: "Overview", icon: <FaChartBar /> },
+					{ key: "overview", label: "Overview", icon: <FaCrown /> },
 					{ key: "users", label: "Users", icon: <FaUsers /> },
 					{ key: "items", label: "Items", icon: <FaBoxOpen /> },
 					{ key: "keepers", label: "Keepers", icon: <FaUserShield /> },
 					{ key: "conversations", label: "Conversations", icon: <FaComments /> },
 					{ key: "categories", label: "Categories", icon: <FaTags /> },
 					{ key: "reports", label: "Reports", icon: <FaChartBar /> },
+					{ key: "deletion-reports", label: "Deletion Reports", icon: <FaTrash /> },
 					{ key: "create-account", label: "Create Account", icon: <FaUserPlus /> },
 				].map((tab) => (
 					<button
@@ -535,6 +538,10 @@ function AdminDashboard() {
 
 					{activeTab === "reports" && (
 						<ReportsTab />
+					)}
+
+					{activeTab === "deletion-reports" && (
+						<DeletionReportsTab />
 					)}
 
 					{activeTab === "create-account" && (

@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user.model');
 const sendEmail = require('../utils/sendEmail');
+const { cancelScheduledUserDeletion } = require('../services/cleanupService');
 require('dotenv').config();
 const crypto = require('crypto');
 // Register a new user or reactivate a deactivated account
@@ -111,6 +112,14 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials', code: 'INVALID_CREDENTIALS' });
+    }
+
+    // Update last login date and cancel any scheduled deletion
+    user.lastLoginDate = new Date();
+    if (user.scheduledForDeletion) {
+      await cancelScheduledUserDeletion(user._id);
+    } else {
+      await user.save();
     }
 
     // Generate JWT token

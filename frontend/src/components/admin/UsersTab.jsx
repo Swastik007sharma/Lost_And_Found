@@ -325,7 +325,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
               setUserSortBy(e.target.value);
               setPage((prev) => ({ ...prev, users: 1 }));
             }}
-            className="px-4 py-2.5 sm:py-3 rounded-xl border-2 focus:ring-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 text-sm"
+            className="px-4 py-2.5 sm:py-3 rounded-xl border-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 text-sm"
             style={{
               borderColor: 'var(--color-bg)',
               background: 'var(--color-bg)',

@@ -78,6 +78,25 @@ const itemSchema = new Schema({
   isClaimed: { type: Boolean, default: false },
   isReturned: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true }, // For soft deletion
+  lastActivityDate: {
+    type: Date,
+    default: Date.now,
+    index: true,
+  },
+  scheduledForDeletion: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
+  deletionScheduledAt: {
+    type: Date,
+    default: null,
+  },
+  deletionReason: {
+    type: String,
+    enum: ['inactivity', 'manual', 'policy_violation', null],
+    default: null,
+  },
 }, {
   timestamps: true,
 });

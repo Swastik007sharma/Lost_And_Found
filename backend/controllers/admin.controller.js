@@ -364,3 +364,435 @@ exports.getConversationsAndMessages = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch conversations and messages', code: 'SERVER_ERROR' });
   }
 };
+
+// ========================
+// Cleanup/Deletion Methods
+// ========================
+
+const cleanupService = require('../services/cleanupService');
+
+/**
+ * Get items scheduled for deletion
+ */
+exports.getScheduledDeletions = async (req, res) => {
+  try {
+    const items = await cleanupService.getScheduledDeletions();
+    res.status(200).json({
+      success: true,
+      message: 'Scheduled deletions fetched successfully',
+      items,
+      count: items.length
+    });
+  } catch (error) {
+    console.error('Error fetching scheduled deletions:', error);
+    res.status(500).json({
+      message: 'Failed to fetch scheduled deletions',
+      code: 'SERVER_ERROR',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Cancel scheduled deletion for an item
+ */
+exports.cancelScheduledDeletion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const item = await cleanupService.cancelScheduledDeletion(id);
+    res.status(200).json({
+      success: true,
+      message: 'Deletion cancelled successfully',
+      item
+    });
+  } catch (error) {
+    console.error('Error cancelling deletion:', error);
+    res.status(500).json({
+      message: error.message || 'Failed to cancel deletion',
+      code: 'SERVER_ERROR',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Manual trigger for cleanup (testing purposes)
+ */
+exports.triggerCleanup = async (req, res) => {
+  try {
+    console.log('🔧 Manual cleanup triggered by admin');
+    const markResults = await cleanupService.markInactiveItemsForDeletion();
+    const deleteResults = await cleanupService.deleteScheduledItems();
+
+    res.status(200).json({
+      success: true,
+      message: 'Cleanup executed successfully',
+      marked: markResults.length,
+      deleted: deleteResults.filter((r) => r.success).length,
+      failed: deleteResults.filter((r) => !r.success).length,
+      details: {
+        markedItems: markResults,
+        deletedItems: deleteResults,
+      }
+    });
+  } catch (error) {
+    console.error('Error triggering cleanup:', error);
+    res.status(500).json({
+      message: 'Cleanup failed',
+      code: 'SERVER_ERROR',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get users scheduled for deletion
+ */
+exports.getScheduledUserDeletions = async (req, res) => {
+  try {
+    const users = await cleanupService.getScheduledUserDeletions();
+    res.status(200).json({
+      success: true,
+      message: 'Scheduled user deletions fetched successfully',
+      users,
+      count: users.length
+    });
+  } catch (error) {
+    console.error('Error fetching scheduled user deletions:', error);
+    res.status(500).json({
+      message: 'Failed to fetch scheduled user deletions',
+      code: 'SERVER_ERROR',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Cancel scheduled deletion for a user
+ */
+exports.cancelScheduledUserDeletion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await cleanupService.cancelScheduledUserDeletion(id);
+    res.status(200).json({
+      success: true,
+      message: 'User deletion cancelled successfully',
+      user
+    });
+  } catch (error) {
+    console.error('Error cancelling user deletion:', error);
+    res.status(500).json({
+      message: error.message || 'Failed to cancel user deletion',
+      code: 'SERVER_ERROR',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get cleanup configuration
+ */
+exports.getCleanupConfig = async (req, res) => {
+  try {
+    const config = {
+      userDeletionStrategy: process.env.USER_DELETION_STRATEGY || 'deactivation',
+      inactivityDays: parseInt(process.env.INACTIVITY_DAYS || '60', 10),
+      gracePeriodDays: parseInt(process.env.GRACE_PERIOD_DAYS || '7', 10),
+      strategies: {
+        inactivity: {
+          name: 'Inactivity-Based',
+          description: 'Delete users after specified days of no login activity',
+          criteria: 'Based on lastLoginDate field',
+        },
+        deactivation: {
+          name: 'Deactivation-Based',
+          description: 'Delete users after specified days since account was deactivated (isActive = false)',
+          criteria: 'Based on deactivatedAt field (when isActive changed to false)',
+        },
+      },
+    };
+
+    res.status(200).json({
+      success: true,
+      message: 'Cleanup configuration fetched successfully',
+      config
+    });
+  } catch (error) {
+    console.error('Error fetching cleanup config:', error);
+    res.status(500).json({
+      message: 'Failed to fetch cleanup configuration',
+      code: 'SERVER_ERROR',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Update cleanup configuration
+ */
+exports.updateCleanupConfig = async (req, res) => {
+  try {
+    const { userDeletionStrategy, inactivityDays, gracePeriodDays } = req.body;
+
+    // Validate strategy
+    if (userDeletionStrategy && !['inactivity', 'deactivation'].includes(userDeletionStrategy)) {
+      return res.status(400).json({
+        message: 'Invalid user deletion strategy. Must be "inactivity" or "deactivation"',
+        code: 'INVALID_STRATEGY',
+      });
+    }
+
+    // Validate days
+    if (inactivityDays && (inactivityDays < 1 || inactivityDays > 365)) {
+      return res.status(400).json({
+        message: 'Inactivity days must be between 1 and 365',
+        code: 'INVALID_DAYS',
+      });
+    }
+
+    if (gracePeriodDays && (gracePeriodDays < 1 || gracePeriodDays > 30)) {
+      return res.status(400).json({
+        message: 'Grace period days must be between 1 and 30',
+        code: 'INVALID_DAYS',
+      });
+    }
+
+    // Note: In production, these would be stored in a database
+    // For now, we'll inform the admin to update the .env file
+    const updatedConfig = {
+      userDeletionStrategy: userDeletionStrategy || process.env.USER_DELETION_STRATEGY || 'deactivation',
+      inactivityDays: inactivityDays || parseInt(process.env.INACTIVITY_DAYS || '60', 10),
+      gracePeriodDays: gracePeriodDays || parseInt(process.env.GRACE_PERIOD_DAYS || '7', 10),
+    };
+
+    res.status(200).json({
+      success: true,
+      message: 'Configuration update requested. Please update the following in your .env file and restart the server:',
+      envUpdates: {
+        USER_DELETION_STRATEGY: updatedConfig.userDeletionStrategy,
+        INACTIVITY_DAYS: updatedConfig.inactivityDays,
+        GRACE_PERIOD_DAYS: updatedConfig.gracePeriodDays,
+      },
+      note: 'Server restart required for changes to take effect'
+    });
+  } catch (error) {
+    console.error('Error updating cleanup config:', error);
+    res.status(500).json({
+      message: 'Failed to update cleanup configuration',
+      code: 'SERVER_ERROR',
+      error: error.message,
+    });
+  }
+};
+
+// Get report of items scheduled for deletion
+exports.getScheduledItemsReport = async (req, res) => {
+  try {
+    const scheduledItems = await Item.find({
+      scheduledForDeletion: true,
+      deletionScheduledAt: { $exists: true }
+    })
+      .populate('postedBy', 'name email')
+      .populate('category', 'name')
+      .populate('subCategory', 'name')
+      .select('title description status location deletionScheduledAt deletionWarningEmailSent lastActivityDate createdAt images')
+      .sort({ deletionScheduledAt: 1 });
+
+    const GRACE_PERIOD_DAYS = parseInt(process.env.GRACE_PERIOD_DAYS || '7', 10);
+
+    const report = scheduledItems.map(item => {
+      const scheduledDate = new Date(item.deletionScheduledAt);
+      const deletionDate = new Date(scheduledDate);
+      deletionDate.setDate(deletionDate.getDate() + GRACE_PERIOD_DAYS);
+
+      const daysUntilDeletion = Math.ceil((deletionDate - new Date()) / (1000 * 60 * 60 * 24));
+
+      return {
+        itemId: item._id,
+        title: item.title,
+        description: item.description,
+        status: item.status,
+        location: item.location,
+        category: item.category?.name,
+        subCategory: item.subCategory?.name,
+        postedBy: item.postedBy ? {
+          id: item.postedBy._id,
+          name: item.postedBy.name,
+          email: item.postedBy.email
+        } : null,
+        images: item.images?.length || 0,
+        lastActivityDate: item.lastActivityDate,
+        scheduledDate: scheduledDate,
+        estimatedDeletionDate: deletionDate,
+        daysUntilDeletion,
+        warningEmailSent: item.deletionWarningEmailSent,
+        createdAt: item.createdAt
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Scheduled items report fetched successfully',
+      count: report.length,
+      gracePeriodDays: GRACE_PERIOD_DAYS,
+      items: report
+    });
+  } catch (error) {
+    console.error('Error fetching scheduled items report:', error);
+    res.status(500).json({
+      message: 'Failed to fetch scheduled items report',
+      code: 'SERVER_ERROR',
+      error: error.message
+    });
+  }
+};
+
+// Get report of users scheduled for deletion
+exports.getScheduledUsersReport = async (req, res) => {
+  try {
+    const scheduledUsers = await User.find({
+      scheduledForDeletion: true,
+      deletionScheduledAt: { $exists: true },
+      role: { $ne: 'admin' } // Exclude admins from deletion reports
+    })
+      .select('name email role isActive lastLoginDate deactivatedAt deletionScheduledAt deletionWarningEmailSent createdAt')
+      .sort({ deletionScheduledAt: 1 });
+
+    const GRACE_PERIOD_DAYS = parseInt(process.env.GRACE_PERIOD_DAYS || '7', 10);
+    const USER_DELETION_STRATEGY = process.env.USER_DELETION_STRATEGY || 'deactivation';
+
+    const report = await Promise.all(scheduledUsers.map(async (user) => {
+      const scheduledDate = new Date(user.deletionScheduledAt);
+      const deletionDate = new Date(scheduledDate);
+      deletionDate.setDate(deletionDate.getDate() + GRACE_PERIOD_DAYS);
+
+      const daysUntilDeletion = Math.ceil((deletionDate - new Date()) / (1000 * 60 * 60 * 24));
+
+      // Count user's items
+      const itemCount = await Item.countDocuments({ postedBy: user._id });
+
+      return {
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+        strategy: USER_DELETION_STRATEGY,
+        lastLoginDate: user.lastLoginDate,
+        deactivatedAt: user.deactivatedAt,
+        scheduledDate: scheduledDate,
+        estimatedDeletionDate: deletionDate,
+        daysUntilDeletion,
+        warningEmailSent: user.deletionWarningEmailSent,
+        itemsCount: itemCount,
+        createdAt: user.createdAt
+      };
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: 'Scheduled users report fetched successfully',
+      count: report.length,
+      gracePeriodDays: GRACE_PERIOD_DAYS,
+      deletionStrategy: USER_DELETION_STRATEGY,
+      users: report
+    });
+  } catch (error) {
+    console.error('Error fetching scheduled users report:', error);
+    res.status(500).json({
+      message: 'Failed to fetch scheduled users report',
+      code: 'SERVER_ERROR',
+      error: error.message
+    });
+  }
+};
+
+// Get report of successfully deleted data (from logs/tracking)
+exports.getDeletionSuccessReport = async (req, res) => {
+  try {
+    const { days = 30, type = 'all' } = req.query; // type: 'all', 'items', 'users'
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(days, 10));
+
+    // Since we don't have a deletion log table, we'll track items and users that no longer exist
+    // For a production system, you'd want to create a DeletionLog model
+
+    // Count recently deleted items (items marked for deletion but no longer exist)
+    const totalItems = await Item.countDocuments({ isActive: false });
+
+    // Count inactive users (users who were deactivated/deleted)
+    const totalUsers = await User.countDocuments({
+      isActive: false,
+      role: { $ne: 'admin' }
+    });
+
+    // Get some statistics
+    const itemStats = await Item.aggregate([
+      {
+        $match: {
+          isActive: false,
+          updatedAt: { $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const userStats = await User.aggregate([
+      {
+        $match: {
+          isActive: false,
+          role: { $ne: 'admin' },
+          updatedAt: { $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: '$role',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // For real deletion tracking, we'd need to implement a DeletionLog model
+    // This is a simplified version showing deactivated/soft-deleted items
+    const report = {
+      period: {
+        days: parseInt(days, 10),
+        startDate,
+        endDate: new Date()
+      },
+      summary: {
+        totalInactiveItems: totalItems,
+        totalInactiveUsers: totalUsers,
+      },
+      itemStats: itemStats.reduce((acc, stat) => {
+        acc[stat._id] = stat.count;
+        return acc;
+      }, {}),
+      userStats: userStats.reduce((acc, stat) => {
+        acc[stat._id] = stat.count;
+        return acc;
+      }, {}),
+      note: 'This report shows deactivated/soft-deleted records. For detailed deletion logs, implement a DeletionLog model.'
+    };
+
+    res.status(200).json({
+      success: true,
+      message: 'Deletion success report fetched successfully',
+      report
+    });
+  } catch (error) {
+    console.error('Error fetching deletion success report:', error);
+    res.status(500).json({
+      message: 'Failed to fetch deletion success report',
+      code: 'SERVER_ERROR',
+      error: error.message
+    });
+  }
+};
