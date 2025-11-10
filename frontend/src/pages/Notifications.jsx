@@ -44,7 +44,8 @@ function Notifications() {
       setNotifications((prev) => prev.map((notif) => ({ ...notif, isRead: true })));
       toast.success('All notifications marked as read!');
     } catch (err) {
-      toast.error(`Failed to mark all as read: ${err.response?.data?.error || err.message}`);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to mark all as read';
+      toast.error(errorMessage);
     }
   };
 
@@ -61,8 +62,8 @@ function Notifications() {
       setNotifications(response.data.data.notifications || []);
       setTotalPages(response.data.data.pagination?.totalPages || 1);
     } catch (err) {
-      const errorMessage = err.response?.data?.error || err.message || 'Unknown error';
-      toast.error(`Failed to load notifications: ${errorMessage}`);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to load notifications';
+      toast.error(errorMessage);
     } finally {
       setPageLoading(false);
     }
@@ -103,7 +104,8 @@ function Notifications() {
       // Optionally add toast.success if desired
       // toast.success('Notification marked as read!');
     } catch (err) {
-      toast.error(`Failed to mark as read: ${err.response?.data?.error || err.message}`);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to mark as read';
+      toast.error(errorMessage);
     }
   };
 

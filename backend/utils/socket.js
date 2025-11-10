@@ -64,10 +64,20 @@ module.exports = (server) => {
 
     socket.on('connect_error', (error) => {
       console.error('Socket connect error:', error.message, 'Details:', JSON.stringify(error));
+      socket.emit('errorMessage', {
+        message: 'Connection error occurred',
+        type: 'connection',
+        details: error.message
+      });
     });
 
     socket.on('error', (error) => {
       console.error('Socket error:', error.message, 'Details:', JSON.stringify(error));
+      socket.emit('errorMessage', {
+        message: 'Socket error occurred',
+        type: 'socket',
+        details: error.message
+      });
     });
 
     socket.on('upgrade', (transport) => {

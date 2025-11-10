@@ -51,7 +51,10 @@ function ItemCreate() {
         const response = await getCategories({ limit: 100 });
         setCategories(response.data.categories || []);
       } catch (err) {
-        toast.error('Failed to load categories: ' + (err.response?.data?.message || err.message));
+        toast.error('Failed to load categories: ' + (err.response?.data?.message || err.message), {
+          toastId: 'categories-load-error',
+          position: 'top-center'
+        });
       }
     };
     fetchCategories();
@@ -71,7 +74,10 @@ function ItemCreate() {
             setFormData((prev) => ({ ...prev, subCategory: '' }));
           }
         } catch (err) {
-          toast.error('Failed to load subcategories: ' + (err.response?.data?.message || err.message));
+          toast.error('Failed to load subcategories: ' + (err.response?.data?.message || err.message), {
+            toastId: 'subcategories-load-error',
+            position: 'top-center'
+          });
         }
       } else {
         setSubCategories([]);
@@ -245,16 +251,55 @@ function ItemCreate() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.status === 'Found' && !image) {
-      toast.error('Image is required for found items.');
+
+    // Validate all required fields
+    if (!formData.title?.trim()) {
+      toast.error('Title is required.', {
+        toastId: 'title-required',
+        position: 'top-center'
+      });
       return;
     }
-    if (!formData.location) {
-      toast.error('Location is required.');
+    if (!formData.description?.trim()) {
+      toast.error('Description is required.', {
+        toastId: 'description-required',
+        position: 'top-center'
+      });
+      return;
+    }
+    if (!formData.category) {
+      toast.error('Category is required.', {
+        toastId: 'category-required',
+        position: 'top-center'
+      });
       return;
     }
     if (!formData.subCategory) {
-      toast.error('Subcategory is required.');
+      toast.error('Subcategory is required.', {
+        toastId: 'subcategory-required',
+        position: 'top-center'
+      });
+      return;
+    }
+    if (!formData.status) {
+      toast.error('Status is required.', {
+        toastId: 'status-required',
+        position: 'top-center'
+      });
+      return;
+    }
+    if (!formData.location?.trim()) {
+      toast.error('Location is required.', {
+        toastId: 'location-required',
+        position: 'top-center'
+      });
+      return;
+    }
+    if (formData.status === 'Found' && !image) {
+      toast.error('Image is required for found items.', {
+        toastId: 'image-required',
+        position: 'top-center'
+      });
       return;
     }
 
@@ -272,7 +317,11 @@ function ItemCreate() {
 
     try {
       await createItem(data);
-      toast.success('Item created successfully!');
+      toast.success('Item created successfully!', {
+        toastId: 'item-create-success',
+        position: 'top-center',
+        autoClose: 3000
+      });
       if (formData.status === 'Found') {
         setShowFoundSuccess(true);
       } else {
@@ -290,14 +339,40 @@ function ItemCreate() {
         setTimeout(() => navigate('/dashboard'), 1000);
       }
     } catch (err) {
-      console.log(err);
-      if (err.response?.data?.error?.type === 'VALIDATION_ERROR') {
-        const errorDetails = err.response.data.error.details.map(detail => `${detail.field}: ${detail.message}`).join(', ');
-        toast.error(`Failed to create item: ${errorDetails}`);
-      } else if (err.response?.data?.code === 'IMAGE_VERIFICATION_FAILED') {
-        toast.error(`Image verification failed: ${err.response.data.details}`);
+      console.error('Item creation error:', err);
+
+      // Handle the new consistent error format
+      const errorResponse = err.response?.data;
+
+      if (errorResponse) {
+        // Check if it's a validation error with details
+        if (errorResponse.code === 'VALIDATION_ERROR' && errorResponse.details) {
+          toast.error(errorResponse.message || 'Validation failed', {
+            toastId: 'validation-error',
+            position: 'top-center',
+            autoClose: 5000
+          });
+        } else if (errorResponse.code === 'IMAGE_VERIFICATION_FAILED') {
+          toast.error(`Image verification failed: ${errorResponse.details || errorResponse.message}`, {
+            toastId: 'image-verification-error',
+            position: 'top-center',
+            autoClose: 5000
+          });
+        } else {
+          // Show the error message from the backend
+          toast.error(errorResponse.message || 'Failed to create item', {
+            toastId: 'create-item-error',
+            position: 'top-center',
+            autoClose: 5000
+          });
+        }
       } else {
-        toast.error('Failed to create item: ' + (err.response?.data?.message || err.message));
+        // Network or other error
+        toast.error(err.message || 'Failed to create item. Please try again.', {
+          toastId: 'network-error',
+          position: 'top-center',
+          autoClose: 5000
+        });
       }
     } finally {
       setLoading(false);

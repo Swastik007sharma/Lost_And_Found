@@ -108,7 +108,8 @@ function Profile() {
       setIsFormOpen(null);
     } catch (err) {
       console.error('Password Update Error:', err);
-      toast.error('Failed to update password: ' + (err.response?.data?.error || err.message));
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to update password';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -156,14 +157,14 @@ function Profile() {
       }); // Sync form
     } catch (err) {
       console.error('Profile Update Error:', err);
-      const errorMessage = err.response?.data?.error || err.message;
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to update profile';
       if (err.response?.status === 401) {
         console.log('Unauthorized error, token may be invalid');
         toast.error('Session expired. Please log in again.');
         setUser(null);
         setTimeout(() => navigate('/login'), 2000);
       } else {
-        toast.error('Failed to update profile: ' + errorMessage);
+        toast.error(errorMessage);
       }
     } finally {
       console.log('Closing profile form, isFormOpen before:', isFormOpen);
@@ -183,7 +184,8 @@ function Profile() {
         navigate('/login');
       } catch (err) {
         console.error('Delete Account Error:', err);
-        toast.error('Failed to delete account: ' + (err.response?.data?.error || err.message));
+        const errorMessage = err.response?.data?.message || err.message || 'Failed to delete account';
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -222,8 +224,8 @@ function Profile() {
               <button
                 onClick={() => navigate('/dashboard')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${theme === 'dark'
-                    ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
-                    : 'bg-white hover:bg-gray-50 text-gray-700 shadow-md'
+                  ? 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                  : 'bg-white hover:bg-gray-50 text-gray-700 shadow-md'
                   }`}
               >
                 <FiHome className="text-lg" />
@@ -242,13 +244,13 @@ function Profile() {
           >
             {/* Profile Header with Avatar */}
             <div className={`relative h-32 ${theme === 'dark'
-                ? 'bg-gradient-to-r from-blue-600 to-purple-600'
-                : 'bg-gradient-to-r from-blue-500 to-purple-500'
+              ? 'bg-gradient-to-r from-blue-600 to-purple-600'
+              : 'bg-gradient-to-r from-blue-500 to-purple-500'
               }`}>
               <div className="absolute -bottom-16 left-8">
                 <div className={`w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold shadow-xl ${theme === 'dark'
-                    ? 'bg-gray-700 text-white border-4 border-gray-800'
-                    : 'bg-white text-blue-600 border-4 border-white'
+                  ? 'bg-gray-700 text-white border-4 border-gray-800'
+                  : 'bg-white text-blue-600 border-4 border-white'
                   }`}>
                   {displayData.name ? displayData.name[0].toUpperCase() : <FiUser />}
                 </div>
@@ -265,10 +267,10 @@ function Profile() {
                   </h2>
                   <div className="flex items-center gap-2 mt-2">
                     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold ${displayData.role === 'keeper'
-                        ? 'bg-purple-100 text-purple-700'
-                        : displayData.role === 'admin'
-                          ? 'bg-red-100 text-red-700'
-                          : 'bg-blue-100 text-blue-700'
+                      ? 'bg-purple-100 text-purple-700'
+                      : displayData.role === 'admin'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-blue-100 text-blue-700'
                       }`}>
                       <FiShield className="text-xs" />
                       {displayData.role.charAt(0).toUpperCase() + displayData.role.slice(1)}
@@ -367,8 +369,8 @@ function Profile() {
                 <button
                   onClick={() => toggleForm('profile')}
                   className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
                     }`}
                 >
                   <FiEdit className="text-lg" />
@@ -377,8 +379,8 @@ function Profile() {
                 <button
                   onClick={() => toggleForm('password')}
                   className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                      : 'bg-purple-500 hover:bg-purple-600 text-white'
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                    : 'bg-purple-500 hover:bg-purple-600 text-white'
                     }`}
                 >
                   <FiLock className="text-lg" />
@@ -388,8 +390,8 @@ function Profile() {
                   onClick={handleDeleteAccount}
                   disabled={loading}
                   className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
-                      ? 'bg-red-600 hover:bg-red-700 text-white'
-                      : 'bg-red-500 hover:bg-red-600 text-white'
+                    ? 'bg-red-600 hover:bg-red-700 text-white'
+                    : 'bg-red-500 hover:bg-red-600 text-white'
                     } sm:col-span-2 lg:col-span-1`}
                 >
                   <FiTrash2 className="text-lg" />
@@ -419,8 +421,8 @@ function Profile() {
                     <button
                       onClick={() => setIsFormOpen(null)}
                       className={`p-2 rounded-lg transition-colors ${theme === 'dark'
-                          ? 'hover:bg-gray-700 text-gray-400'
-                          : 'hover:bg-gray-100 text-gray-600'
+                        ? 'hover:bg-gray-700 text-gray-400'
+                        : 'hover:bg-gray-100 text-gray-600'
                         }`}
                     >
                       <FiX className="text-xl" />
@@ -441,8 +443,8 @@ function Profile() {
                         onChange={handleProfileChange}
                         required
                         className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
-                            ? 'bg-gray-700 border-gray-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-900'
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
                           }`}
                       />
                     </div>
@@ -462,8 +464,8 @@ function Profile() {
                         disabled
                         required
                         className={`w-full px-4 py-3 rounded-lg border cursor-not-allowed ${theme === 'dark'
-                            ? 'bg-gray-700/50 border-gray-600 text-gray-400'
-                            : 'bg-gray-100 border-gray-300 text-gray-500'
+                          ? 'bg-gray-700/50 border-gray-600 text-gray-400'
+                          : 'bg-gray-100 border-gray-300 text-gray-500'
                           }`}
                       />
                     </div>
@@ -484,8 +486,8 @@ function Profile() {
                             onChange={handleProfileChange}
                             placeholder="Enter your location"
                             className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
-                                ? 'bg-gray-700 border-gray-600 text-white'
-                                : 'bg-white border-gray-300 text-gray-900'
+                              ? 'bg-gray-700 border-gray-600 text-white'
+                              : 'bg-white border-gray-300 text-gray-900'
                               }`}
                           />
                         </div>
@@ -503,8 +505,8 @@ function Profile() {
                             onChange={handleProfileChange}
                             placeholder="Enter your department"
                             className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
-                                ? 'bg-gray-700 border-gray-600 text-white'
-                                : 'bg-white border-gray-300 text-gray-900'
+                              ? 'bg-gray-700 border-gray-600 text-white'
+                              : 'bg-white border-gray-300 text-gray-900'
                               }`}
                           />
                         </div>
@@ -522,8 +524,8 @@ function Profile() {
                             onChange={handleProfileChange}
                             placeholder="Extra details (optional)"
                             className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
-                                ? 'bg-gray-700 border-gray-600 text-white'
-                                : 'bg-white border-gray-300 text-gray-900'
+                              ? 'bg-gray-700 border-gray-600 text-white'
+                              : 'bg-white border-gray-300 text-gray-900'
                               }`}
                           />
                         </div>
@@ -534,8 +536,8 @@ function Profile() {
                         type="submit"
                         disabled={loading}
                         className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
-                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                            : 'bg-blue-500 hover:bg-blue-600 text-white'
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                          : 'bg-blue-500 hover:bg-blue-600 text-white'
                           }`}
                       >
                         <FiCheck />
@@ -545,8 +547,8 @@ function Profile() {
                         type="button"
                         onClick={() => setIsFormOpen(null)}
                         className={`px-6 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
-                            ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                          ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                          : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                           }`}
                       >
                         Cancel
@@ -578,8 +580,8 @@ function Profile() {
                     <button
                       onClick={() => setIsFormOpen(null)}
                       className={`p-2 rounded-lg transition-colors ${theme === 'dark'
-                          ? 'hover:bg-gray-700 text-gray-400'
-                          : 'hover:bg-gray-100 text-gray-600'
+                        ? 'hover:bg-gray-700 text-gray-400'
+                        : 'hover:bg-gray-100 text-gray-600'
                         }`}
                     >
                       <FiX className="text-xl" />
@@ -601,8 +603,8 @@ function Profile() {
                         onChange={handlePasswordChange}
                         required
                         className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
-                            ? 'bg-gray-700 border-gray-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-900'
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
                           }`}
                       />
                       <button
@@ -629,8 +631,8 @@ function Profile() {
                         onChange={handlePasswordChange}
                         required
                         className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
-                            ? 'bg-gray-700 border-gray-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-900'
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
                           }`}
                       />
                       <button
@@ -657,8 +659,8 @@ function Profile() {
                         onChange={handlePasswordChange}
                         required
                         className={`w-full px-4 py-3 rounded-lg border ${theme === 'dark'
-                            ? 'bg-gray-700 border-gray-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-900'
+                          ? 'bg-gray-700 border-gray-600 text-white'
+                          : 'bg-white border-gray-300 text-gray-900'
                           }`}
                       />
                       <button
@@ -675,8 +677,8 @@ function Profile() {
                         type="submit"
                         disabled={loading}
                         className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
-                            ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                            : 'bg-purple-500 hover:bg-purple-600 text-white'
+                          ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                          : 'bg-purple-500 hover:bg-purple-600 text-white'
                           }`}
                       >
                         <FiCheck />
@@ -686,8 +688,8 @@ function Profile() {
                         type="button"
                         onClick={() => setIsFormOpen(null)}
                         className={`px-6 py-3 rounded-lg font-medium transition-all ${theme === 'dark'
-                            ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                          ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                          : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                           }`}
                       >
                         Cancel

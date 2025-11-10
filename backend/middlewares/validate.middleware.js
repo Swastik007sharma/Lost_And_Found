@@ -8,10 +8,10 @@ exports.validate = (schema, source = "body") => {
       });
 
       return res.status(500).json({
-        success: false,
-        error: {
-          type: "VALIDATION_CONFIG_ERROR",
-          message: "Server misconfiguration: Validation schema missing",
+        status: 'error',
+        message: "Server misconfiguration: Validation schema missing",
+        code: "VALIDATION_CONFIG_ERROR",
+        details: {
           route: `${req.method} ${req.path}`,
         },
       });
@@ -21,10 +21,10 @@ exports.validate = (schema, source = "body") => {
 
     if (!data) {
       return res.status(400).json({
-        success: false,
-        error: {
-          type: "MISSING_DATA",
-          message: `No ${source} data provided`,
+        status: 'error',
+        message: `No ${source} data provided`,
+        code: "MISSING_DATA",
+        details: {
           route: `${req.method} ${req.path}`,
         },
       });
@@ -40,13 +40,13 @@ exports.validate = (schema, source = "body") => {
       });
 
       return res.status(400).json({
-        success: false,
-        error: {
-          type: "INVALID_DATA_TYPE",
-          message: `Invalid ${source} data: Expected object, received ${typeof data}`,
-          details: [
-            { field: "root", message: `Expected object, received ${typeof data}` },
-          ],
+        status: 'error',
+        message: `Invalid ${source} data: Expected object, received ${typeof data}`,
+        code: "INVALID_DATA_TYPE",
+        details: {
+          field: "root",
+          expected: "object",
+          received: typeof data,
           route: `${req.method} ${req.path}`,
         },
       });
@@ -70,11 +70,11 @@ exports.validate = (schema, source = "body") => {
       });
 
       return res.status(400).json({
-        success: false,
-        error: {
-          type: "VALIDATION_ERROR",
-          message: "Validation failed",
-          details: errors,
+        status: 'error',
+        message: errors.map(e => `${e.field}: ${e.message}`).join(', ') || "Validation failed",
+        code: "VALIDATION_ERROR",
+        details: {
+          fields: errors,
           route: `${req.method} ${req.path}`,
         },
       });

@@ -5,7 +5,7 @@ function Modal({ isOpen, onClose, children }) {
       className="fixed inset-0 flex items-center justify-center p-4"
       style={{
         background: 'rgba(0,0,0,0.6)',
-        zIndex: 45,
+        zIndex: 40,
         backdropFilter: 'blur(4px)'
       }}
       onClick={onClose}

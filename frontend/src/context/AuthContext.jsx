@@ -88,18 +88,14 @@ export function AuthProvider({ children }) {
 
       socketRef.current.on('connect_error', (error) => {
         console.error('Connection error:', error.message, 'Code:', error.code || 'N/A');
-        toast.error(`WebSocket connection error: ${error.message || 'Unable to connect to server'}. Retrying...`, {
-          autoClose: 5000,
-        });
+        // Don't show toast for connection errors - they will auto-retry
+        // Only log to console for debugging
       });
 
       socketRef.current.on('disconnect', (reason) => {
         console.log('Disconnected due to:', reason);
-        if (reason === 'io server disconnect') {
-          toast.warn('Server disconnected. Attempting to reconnect...', {
-            autoClose: 5000,
-          });
-        }
+        // Don't show toast for disconnects - socket will auto-reconnect
+        // Only log to console for debugging
       });
 
       socketRef.current.on('newNotification', (notification) => {
@@ -117,14 +113,28 @@ export function AuthProvider({ children }) {
         console.log('Received message:', message);
       });
 
-      socketRef.current.on('errorMessage', (errorMsg) => {
-        console.error('Socket error message:', errorMsg);
-        const notifId = Date.now();
-        setNotifications((prev) => [...prev, { id: notifId, message: errorMsg || 'An error occurred', type: 'error' }]);
-        toast.error(errorMsg || 'An error occurred', {
-          autoClose: 5000,
-          onClose: () => removeNotification(notifId),
-        });
+      socketRef.current.on('errorMessage', (errorData) => {
+        console.error('Socket error message:', errorData);
+
+        // Only show toast for application errors, not connection/socket errors
+        const isConnectionError = errorData?.type === 'connection' || errorData?.type === 'socket';
+
+        if (!isConnectionError) {
+          const message = typeof errorData === 'string' ? errorData : errorData?.message || 'An error occurred';
+          const notifId = Date.now();
+          setNotifications((prev) => [...prev, { id: notifId, message, type: 'error' }]);
+          toast.error(message, {
+            autoClose: 5000,
+            onClose: () => removeNotification(notifId),
+          });
+        }
+      });
+
+      // Add generic socket error handler
+      socketRef.current.on('error', (error) => {
+        console.error('Socket error:', error);
+        // Don't show toast for generic socket errors - they're usually transient
+        // Only log to console for debugging
       });
 
       const pingInterval = setInterval(() => {
