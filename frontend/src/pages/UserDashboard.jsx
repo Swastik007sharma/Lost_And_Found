@@ -10,6 +10,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
+import StatsCard from '../components/common/StatsCard';
 import {
   FiGrid,
   FiList,
@@ -319,8 +320,8 @@ function UserDashboard() {
               <Link
                 to="/items/create"
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl ${theme === 'dark'
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
                   }`}
               >
                 <FiPlus className="text-lg" />
@@ -329,8 +330,8 @@ function UserDashboard() {
               <Link
                 to="/profile"
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${theme === 'dark'
-                    ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
-                    : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-md hover:shadow-lg'
+                  ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
+                  : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-md hover:shadow-lg'
                   }`}
               >
                 <FiUser className="text-lg" />
@@ -339,8 +340,8 @@ function UserDashboard() {
               <Link
                 to="/notifications"
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${theme === 'dark'
-                    ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
-                    : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-md hover:shadow-lg'
+                  ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
+                  : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-md hover:shadow-lg'
                   }`}
               >
                 <FiBell className="text-lg" />
@@ -355,101 +356,75 @@ function UserDashboard() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, delay: 0.1 }}
-              className={`p-4 sm:p-6 rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-                }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <FiPackage className={`text-2xl ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
-                  }`} />
-              </div>
-              <p className={`text-3xl font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                }`}>
-                {stats.total}
-              </p>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                Total Items
-              </p>
+              <StatsCard
+                icon={<FiPackage />}
+                value={stats.total}
+                label="Total Items"
+                bgColor="blue"
+                iconColorLight="text-blue-600"
+                iconColorDark="text-blue-400"
+              />
             </motion.div>
 
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, delay: 0.2 }}
-              className={`p-4 sm:p-6 rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-                }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <FiAlertCircle className="text-2xl text-red-500" />
-              </div>
-              <p className={`text-3xl font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                }`}>
-                {stats.lost}
-              </p>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                Lost
-              </p>
+              <StatsCard
+                icon={<FiAlertCircle />}
+                value={stats.lost}
+                label="Lost"
+                bgColor="red"
+                iconColorLight="text-red-600"
+                iconColorDark="text-red-400"
+              />
             </motion.div>
 
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, delay: 0.3 }}
-              className={`p-4 sm:p-6 rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-                }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <FiPackage className="text-2xl text-green-500" />
-              </div>
-              <p className={`text-3xl font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                }`}>
-                {stats.found}
-              </p>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                Found
-              </p>
+              <StatsCard
+                icon={<FiPackage />}
+                value={stats.found}
+                label="Found"
+                bgColor="green"
+                iconColorLight="text-green-600"
+                iconColorDark="text-green-400"
+              />
             </motion.div>
 
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, delay: 0.4 }}
-              className={`p-4 sm:p-6 rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-                }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <FiClock className="text-2xl text-yellow-500" />
-              </div>
-              <p className={`text-3xl font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                }`}>
-                {stats.claimed}
-              </p>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                Claimed
-              </p>
+              <StatsCard
+                icon={<FiClock />}
+                value={stats.claimed}
+                label="Claimed"
+                bgColor="yellow"
+                iconColorLight="text-yellow-600"
+                iconColorDark="text-yellow-400"
+              />
             </motion.div>
 
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, delay: 0.5 }}
-              className={`p-4 sm:p-6 rounded-xl shadow-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'
-                }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <FiTrendingUp className="text-2xl text-purple-500" />
-              </div>
-              <p className={`text-3xl font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                }`}>
-                {stats.returned}
-              </p>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                Returned
-              </p>
+              <StatsCard
+                icon={<FiTrendingUp />}
+                value={stats.returned}
+                label="Returned"
+                bgColor="purple"
+                iconColorLight="text-purple-600"
+                iconColorDark="text-purple-400"
+              />
             </motion.div>
           </div>
         </motion.div>
@@ -472,12 +447,12 @@ function UserDashboard() {
             <button
               onClick={() => setViewType('card')}
               className={`p-2.5 rounded-lg transition-all ${viewType === 'card'
-                  ? theme === 'dark'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-blue-500 text-white'
-                  : theme === 'dark'
-                    ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? theme === 'dark'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-blue-500 text-white'
+                : theme === 'dark'
+                  ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
             >
               <FiGrid className="text-lg" />
@@ -485,12 +460,12 @@ function UserDashboard() {
             <button
               onClick={() => setViewType('list')}
               className={`p-2.5 rounded-lg transition-all ${viewType === 'list'
-                  ? theme === 'dark'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-blue-500 text-white'
-                  : theme === 'dark'
-                    ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? theme === 'dark'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-blue-500 text-white'
+                : theme === 'dark'
+                  ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
             >
               <FiList className="text-lg" />
@@ -541,8 +516,8 @@ function UserDashboard() {
             <Link
               to="/items/create"
               className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl ${theme === 'dark'
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
                 }`}
             >
               <FiPlus className="text-lg" />
@@ -643,8 +618,8 @@ function UserDashboard() {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.3, delay: index * 0.05 }}
                           className={`transition-colors ${theme === 'dark'
-                              ? 'hover:bg-gray-700/50'
-                              : 'hover:bg-gray-50'
+                            ? 'hover:bg-gray-700/50'
+                            : 'hover:bg-gray-50'
                             }`}
                         >
                           {editingItemId === item._id ? (
@@ -803,12 +778,12 @@ function UserDashboard() {
                               </td>
                               <td className="px-4 py-4">
                                 <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${item.status === 'Lost'
-                                    ? 'bg-red-100 text-red-700'
-                                    : item.status === 'Found'
-                                      ? 'bg-green-100 text-green-700'
-                                      : item.status === 'Claimed'
-                                        ? 'bg-yellow-100 text-yellow-700'
-                                        : 'bg-purple-100 text-purple-700'
+                                  ? 'bg-red-100 text-red-700'
+                                  : item.status === 'Found'
+                                    ? 'bg-green-100 text-green-700'
+                                    : item.status === 'Claimed'
+                                      ? 'bg-yellow-100 text-yellow-700'
+                                      : 'bg-purple-100 text-purple-700'
                                   }`}>
                                   {item.status}
                                 </span>
@@ -826,8 +801,8 @@ function UserDashboard() {
                                   <Link
                                     to={`/items/${item._id}`}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${theme === 'dark'
-                                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                        : 'bg-blue-500 hover:bg-blue-600 text-white'
+                                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                      : 'bg-blue-500 hover:bg-blue-600 text-white'
                                       }`}
                                   >
                                     <FiEye className="text-sm" />
@@ -836,8 +811,8 @@ function UserDashboard() {
                                   <button
                                     onClick={() => handleEdit(item)}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${theme === 'dark'
-                                        ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                                        : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                                       }`}
                                   >
                                     <FiEdit className="text-sm" />
@@ -846,8 +821,8 @@ function UserDashboard() {
                                   <button
                                     onClick={() => handleDelete(item._id)}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${theme === 'dark'
-                                        ? 'bg-red-600 hover:bg-red-700 text-white'
-                                        : 'bg-red-500 hover:bg-red-600 text-white'
+                                      ? 'bg-red-600 hover:bg-red-700 text-white'
+                                      : 'bg-red-500 hover:bg-red-600 text-white'
                                       }`}
                                   >
                                     <FiTrash className="text-sm" />
@@ -859,8 +834,8 @@ function UserDashboard() {
                                         <button
                                           onClick={() => handleGenerateOTP(item._id)}
                                           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${theme === 'dark'
-                                              ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                              : 'bg-purple-500 hover:bg-purple-600 text-white'
+                                            ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                            : 'bg-purple-500 hover:bg-purple-600 text-white'
                                             }`}
                                         >
                                           <FiKey className="text-sm" />
@@ -875,15 +850,15 @@ function UserDashboard() {
                                             onChange={(e) => setOtp(e.target.value)}
                                             placeholder="Enter OTP"
                                             className={`px-3 py-2 border rounded-lg text-sm w-32 focus:ring-2 focus:ring-purple-500 ${theme === 'dark'
-                                                ? 'bg-gray-700 border-gray-600 text-white'
-                                                : 'bg-white border-gray-300 text-gray-900'
+                                              ? 'bg-gray-700 border-gray-600 text-white'
+                                              : 'bg-white border-gray-300 text-gray-900'
                                               }`}
                                           />
                                           <button
                                             onClick={() => handleVerifyOTP(item._id)}
                                             className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${theme === 'dark'
-                                                ? 'bg-green-600 hover:bg-green-700 text-white'
-                                                : 'bg-green-500 hover:bg-green-600 text-white'
+                                              ? 'bg-green-600 hover:bg-green-700 text-white'
+                                              : 'bg-green-500 hover:bg-green-600 text-white'
                                               }`}
                                           >
                                             <FiCheck className="text-sm" />
@@ -892,8 +867,8 @@ function UserDashboard() {
                                           <button
                                             onClick={handleCancelOTP}
                                             className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${theme === 'dark'
-                                                ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                                                : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                                              ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                              : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                                               }`}
                                           >
                                             <FiX className="text-sm" />

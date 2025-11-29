@@ -14,6 +14,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
   const [userSearch, setUserSearch] = useState("");
   const [userSortBy, setUserSortBy] = useState("createdAt");
   const [userOrder, setUserOrder] = useState("desc");
+  const [userStatus, setUserStatus] = useState("all"); // 'all', 'active', 'inactive'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -31,6 +32,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
         search: userSearch,
         sortBy: userSortBy,
         order: userOrder,
+        isActive: userStatus === "all" ? undefined : userStatus === "active",
       });
       setUsers(response.data.users || []);
       setTotalUsers(response.data.pagination?.total || 0);
@@ -49,7 +51,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
     } finally {
       setLoading(false);
     }
-  }, [page.users, limit, userSearch, userSortBy, userOrder, setTotalPages]);
+  }, [page.users, limit, userSearch, userSortBy, userOrder, userStatus, setTotalPages]);
 
   useEffect(() => {
     const debounceFetch = setTimeout(() => fetchUsers(), 300);
@@ -79,6 +81,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
           page: currentPage,
           limit: 100, // Fetch 100 at a time
           search: userSearch,
+          isActive: userStatus === "all" ? undefined : userStatus === "active",
           sortBy: userSortBy,
           order: userOrder,
         });
@@ -99,7 +102,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
     } finally {
       setLoadingAllData(false);
     }
-  }, [userSearch, userSortBy, userOrder]);
+  }, [userSearch, userSortBy, userOrder, userStatus]);
 
   // Filter users by date range
   const filterUsersByDate = useCallback((usersToFilter, filters) => {
@@ -300,7 +303,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="relative">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -354,10 +357,28 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
           </select>
+
+          <select
+            value={userStatus}
+            onChange={(e) => {
+              setUserStatus(e.target.value);
+              setPage((prev) => ({ ...prev, users: 1 }));
+            }}
+            className="px-4 py-2.5 sm:py-3 rounded-xl border-2 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 text-sm"
+            style={{
+              borderColor: 'var(--color-bg)',
+              background: 'var(--color-bg)',
+              color: 'var(--color-text)'
+            }}
+          >
+            <option value="all">All Users</option>
+            <option value="active">Active Only</option>
+            <option value="inactive">Inactive Only</option>
+          </select>
         </div>
       </div>
     ),
-    [userSearch, userSortBy, userOrder, setPage, users.length, totalUsers, handleDownloadJSON, handleDownloadCSV]
+    [userSearch, userSortBy, userOrder, userStatus, setPage, users.length, totalUsers, handleDownloadJSON, handleDownloadCSV]
   );
 
   return (

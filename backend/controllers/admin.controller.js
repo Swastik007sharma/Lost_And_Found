@@ -7,12 +7,17 @@ const Message = require('../models/message.model');
 // Get a list of all users (admin-only)
 exports.getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '', sortBy = 'createdAt', order = 'desc' } = req.query;
+    const { page = 1, limit = 10, search = '', sortBy = 'createdAt', order = 'desc', isActive } = req.query;
     const skip = (page - 1) * limit;
 
     // Build the aggregation pipeline
     const pipeline = [];
-    const matchConditions = {}; // Default to active users
+    const matchConditions = {};
+
+    // Filter by active/inactive status if provided
+    if (isActive !== undefined && isActive !== '') {
+      matchConditions.isActive = isActive === 'true';
+    }
 
     if (search) {
       matchConditions.$or = [

@@ -4,6 +4,7 @@ import { getUserItems, getUserById } from '../services/adminService';
 import { toast } from 'react-toastify';
 import Pagination from '../components/common/Pagination';
 import Loader from '../components/common/Loader';
+import StatsCard from '../components/common/StatsCard';
 import {
   FaUser,
   FaEnvelope,
@@ -116,8 +117,8 @@ function UserDetail() {
         <div className="rounded-2xl shadow-xl overflow-hidden mb-6" style={{ background: 'var(--color-secondary)' }}>
           {/* Header Banner */}
           <div className={`relative h-32 ${theme === 'dark'
-              ? 'bg-linear-to-r from-blue-600 to-purple-600'
-              : 'bg-linear-to-r from-blue-500 to-purple-500'
+            ? 'bg-linear-to-r from-blue-600 to-purple-600'
+            : 'bg-linear-to-r from-blue-500 to-purple-500'
             }`}>
             <div className="absolute -bottom-16 left-8">
               {user.profileImage ? (
@@ -130,8 +131,8 @@ function UserDetail() {
               ) : (
                 <div
                   className={`w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold shadow-xl ${theme === 'dark'
-                      ? 'bg-gray-700 text-white border-4 border-gray-800'
-                      : 'bg-white text-blue-600 border-4 border-white'
+                    ? 'bg-gray-700 text-white border-4 border-gray-800'
+                    : 'bg-white text-blue-600 border-4 border-white'
                     }`}
                 >
                   {user.name ? user.name[0].toUpperCase() : <FaUser />}
@@ -150,10 +151,10 @@ function UserDetail() {
                 <div className="flex items-center gap-2 mt-2">
                   <span
                     className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold ${user.role === 'keeper'
-                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
-                        : user.role === 'admin'
-                          ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-                          : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                      ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
+                      : user.role === 'admin'
+                        ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                        : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
                       }`}
                   >
                     <FaUserShield className="text-xs" />
@@ -336,100 +337,50 @@ function UserDetail() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-          <div
-            className="p-4 rounded-xl shadow-lg"
-            style={{ background: 'var(--color-secondary)' }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900">
-                <FaBoxOpen className="text-2xl text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-                  {stats.totalItems}
-                </p>
-                <p className="text-xs opacity-70" style={{ color: 'var(--color-text)' }}>
-                  Total Items
-                </p>
-              </div>
-            </div>
-          </div>
+          <StatsCard
+            icon={<FaBoxOpen />}
+            value={stats.totalItems}
+            label="Total Items"
+            bgColor="blue"
+            iconColorLight="text-blue-600"
+            iconColorDark="text-blue-400"
+          />
 
-          <div
-            className="p-4 rounded-xl shadow-lg"
-            style={{ background: 'var(--color-secondary)' }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900">
-                <FaClipboardList className="text-2xl text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-                  {stats.postedItems}
-                </p>
-                <p className="text-xs opacity-70" style={{ color: 'var(--color-text)' }}>
-                  Posted
-                </p>
-              </div>
-            </div>
-          </div>
+          <StatsCard
+            icon={<FaClipboardList />}
+            value={stats.postedItems}
+            label="Posted"
+            bgColor="green"
+            iconColorLight="text-green-600"
+            iconColorDark="text-green-400"
+          />
 
-          <div
-            className="p-4 rounded-xl shadow-lg"
-            style={{ background: 'var(--color-secondary)' }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900">
-                <FaCheckCircle className="text-2xl text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-                  {stats.claimedItems}
-                </p>
-                <p className="text-xs opacity-70" style={{ color: 'var(--color-text)' }}>
-                  Claimed
-                </p>
-              </div>
-            </div>
-          </div>
+          <StatsCard
+            icon={<FaCheckCircle />}
+            value={stats.claimedItems}
+            label="Claimed"
+            bgColor="purple"
+            iconColorLight="text-purple-600"
+            iconColorDark="text-purple-400"
+          />
 
-          <div
-            className="p-4 rounded-xl shadow-lg"
-            style={{ background: 'var(--color-secondary)' }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900">
-                <FaTimesCircle className="text-2xl text-red-600 dark:text-red-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-                  {stats.lostItems}
-                </p>
-                <p className="text-xs opacity-70" style={{ color: 'var(--color-text)' }}>
-                  Lost
-                </p>
-              </div>
-            </div>
-          </div>
+          <StatsCard
+            icon={<FaTimesCircle />}
+            value={stats.lostItems}
+            label="Lost"
+            bgColor="red"
+            iconColorLight="text-red-600"
+            iconColorDark="text-red-400"
+          />
 
-          <div
-            className="p-4 rounded-xl shadow-lg"
-            style={{ background: 'var(--color-secondary)' }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-emerald-100 dark:bg-emerald-900">
-                <FaCheckCircle className="text-2xl text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-                  {stats.foundItems}
-                </p>
-                <p className="text-xs opacity-70" style={{ color: 'var(--color-text)' }}>
-                  Found
-                </p>
-              </div>
-            </div>
-          </div>
+          <StatsCard
+            icon={<FaCheckCircle />}
+            value={stats.foundItems}
+            label="Found"
+            bgColor="emerald"
+            iconColorLight="text-emerald-600"
+            iconColorDark="text-emerald-400"
+          />
         </div>
 
         {/* Items Section */}
@@ -446,8 +397,8 @@ function UserDetail() {
                     key={item._id}
                     to={`/items/${item._id}`}
                     className={`p-4 rounded-xl border-2 transition-all hover:shadow-lg hover:-translate-y-1 ${theme === 'dark'
-                        ? 'bg-gray-700/50 border-gray-600 hover:border-blue-500'
-                        : 'bg-white border-gray-200 hover:border-blue-400'
+                      ? 'bg-gray-700/50 border-gray-600 hover:border-blue-500'
+                      : 'bg-white border-gray-200 hover:border-blue-400'
                       }`}
                   >
                     {item.image && (
@@ -472,10 +423,10 @@ function UserDetail() {
                     <div className="flex items-center justify-between">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold ${item.status === 'Lost'
-                            ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-                            : item.status === 'Found'
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                              : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                          ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                          : item.status === 'Found'
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
                           }`}
                       >
                         {item.status}
