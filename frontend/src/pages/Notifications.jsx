@@ -253,7 +253,7 @@ function Notifications() {
               >
                 <div className="p-4 sm:p-5 flex items-start gap-3 sm:gap-4">
                   {/* Icon/Indicator */}
-                  <div className="flex-shrink-0 mt-1">
+                  <div className="shrink-0 mt-1">
                     {!notif.isRead ? (
                       <div
                         className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-lg animate-pulse"
@@ -274,7 +274,7 @@ function Notifications() {
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <p
-                      className={`text-sm sm:text-base break-words leading-relaxed ${notif.isRead ? 'opacity-70' : 'font-semibold'
+                      className={`text-sm sm:text-base wrap-break-word leading-relaxed ${notif.isRead ? 'opacity-70' : 'font-semibold'
                         }`}
                       style={{ color: 'var(--color-text)' }}
                     >
@@ -307,7 +307,7 @@ function Notifications() {
                   {!notif.isRead && (
                     <button
                       onClick={() => handleMarkAsRead(notif._id)}
-                      className="flex-shrink-0 px-3 py-2 sm:px-4 sm:py-2 rounded-xl font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center gap-2"
+                      className="shrink-0 px-3 py-2 sm:px-4 sm:py-2 rounded-xl font-semibold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 flex items-center gap-2"
                       style={{
                         background: 'var(--color-primary)',
                         color: 'white'

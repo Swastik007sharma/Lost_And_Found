@@ -95,7 +95,7 @@ const ItemCard = ({
       }}
     >
       {/* Image area */}
-      <div className="relative flex-shrink-0">
+      <div className="relative shrink-0">
         <Link to={`/items/${item._id}`} tabIndex={0} aria-label={`View details for ${item.title}`}>
           <div
             className="relative w-full h-56 flex items-center justify-center overflow-hidden"
@@ -112,7 +112,7 @@ const ItemCard = ({
                   loading="lazy"
                 />
                 {/* Gradient overlay on hover */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                 {/* View Details overlay on hover */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -184,7 +184,7 @@ const ItemCard = ({
 
       {/* Card content */}
       <div
-        className="p-5 flex flex-col gap-3 flex-grow"
+        className="p-5 flex flex-col gap-3 grow"
         style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}
       >
         {/* Title */}
@@ -196,7 +196,7 @@ const ItemCard = ({
         </h3>
 
         {/* Description - Fixed height to maintain consistency */}
-        <div className="min-h-[1.5rem]">
+        <div className="min-h-6">
           {item.description && (
             <p
               className="text-sm line-clamp-1 leading-relaxed"
@@ -218,7 +218,7 @@ const ItemCard = ({
                 border: '1px solid var(--color-border, #e5e7eb)'
               }}
             >
-              <FaTag className="text-purple-500 flex-shrink-0" />
+              <FaTag className="text-purple-500 shrink-0" />
               <span className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
                 {item.category.name}
                 {item.subCategory?.name && (
@@ -237,7 +237,7 @@ const ItemCard = ({
                 border: '1px solid var(--color-border, #e5e7eb)'
               }}
             >
-              <FaMapMarkerAlt className="text-red-500 flex-shrink-0" />
+              <FaMapMarkerAlt className="text-red-500 shrink-0" />
               <span className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
                 {item.location}
               </span>

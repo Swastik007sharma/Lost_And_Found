@@ -257,7 +257,7 @@ function VerifyOtp() {
             >
               <Button
                 type="submit"
-                className={`w-full py-3 rounded-lg text-sm font-semibold text-white transition-all duration-200 shadow-lg group ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl'
+                className={`w-full py-3 rounded-lg text-sm font-semibold text-white transition-all duration-200 shadow-lg group ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl'
                   }`}
                 disabled={loading}
               >

@@ -112,13 +112,13 @@ function Navbar() {
 
   if (loading) {
     return (
-      <div className="sticky top-0 left-0 w-full z-50 bg-[var(--color-bg)] backdrop-blur-xl border-b border-[var(--color-border)] shadow-md">
-        <div className="max-w-screen-xl mx-auto px-4 py-4">
+      <div className="sticky top-0 left-0 w-full z-50 bg-(--color-bg) backdrop-blur-xl border-b border-(--color-border) shadow-md">
+        <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="animate-pulse flex justify-between items-center">
-            <div className="h-8 w-32 bg-[var(--color-muted)] rounded-lg"></div>
+            <div className="h-8 w-32 bg-(--color-muted) rounded-lg"></div>
             <div className="flex gap-4">
-              <div className="h-8 w-20 bg-[var(--color-muted)] rounded-lg"></div>
-              <div className="h-8 w-20 bg-[var(--color-muted)] rounded-lg"></div>
+              <div className="h-8 w-20 bg-(--color-muted) rounded-lg"></div>
+              <div className="h-8 w-20 bg-(--color-muted) rounded-lg"></div>
             </div>
           </div>
         </div>
@@ -130,14 +130,14 @@ function Navbar() {
     ? createPortal(
       <>
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1200] md:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-1200 md:hidden"
           onClick={() => setMenuOpen(false)}
         ></div>
         <aside
-          className="fixed top-0 left-0 h-full w-full max-w-xs bg-[var(--color-sidebar)] border-r border-[var(--color-border)] shadow-2xl z-[1201] md:hidden flex flex-col"
+          className="fixed top-0 left-0 h-full w-full max-w-xs bg-(--color-sidebar) border-r border-(--color-border) shadow-2xl z-1201 md:hidden flex flex-col"
           style={{ backgroundColor: 'var(--color-sidebar)', backgroundImage: 'none' }}
         >
-          <div className="p-4 flex justify-between items-center border-b border-[var(--color-border)] bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)]">
+          <div className="p-4 flex justify-between items-center border-b border-(--color-border) bg-linear-to-r from-(--color-primary) to-(--color-accent)">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-md">
                 <FaSearch className="text-white text-sm" />
@@ -166,8 +166,8 @@ function Navbar() {
                       className={`
                           flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 font-medium relative
                           ${isActive
-                          ? 'bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white shadow-md border-l-4 border-white'
-                          : 'text-[var(--color-text)] hover:bg-[var(--color-muted)]'
+                          ? 'bg-linear-to-r from-(--color-primary) to-(--color-accent) text-white shadow-md border-l-4 border-white'
+                          : 'text-(--color-text) hover:bg-(--color-muted)'
                         }
                         `}
                     >
@@ -187,11 +187,11 @@ function Navbar() {
             </div>
 
             {token ? (
-              <div className="mt-auto w-full border-t border-[var(--color-border)] p-4 space-y-2">
+              <div className="mt-auto w-full border-t border-(--color-border) p-4 space-y-2">
                 <Link
                   to="/profile"
                   onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2 hover:bg-[var(--color-muted)] rounded-lg transition-all duration-200 text-sm text-[var(--color-text)]"
+                  className="flex items-center gap-3 px-3 py-2 hover:bg-(--color-muted) rounded-lg transition-all duration-200 text-sm text-(--color-text)"
                 >
                   <FaUser className="text-base" />
                   <span>Profile</span>
@@ -205,18 +205,18 @@ function Navbar() {
                 </button>
               </div>
             ) : (
-              <div className="mt-auto w-full border-t border-[var(--color-border)] p-4 space-y-2">
+              <div className="mt-auto w-full border-t border-(--color-border) p-4 space-y-2">
                 <Link
                   to="/login"
                   onClick={() => setMenuOpen(false)}
-                  className="block w-full px-3 py-3 rounded-lg text-center font-medium text-[var(--color-text)] hover:bg-[var(--color-muted)] transition-all duration-200"
+                  className="block w-full px-3 py-3 rounded-lg text-center font-medium text-(--color-text) hover:bg-(--color-muted) transition-all duration-200"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setMenuOpen(false)}
-                  className="block w-full px-3 py-3 rounded-lg text-center font-medium bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white shadow-md hover:shadow-lg transition-all duration-200"
+                  className="block w-full px-3 py-3 rounded-lg text-center font-medium bg-linear-to-r from-(--color-primary) to-(--color-accent) text-white shadow-md hover:shadow-lg transition-all duration-200"
                 >
                   Register
                 </Link>
@@ -231,15 +231,15 @@ function Navbar() {
 
   return (
     <>
-      <nav className="sticky bg-[var(--color-bg)] backdrop-blur-xl border-b border-[var(--color-border)] shadow-lg top-0 left-0 w-full z-50">
-        <div className="max-w-screen-xl mx-auto py-4 px-4 flex justify-between items-center">
+      <nav className="sticky bg-(--color-bg) backdrop-blur-xl border-b border-(--color-border) shadow-lg top-0 left-0 w-full z-50">
+        <div className="max-w-7xl mx-auto py-4 px-4 flex justify-between items-center">
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-200">
+            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-(--color-primary) to-(--color-accent) flex items-center justify-center shadow-md transform group-hover:scale-110 transition-transform duration-200">
               <FaSearch className="text-white text-sm" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-linear-to-r from-(--color-primary) to-(--color-accent) bg-clip-text text-transparent">
               Lost & Found
             </span>
           </Link>
@@ -256,8 +256,8 @@ function Navbar() {
                   className={`
                     group flex items-center gap-2 transition-all duration-200 relative px-3 py-2 rounded-lg font-medium
                     ${isActive
-                      ? 'bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white shadow-md'
-                      : 'text-[var(--color-text)] hover:bg-[var(--color-muted)] hover:scale-105'
+                      ? 'bg-linear-to-r from-(--color-primary) to-(--color-accent) text-white shadow-md'
+                      : 'text-(--color-text) hover:bg-(--color-muted) hover:scale-105'
                     }
                   `}
                 >
@@ -287,8 +287,8 @@ function Navbar() {
                     className={`
                       w-10 h-10 rounded-lg text-white font-bold flex items-center justify-center transition-all duration-200 shadow-md
                       ${profileOpen
-                        ? 'bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] ring-4 ring-[var(--color-primary)]/20 scale-105'
-                        : 'bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-accent)] hover:scale-110 hover:shadow-lg'
+                        ? 'bg-linear-to-br from-(--color-primary) to-(--color-accent) ring-4 ring-(--color-primary)/20 scale-105'
+                        : 'bg-linear-to-br from-(--color-primary) to-(--color-accent) hover:scale-110 hover:shadow-lg'
                       }
                     `}
                   >
@@ -309,8 +309,8 @@ function Navbar() {
                         className="fixed inset-0 z-40"
                         onClick={() => setProfileOpen(false)}
                       ></div>
-                      <div className="absolute right-0 mt-2 w-48 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl shadow-2xl z-50 overflow-hidden">
-                        <div className="p-2 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)]">
+                      <div className="absolute right-0 mt-2 w-48 bg-(--color-bg) border border-(--color-border) rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <div className="p-2 bg-linear-to-r from-(--color-primary) to-(--color-accent)">
                           <p className="text-white font-semibold text-sm truncate">{user?.name || 'User'}</p>
                           <p className="text-white/80 text-xs truncate">{user?.email || ''}</p>
                         </div>
@@ -320,7 +320,7 @@ function Navbar() {
                               navigate('/profile');
                               setProfileOpen(false);
                             }}
-                            className="w-full px-3 py-2 hover:bg-[var(--color-muted)] rounded-lg text-sm flex items-center gap-2 text-[var(--color-text)] transition-all duration-200"
+                            className="w-full px-3 py-2 hover:bg-(--color-muted) rounded-lg text-sm flex items-center gap-2 text-(--color-text) transition-all duration-200"
                           >
                             <FaUser /> Profile
                           </button>
@@ -340,13 +340,13 @@ function Navbar() {
               <div className='hidden md:flex gap-2 items-center'>
                 <Link
                   to="/login"
-                  className="px-4 py-2 text-sm rounded-lg font-medium text-[var(--color-text)] hover:bg-[var(--color-muted)] transition-all duration-200"
+                  className="px-4 py-2 text-sm rounded-lg font-medium text-(--color-text) hover:bg-(--color-muted) transition-all duration-200"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="px-4 py-2 text-sm rounded-lg font-medium bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white hover:shadow-lg hover:scale-105 transition-all duration-200"
+                  className="px-4 py-2 text-sm rounded-lg font-medium bg-linear-to-r from-(--color-primary) to-(--color-accent) text-white hover:shadow-lg hover:scale-105 transition-all duration-200"
                 >
                   Register
                 </Link>
@@ -360,10 +360,10 @@ function Navbar() {
             {token && (
               <button
                 onClick={() => navigate('/notifications')}
-                className="md:hidden relative w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[var(--color-muted)] transition-all duration-200"
+                className="md:hidden relative w-10 h-10 flex items-center justify-center rounded-lg hover:bg-(--color-muted) transition-all duration-200"
                 aria-label="Notifications"
               >
-                <FaBell className="w-5 h-5 text-[var(--color-text)]" />
+                <FaBell className="w-5 h-5 text-(--color-text)" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -373,11 +373,11 @@ function Navbar() {
             )}
 
             <button
-              className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-[var(--color-muted)] transition-all duration-200"
+              className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-(--color-muted) transition-all duration-200"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Toggle Menu"
             >
-              {menuOpen ? <FaTimes className="w-6 h-6 text-[var(--color-text)]" /> : <FaBars className="w-6 h-6 text-[var(--color-text)]" />}
+              {menuOpen ? <FaTimes className="w-6 h-6 text-(--color-text)" /> : <FaBars className="w-6 h-6 text-(--color-text)" />}
             </button>
           </div>
         </div>

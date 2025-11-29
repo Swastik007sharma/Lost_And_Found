@@ -255,7 +255,7 @@ function ReportsTab() {
       {/* Header */}
       <div className="p-4 sm:p-6 rounded-2xl shadow-lg" style={{ background: 'var(--color-secondary)' }}>
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
             <FaChartBar className="text-xl sm:text-2xl" />
           </div>
           <div>
@@ -421,7 +421,7 @@ function ReportsTab() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
               <label className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group">
-                <div className="text-base sm:text-xl transition-transform group-hover:scale-110 flex-shrink-0">
+                <div className="text-base sm:text-xl transition-transform group-hover:scale-110 shrink-0">
                   {selectedData.summary ?
                     <FaCheckSquare className="text-blue-500" /> :
                     <FaSquare className="opacity-30" style={{ color: 'var(--color-text)' }} />
@@ -439,7 +439,7 @@ function ReportsTab() {
               </label>
 
               <label className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group">
-                <div className="text-base sm:text-xl transition-transform group-hover:scale-110 flex-shrink-0">
+                <div className="text-base sm:text-xl transition-transform group-hover:scale-110 shrink-0">
                   {selectedData.items ?
                     <FaCheckSquare className="text-blue-500" /> :
                     <FaSquare className="opacity-30" style={{ color: 'var(--color-text)' }} />

@@ -33,7 +33,7 @@ const KeepersList = () => {
 
   if (error) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gray-900' : 'bg-linear-to-br from-blue-50 via-white to-purple-50'
         }`}>
         <div className={`text-center p-8 rounded-2xl ${theme === 'dark' ? 'bg-gray-800' : 'bg-white shadow-xl'
           }`}>
@@ -44,7 +44,7 @@ const KeepersList = () => {
   }
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-linear-to-br from-blue-50 via-white to-purple-50'
       }`}>
       <div className="container mx-auto px-4 py-8 sm:py-12">
         {/* Header Section */}
@@ -93,7 +93,7 @@ const KeepersList = () => {
                 }`}
             >
               {/* Gradient Header */}
-              <div className="h-24 bg-gradient-to-r from-blue-500 to-purple-500 relative">
+              <div className="h-24 bg-linear-to-r from-blue-500 to-purple-500 relative">
                 <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2">
                   <div className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold shadow-xl border-4 ${theme === 'dark'
                       ? 'bg-gray-700 text-white border-gray-800'
@@ -125,7 +125,7 @@ const KeepersList = () => {
                   {/* Email */}
                   <div className={`flex items-start gap-3 p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
                     }`}>
-                    <div className={`p-2 rounded-lg flex-shrink-0 ${theme === 'dark' ? 'bg-blue-600/20' : 'bg-blue-100'
+                    <div className={`p-2 rounded-lg shrink-0 ${theme === 'dark' ? 'bg-blue-600/20' : 'bg-blue-100'
                       }`}>
                       <FiMail className={`text-sm ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
                         }`} />
@@ -146,7 +146,7 @@ const KeepersList = () => {
                   {keeper.location && (
                     <div className={`flex items-start gap-3 p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
                       }`}>
-                      <div className={`p-2 rounded-lg flex-shrink-0 ${theme === 'dark' ? 'bg-green-600/20' : 'bg-green-100'
+                      <div className={`p-2 rounded-lg shrink-0 ${theme === 'dark' ? 'bg-green-600/20' : 'bg-green-100'
                         }`}>
                         <FiMapPin className={`text-sm ${theme === 'dark' ? 'text-green-400' : 'text-green-600'
                           }`} />
@@ -168,7 +168,7 @@ const KeepersList = () => {
                   {keeper.department && (
                     <div className={`flex items-start gap-3 p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
                       }`}>
-                      <div className={`p-2 rounded-lg flex-shrink-0 ${theme === 'dark' ? 'bg-purple-600/20' : 'bg-purple-100'
+                      <div className={`p-2 rounded-lg shrink-0 ${theme === 'dark' ? 'bg-purple-600/20' : 'bg-purple-100'
                         }`}>
                         <FiBookmark className={`text-sm ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
                           }`} />
@@ -190,7 +190,7 @@ const KeepersList = () => {
                   {keeper.description && (
                     <div className={`flex items-start gap-3 p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
                       }`}>
-                      <div className={`p-2 rounded-lg flex-shrink-0 ${theme === 'dark' ? 'bg-yellow-600/20' : 'bg-yellow-100'
+                      <div className={`p-2 rounded-lg shrink-0 ${theme === 'dark' ? 'bg-yellow-600/20' : 'bg-yellow-100'
                         }`}>
                         <FiFileText className={`text-sm ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'
                           }`} />

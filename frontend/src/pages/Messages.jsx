@@ -343,7 +343,7 @@ function Messages() {
                         <div className={`flex gap-2 max-w-[75%] sm:max-w-[65%] ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'
                           }`}>
                           {/* Avatar */}
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isCurrentUser
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isCurrentUser
                             ? theme === 'dark' ? 'bg-blue-600' : 'bg-blue-500'
                             : theme === 'dark' ? 'bg-gray-700' : 'bg-gray-300'
                             }`}>
@@ -368,7 +368,7 @@ function Messages() {
                                   {msg.sender?.name || 'Unknown'}
                                 </p>
                               )}
-                              <p className="text-sm break-words">{msg.content || 'No content'}</p>
+                              <p className="text-sm wrap-break-word">{msg.content || 'No content'}</p>
                             </div>
                             <p className={`text-xs mt-1 ${isCurrentUser ? 'text-right' : 'text-left'
                               } ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>

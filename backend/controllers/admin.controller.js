@@ -61,7 +61,7 @@ exports.toggleUserActivation = async (req, res) => {
 exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id, 'name email role createdAt isActive').lean();
+    const user = await User.findById(id, 'name email role createdAt isActive profileImage location department description').lean();
     if (!user) {
       return res.status(404).json({ message: 'User not found', code: 'NOT_FOUND' });
     }

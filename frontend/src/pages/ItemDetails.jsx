@@ -412,7 +412,7 @@ function ItemDetails() {
                           alt={item.title}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           <div className="absolute bottom-6 left-6 right-6">
                             <p className="text-white text-lg font-semibold flex items-center space-x-2">
                               <FaSearch className="text-xl" />
@@ -422,7 +422,7 @@ function ItemDetails() {
                         </div>
                       </div>
                     ) : (
-                      <div className="w-full h-96 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center group">
+                      <div className="w-full h-96 bg-linear-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center group">
                         <div className="flex flex-col items-center space-y-4 p-8 rounded-xl bg-white/50 dark:bg-black/30 backdrop-blur-sm">
                           <div className="relative">
                             <FaImage className="text-gray-400 dark:text-gray-500 text-6xl group-hover:text-blue-400 transition-colors duration-300" />
@@ -455,7 +455,7 @@ function ItemDetails() {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 hover:shadow-md" style={{ background: 'var(--color-bg)' }}>
-                      <FaMapMarkerAlt className="text-xl mt-1 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                      <FaMapMarkerAlt className="text-xl mt-1 shrink-0" style={{ color: 'var(--color-accent)' }} />
                       <div>
                         <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--color-text)', opacity: 0.6 }}>
                           Location
@@ -467,7 +467,7 @@ function ItemDetails() {
                     </div>
 
                     <div className="flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 hover:shadow-md" style={{ background: 'var(--color-bg)' }}>
-                      <FaCalendarAlt className="text-xl mt-1 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                      <FaCalendarAlt className="text-xl mt-1 shrink-0" style={{ color: 'var(--color-accent)' }} />
                       <div>
                         <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--color-text)', opacity: 0.6 }}>
                           Posted On
@@ -483,7 +483,7 @@ function ItemDetails() {
                     </div>
 
                     <div className="flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 hover:shadow-md" style={{ background: 'var(--color-bg)' }}>
-                      <FaUser className="text-xl mt-1 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                      <FaUser className="text-xl mt-1 shrink-0" style={{ color: 'var(--color-accent)' }} />
                       <div>
                         <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--color-text)', opacity: 0.6 }}>
                           Posted By
@@ -495,7 +495,7 @@ function ItemDetails() {
                     </div>
 
                     <div className="flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 hover:shadow-md" style={{ background: 'var(--color-bg)' }}>
-                      <FaShieldAlt className="text-xl mt-1 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                      <FaShieldAlt className="text-xl mt-1 shrink-0" style={{ color: 'var(--color-accent)' }} />
                       <div>
                         <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--color-text)', opacity: 0.6 }}>
                           Keeper
@@ -508,7 +508,7 @@ function ItemDetails() {
 
                     {item.claimedByName && (
                       <div className="flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 hover:shadow-md md:col-span-2" style={{ background: 'var(--color-bg)' }}>
-                        <FaCheckCircle className="text-xl mt-1 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                        <FaCheckCircle className="text-xl mt-1 shrink-0" style={{ color: 'var(--color-accent)' }} />
                         <div>
                           <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: 'var(--color-text)', opacity: 0.6 }}>
                             Claimed By

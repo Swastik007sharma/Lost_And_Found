@@ -67,7 +67,7 @@ const KeeperProfile = () => {
 
   if (error) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-gray-900' : 'bg-linear-to-br from-blue-50 via-white to-purple-50'
         }`}>
         <div className={`text-center p-8 rounded-2xl ${theme === 'dark' ? 'bg-gray-800' : 'bg-white shadow-xl'
           }`}>
@@ -89,7 +89,7 @@ const KeeperProfile = () => {
   if (!keeper) return null;
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-linear-to-br from-blue-50 via-white to-purple-50'
       }`}>
       <div className="container mx-auto px-4 py-8 sm:py-12">
         {/* Back Button */}
@@ -116,8 +116,8 @@ const KeeperProfile = () => {
         >
           {/* Gradient Header */}
           <div className={`relative h-32 ${theme === 'dark'
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600'
-              : 'bg-gradient-to-r from-blue-500 to-purple-500'
+              ? 'bg-linear-to-r from-blue-600 to-purple-600'
+              : 'bg-linear-to-r from-blue-500 to-purple-500'
             }`}>
             <div className="absolute -bottom-16 left-8">
               <div className={`w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold shadow-xl ${theme === 'dark'

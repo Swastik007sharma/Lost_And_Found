@@ -209,7 +209,7 @@ function Conversations() {
                   {/* Main Content */}
                   <div className="flex items-start gap-4">
                     {/* Avatar with Unread Indicator */}
-                    <div className="relative flex-shrink-0">
+                    <div className="relative shrink-0">
                       <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center ${theme === 'dark' ? 'bg-blue-600/20' : 'bg-blue-100'
                         }`}>
                         <FiUser className={`text-xl sm:text-2xl ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
@@ -246,18 +246,18 @@ function Conversations() {
                             conv.lastMessage.sender &&
                             user?.id &&
                             String(conv.lastMessage.sender) !== String(user.id) && (
-                              <span className="flex-shrink-0 px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full">
+                              <span className="shrink-0 px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full">
                                 NEW
                               </span>
                             )}
                         </div>
-                        <FiChevronRight className={`flex-shrink-0 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'
+                        <FiChevronRight className={`shrink-0 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'
                           }`} />
                       </div>
 
                       {/* Item Info */}
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <FiPackage className={`flex-shrink-0 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                        <FiPackage className={`shrink-0 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
                           }`} />
                         <span className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
                           }`}>

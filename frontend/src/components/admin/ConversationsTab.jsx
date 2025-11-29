@@ -18,7 +18,7 @@ function ConversationsTab({
       <div className="p-4 sm:p-6 rounded-2xl shadow-lg" style={{ background: 'var(--color-secondary)' }}>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white shadow-md">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-linear-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white shadow-md">
               <FaComments className="text-xl sm:text-2xl" />
             </div>
             <div>
@@ -89,7 +89,7 @@ function ConversationsTab({
               >
                 <div className="flex items-start justify-between mb-2">
                   <h4 className="font-bold text-xs sm:text-sm truncate flex-1 mr-2">{conv.item?.title || 'Untitled Item'}</h4>
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 ${conv.item?.status === 'found' ? 'bg-green-100 text-green-700' :
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 ${conv.item?.status === 'found' ? 'bg-green-100 text-green-700' :
                     conv.item?.status === 'lost' ? 'bg-red-100 text-red-700' :
                       'bg-gray-100 text-gray-700'
                     }`}>
@@ -98,12 +98,12 @@ function ConversationsTab({
                 </div>
 
                 <div className="flex items-center gap-2 text-xs mb-2 opacity-80">
-                  <FaUser className="flex-shrink-0" />
+                  <FaUser className="shrink-0" />
                   <span className="truncate">{conv.participants.map((p) => p.name).join(", ")}</span>
                 </div>
 
                 <div className="text-xs opacity-70 flex items-start gap-2">
-                  <FaClock className="flex-shrink-0 mt-0.5" />
+                  <FaClock className="shrink-0 mt-0.5" />
                   <span className="line-clamp-1">
                     {conv.lastMessage?.content || "No messages yet"} • {" "}
                     {new Date(conv.lastMessage?.createdAt || 0).toLocaleDateString()}
@@ -146,7 +146,7 @@ function ConversationsTab({
               <div className="p-3 sm:p-4 border-b-2" style={{ background: 'var(--color-secondary)', borderColor: 'var(--color-bg)' }}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white shadow-md flex-shrink-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-linear-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white shadow-md shrink-0">
                       <FaComments className="text-base sm:text-xl" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -154,12 +154,12 @@ function ConversationsTab({
                         {selectedConversation.item?.title || 'Untitled Item'}
                       </h3>
                       <div className="flex items-center gap-2 text-xs opacity-70 truncate" style={{ color: 'var(--color-text)' }}>
-                        <FaUser className="flex-shrink-0" />
+                        <FaUser className="shrink-0" />
                         <span className="truncate">{selectedConversation.participants.map((p) => p.name).join(", ")}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                  <div className="flex flex-col items-end gap-1 shrink-0">
                     <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${selectedConversation.item?.status === 'found' ? 'bg-green-100 text-green-700' :
                       selectedConversation.item?.status === 'lost' ? 'bg-red-100 text-red-700' :
                         'bg-gray-100 text-gray-700'
@@ -192,7 +192,7 @@ function ConversationsTab({
                       >
                         <div className="flex items-start gap-2 sm:gap-3">
                           {/* Avatar */}
-                          <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs sm:text-sm font-bold shadow-md">
+                          <div className="shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs sm:text-sm font-bold shadow-md">
                             {msg.sender?.name?.charAt(0)?.toUpperCase() || 'U'}
                           </div>
 
@@ -202,7 +202,7 @@ function ConversationsTab({
                               <span className="font-semibold text-xs sm:text-sm truncate" style={{ color: 'var(--color-text)' }}>
                                 {msg.sender?.name || 'Unknown User'}
                               </span>
-                              <span className="text-xs opacity-60 flex items-center gap-1 whitespace-nowrap flex-shrink-0" style={{ color: 'var(--color-text)' }}>
+                              <span className="text-xs opacity-60 flex items-center gap-1 whitespace-nowrap shrink-0" style={{ color: 'var(--color-text)' }}>
                                 <FaClock className="text-[10px]" />
                                 <span className="hidden sm:inline">
                                   {new Date(msg.createdAt).toLocaleString('en-US', {
@@ -220,7 +220,7 @@ function ConversationsTab({
                                 </span>
                               </span>
                             </div>
-                            <p className="text-xs sm:text-sm leading-relaxed break-words" style={{ color: 'var(--color-text)' }}>
+                            <p className="text-xs sm:text-sm leading-relaxed wrap-break-word" style={{ color: 'var(--color-text)' }}>
                               {msg.content}
                             </p>
                           </div>
@@ -230,7 +230,7 @@ function ConversationsTab({
                   ))
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center mb-3">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-linear-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center mb-3">
                       <FaEnvelope className="text-xl sm:text-2xl opacity-50" style={{ color: 'var(--color-text)' }} />
                     </div>
                     <p className="text-xs sm:text-sm opacity-70 text-center px-4" style={{ color: 'var(--color-text)' }}>
@@ -243,7 +243,7 @@ function ConversationsTab({
           ) : (
             <div className="p-4 sm:p-6">
               <div className="border-2 rounded-xl p-8 sm:p-12 h-[400px] sm:h-[600px] flex flex-col items-center justify-center shadow-inner" style={{ background: 'var(--color-bg)', borderColor: 'var(--color-bg)' }}>
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center mb-3 sm:mb-4">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-linear-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center mb-3 sm:mb-4">
                   <FaComments className="text-3xl sm:text-4xl opacity-50" style={{ color: 'var(--color-text)' }} />
                 </div>
                 <p className="text-base sm:text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>

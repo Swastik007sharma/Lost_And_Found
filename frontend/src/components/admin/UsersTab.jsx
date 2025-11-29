@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getUsers, toggleUserActivation } from "../../services/adminService";
 import Loader from "../common/Loader";
 import Pagination from "../common/Pagination";
@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { FaSearch, FaSort, FaUser, FaEnvelope, FaCheckCircle, FaTimesCircle, FaEye, FaUserCircle, FaDownload, FaFileExport } from "react-icons/fa";
 
 function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [userSearch, setUserSearch] = useState("");
@@ -263,7 +264,7 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
       <div className="p-4 sm:p-6 rounded-2xl shadow-lg" style={{ background: 'var(--color-secondary)' }}>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-md">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-md">
               <FaUser className="text-lg sm:text-2xl" />
             </div>
             <div>
@@ -387,15 +388,16 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
             {users.map((u) => (
               <div
                 key={u._id}
-                className="group p-4 sm:p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                className="group p-4 sm:p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
                 style={{ background: 'var(--color-secondary)', color: 'var(--color-text)' }}
+                onClick={() => navigate(`/admin/users/${u._id}`)}
               >
                 {/* User Avatar and Status */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white text-lg sm:text-xl font-bold shadow-lg ${u.role === 'admin' ? 'bg-gradient-to-br from-purple-500 to-purple-600' :
-                      u.role === 'keeper' ? 'bg-gradient-to-br from-green-500 to-green-600' :
-                        'bg-gradient-to-br from-blue-500 to-blue-600'
+                    <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white text-lg sm:text-xl font-bold shadow-lg ${u.role === 'admin' ? 'bg-linear-to-br from-purple-500 to-purple-600' :
+                      u.role === 'keeper' ? 'bg-linear-to-br from-green-500 to-green-600' :
+                        'bg-linear-to-br from-blue-500 to-blue-600'
                       }`}>
                       <FaUserCircle className="text-2xl sm:text-3xl" />
                     </div>
@@ -413,16 +415,16 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
                   </div>
 
                   {u.isActive ? (
-                    <FaCheckCircle className="text-xl sm:text-2xl text-green-500 flex-shrink-0" />
+                    <FaCheckCircle className="text-xl sm:text-2xl text-green-500 shrink-0" />
                   ) : (
-                    <FaTimesCircle className="text-xl sm:text-2xl text-red-500 flex-shrink-0" />
+                    <FaTimesCircle className="text-xl sm:text-2xl text-red-500 shrink-0" />
                   )}
                 </div>
 
                 {/* User Details */}
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center gap-2 text-xs sm:text-sm opacity-80">
-                    <FaEnvelope className="text-blue-500 flex-shrink-0" />
+                    <FaEnvelope className="text-blue-500 shrink-0" />
                     <span className="truncate">{u.email}</span>
                   </div>
                 </div>
@@ -439,16 +441,22 @@ function UsersTab({ user, page, setPage, totalPages, setTotalPages, limit }) {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 sm:gap-3">
-                  <Link
-                    to={`../users/${u._id}`}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/admin/users/${u._id}`);
+                    }}
                     className="flex-1 flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
                     style={{ background: 'var(--color-primary)', color: 'var(--color-bg)' }}
                   >
                     <FaEye />
                     <span>View</span>
-                  </Link>
+                  </button>
                   <button
-                    onClick={() => handleToggleUserActivation(u._id, u.isActive)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleUserActivation(u._id, u.isActive);
+                    }}
                     className={`flex-1 px-2 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg ${u._id === user._id ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                     style={{

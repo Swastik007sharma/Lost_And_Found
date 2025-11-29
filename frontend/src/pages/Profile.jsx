@@ -277,7 +277,7 @@ function Profile() {
   if (!user && !token) return <Loader />;
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 via-white to-purple-50'
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-linear-to-br from-blue-50 via-white to-purple-50'
       }`}>
       <div className="container mx-auto p-4 sm:p-6 lg:p-8">
         <div className="max-w-4xl mx-auto">
@@ -322,8 +322,8 @@ function Profile() {
           >
             {/* Profile Header with Avatar */}
             <div className={`relative h-32 ${theme === 'dark'
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600'
-              : 'bg-gradient-to-r from-blue-500 to-purple-500'
+              ? 'bg-linear-to-r from-blue-600 to-purple-600'
+              : 'bg-linear-to-r from-blue-500 to-purple-500'
               }`}>
               <div className="absolute -bottom-16 left-8">
                 <div className="relative group">

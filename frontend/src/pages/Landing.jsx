@@ -100,8 +100,8 @@ const Home = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
         className={`relative min-h-screen flex items-center justify-center px-4 ${theme === 'dark'
-            ? 'bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900'
-            : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'
+            ? 'bg-linear-to-br from-gray-900 via-blue-900 to-indigo-900'
+            : 'bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50'
           }`}
       >
         {/* Animated Background Elements */}
@@ -186,7 +186,7 @@ const Home = () => {
               }`}
           >
             Lost Something on Campus?<br />
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Let's Find It Together
             </span>
           </motion.h1>
@@ -312,12 +312,12 @@ const Home = () => {
                   }`}
               >
                 {/* Step Number */}
-                <div className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
+                <div className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-linear-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
                   {index + 1}
                 </div>
 
                 {/* Icon */}
-                <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl flex items-center justify-center mx-auto mb-6 bg-gradient-to-r ${step.color} shadow-lg`}>
+                <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl flex items-center justify-center mx-auto mb-6 bg-linear-to-r ${step.color} shadow-lg`}>
                   {step.icon}
                 </div>
 
@@ -381,7 +381,7 @@ const Home = () => {
       </div>
 
       {/* CTA Section */}
-      <div className={`py-16 sm:py-20 px-4 ${theme === 'dark' ? 'bg-gradient-to-r from-blue-900 to-purple-900' : 'bg-gradient-to-r from-blue-600 to-purple-600'}`}>
+      <div className={`py-16 sm:py-20 px-4 ${theme === 'dark' ? 'bg-linear-to-r from-blue-900 to-purple-900' : 'bg-linear-to-r from-blue-600 to-purple-600'}`}>
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -135,7 +135,7 @@ function CreateAccountTab({
       {/* Header Card */}
       <div className="p-4 sm:p-6 rounded-2xl shadow-lg" style={{ background: 'var(--color-secondary)' }}>
         <div className="flex items-center gap-2 sm:gap-3 mb-2">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-md">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-md">
             <FaUserPlus className="text-xl sm:text-2xl" />
           </div>
           <div>
@@ -408,7 +408,7 @@ function CreateAccountTab({
                   disabled={loading}
                 />
                 <div className="flex items-center gap-3 w-full">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${accountForm.role === "admin" ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gray-300 dark:bg-gray-700'
+                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${accountForm.role === "admin" ? 'bg-linear-to-br from-blue-500 to-blue-600' : 'bg-gray-300 dark:bg-gray-700'
                     }`}>
                     <FaUserTie className="text-2xl text-white" />
                   </div>
@@ -447,7 +447,7 @@ function CreateAccountTab({
                   disabled={loading}
                 />
                 <div className="flex items-center gap-3 w-full">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${accountForm.role === "keeper" ? 'bg-gradient-to-br from-green-500 to-green-600' : 'bg-gray-300 dark:bg-gray-700'
+                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${accountForm.role === "keeper" ? 'bg-linear-to-br from-green-500 to-green-600' : 'bg-gray-300 dark:bg-gray-700'
                     }`}>
                     <FaUserShield className="text-2xl text-white" />
                   </div>

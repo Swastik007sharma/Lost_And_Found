@@ -358,7 +358,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
     () => (
       <div className="mb-6 p-6 rounded-2xl shadow-lg" style={{ background: 'var(--color-secondary)' }}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
             <FaSearch className="text-white text-lg" />
           </div>
           <h3 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
@@ -444,7 +444,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
       <div className="p-6 rounded-2xl shadow-lg" style={{ background: 'var(--color-secondary)' }}>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+            <div className="w-14 h-14 rounded-xl bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
               <FaBox className="text-white text-2xl" />
             </div>
             <div>
@@ -501,7 +501,7 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
         <Loader size="lg" variant="dots" text="Loading items..." />
       ) : items.length === 0 ? (
         <div className="p-12 rounded-2xl shadow-lg text-center" style={{ background: 'var(--color-secondary)' }}>
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-linear-to-br from-gray-400 to-gray-500 flex items-center justify-center">
             <FaBox className="text-white text-3xl" />
           </div>
           <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>
@@ -530,8 +530,8 @@ function ItemsTab({ page, setPage, totalPages, setTotalPages, limit }) {
                       </h3>
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold ${item.isActive
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                            : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                          : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
                           }`}
                       >
                         {item.isActive ? (

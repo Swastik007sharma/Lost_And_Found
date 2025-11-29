@@ -204,7 +204,7 @@ function CategoriesTab({
       {/* Header */}
       <div className="p-6 rounded-2xl shadow-lg" style={{ background: 'var(--color-secondary)' }}>
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center text-white shadow-md">
+          <div className="w-12 h-12 rounded-xl bg-linear-to-br from-pink-500 to-pink-600 flex items-center justify-center text-white shadow-md">
             <FaTags className="text-2xl" />
           </div>
           <div>
@@ -259,7 +259,7 @@ function CategoriesTab({
           <div className="p-6 rounded-2xl shadow-lg" style={{ background: 'var(--color-secondary)' }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center text-white shadow-md">
+                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-pink-500 to-pink-600 flex items-center justify-center text-white shadow-md">
                   <FaTags className="text-2xl" />
                 </div>
                 <div>
@@ -372,7 +372,7 @@ function CategoriesTab({
                       {/* Category Header */}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center text-white shadow-md">
+                          <div className="w-12 h-12 rounded-xl bg-linear-to-br from-pink-500 to-pink-600 flex items-center justify-center text-white shadow-md">
                             <FaTags className="text-xl" />
                           </div>
                           <div>
@@ -471,7 +471,7 @@ function CategoriesTab({
               </>
             ) : (
               <div className="p-12 rounded-2xl shadow-lg text-center" style={{ background: 'var(--color-secondary)' }}>
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-linear-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
                   <FaTags className="text-4xl opacity-50" style={{ color: 'var(--color-text)' }} />
                 </div>
                 <p className="text-sm opacity-70" style={{ color: 'var(--color-text)' }}>
@@ -490,7 +490,7 @@ function CategoriesTab({
           <div className="p-6 rounded-2xl shadow-lg" style={{ background: 'var(--color-secondary)' }}>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white shadow-md">
+                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white shadow-md">
                   <FaLayerGroup className="text-2xl" />
                 </div>
                 <div>
@@ -702,7 +702,7 @@ function CategoriesTab({
                       {/* SubCategory Header */}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white shadow-md">
+                          <div className="w-12 h-12 rounded-xl bg-linear-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white shadow-md">
                             <FaLayerGroup className="text-xl" />
                           </div>
                           <div>
@@ -794,7 +794,7 @@ function CategoriesTab({
               </>
             ) : (
               <div className="p-12 rounded-2xl shadow-lg text-center" style={{ background: 'var(--color-bg)' }}>
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-200 to-purple-300 dark:from-purple-700 dark:to-purple-800 flex items-center justify-center">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-linear-to-br from-purple-200 to-purple-300 dark:from-purple-700 dark:to-purple-800 flex items-center justify-center">
                   <FaLayerGroup className="text-4xl opacity-50" style={{ color: 'var(--color-text)' }} />
                 </div>
                 <p className="text-sm opacity-70" style={{ color: 'var(--color-text)' }}>

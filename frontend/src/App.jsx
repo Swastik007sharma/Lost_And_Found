@@ -158,7 +158,7 @@ function App() {
 									}
 								/>
 								<Route
-									path="/users/:id"
+									path="/admin/users/:id"
 									element={
 										<AdminRoute>
 											<UserDetail />

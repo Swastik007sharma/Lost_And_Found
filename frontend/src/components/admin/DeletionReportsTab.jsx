@@ -138,8 +138,8 @@ function DeletionReportsTab() {
         <button
           onClick={() => setActiveView("scheduled-items")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${activeView === "scheduled-items"
-              ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
-              : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+            ? "bg-linear-to-r from-purple-600 to-blue-600 text-white"
+            : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
             }`}
         >
           <FaBox />
@@ -148,8 +148,8 @@ function DeletionReportsTab() {
         <button
           onClick={() => setActiveView("scheduled-users")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${activeView === "scheduled-users"
-              ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
-              : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+            ? "bg-linear-to-r from-purple-600 to-blue-600 text-white"
+            : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
             }`}
         >
           <FaUser />
@@ -158,8 +158,8 @@ function DeletionReportsTab() {
         <button
           onClick={() => setActiveView("deletion-stats")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${activeView === "deletion-stats"
-              ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
-              : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+            ? "bg-linear-to-r from-purple-600 to-blue-600 text-white"
+            : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
             }`}
         >
           <FaCheckCircle />
@@ -407,7 +407,7 @@ function DeletionReportsTab() {
 
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-lg p-6 shadow-lg">
+                <div className="bg-linear-to-br from-red-500 to-red-600 text-white rounded-lg p-6 shadow-lg">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-red-100 text-sm">Inactive Items</p>
@@ -417,7 +417,7 @@ function DeletionReportsTab() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg p-6 shadow-lg">
+                <div className="bg-linear-to-br from-purple-500 to-purple-600 text-white rounded-lg p-6 shadow-lg">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-purple-100 text-sm">Inactive Users</p>
@@ -579,7 +579,7 @@ function DeletionReportsTab() {
                   <button
                     onClick={handleUpdateConfig}
                     disabled={loading}
-                    className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition disabled:opacity-50"
+                    className="flex items-center gap-2 px-6 py-2 bg-linear-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition disabled:opacity-50"
                   >
                     <FaSave />
                     <span>{loading ? 'Updating...' : 'Update Config'}</span>

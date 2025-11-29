@@ -924,7 +924,7 @@ function ItemCreate() {
                   >
                     {loading && (
                       <div className="inline-flex items-center justify-center">
-                        <Loader size="xs" className="!h-5 !w-5" />
+                        <Loader size="xs" className="h-5! w-5!" />
                       </div>
                     )}
                     {!loading && <FaCheckCircle />}

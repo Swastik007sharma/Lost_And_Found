@@ -66,7 +66,7 @@ const Footer = () => {
     ];
 
     return (
-        <footer className={`relative overflow-hidden ${theme === "dark" ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" : "bg-gradient-to-br from-gray-50 via-white to-gray-50"}`}>
+        <footer className={`relative overflow-hidden ${theme === "dark" ? "bg-linear-to-br from-gray-900 via-gray-800 to-gray-900" : "bg-linear-to-br from-gray-50 via-white to-gray-50"}`}>
             {/* Decorative Background Elements */}
             <div className="absolute inset-0 opacity-30">
                 <div className={`absolute top-0 left-0 w-64 h-64 rounded-full filter blur-3xl ${theme === "dark" ? "bg-blue-900" : "bg-blue-100"}`}></div>
@@ -86,10 +86,10 @@ const Footer = () => {
                     >
                         {/* Logo */}
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-br from-blue-600 to-purple-600">
+                            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg bg-linear-to-br from-blue-600 to-purple-600">
                                 <FaBoxOpen className="text-white text-xl" />
                             </div>
-                            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                            <h2 className="text-2xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                                 CampusTrack
                             </h2>
                         </div>

@@ -414,10 +414,10 @@ function AdminDashboard() {
 			{/* Enhanced Header */}
 			<div className="mb-8 text-center">
 				<div className="flex items-center justify-center gap-3 mb-2">
-					<div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+					<div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
 						<FaCrown className="text-2xl text-white" />
 					</div>
-					<h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+					<h1 className="text-3xl sm:text-4xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
 						Admin Dashboard
 					</h1>
 				</div>

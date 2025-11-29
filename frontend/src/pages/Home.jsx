@@ -458,7 +458,7 @@ function Home() {
               style={{ background: 'var(--color-secondary)', borderColor: 'var(--color-border, #e5e7eb)' }}
             >
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300" style={{ background: 'var(--color-primary)' }}>
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300" style={{ background: 'var(--color-primary)' }}>
                   <FaLightbulb className="text-white text-xl sm:text-2xl" />
                 </div>
                 <div className="flex-1">
@@ -484,7 +484,7 @@ function Home() {
               style={{ background: 'var(--color-secondary)', borderColor: 'var(--color-border, #e5e7eb)' }}
             >
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300" style={{ background: 'var(--color-accent)' }}>
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300" style={{ background: 'var(--color-accent)' }}>
                   <FaHandHoldingHeart className="text-white text-xl sm:text-2xl" />
                 </div>
                 <div className="flex-1">
