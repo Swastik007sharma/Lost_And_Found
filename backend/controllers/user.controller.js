@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/user.model');
 const Item = require('../models/item.model');
+const cloudinary = require('../config/cloudinary');
+const fs = require('fs');
 
 // Get current user's profile
 exports.getProfile = async (req, res) => {
@@ -87,6 +89,42 @@ exports.updateProfile = async (req, res) => {
       if (typeof req.body.location === 'string') updateFields.location = req.body.location;
       if (typeof req.body.department === 'string') updateFields.department = req.body.department;
       if (typeof req.body.description === 'string') updateFields.description = req.body.description;
+    }
+
+    // Handle profile image if provided
+    if (req.file) {
+      try {
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: 'profile_images',
+          transformation: [
+            { width: 400, height: 400, crop: 'fill' },
+            { quality: 'auto' }
+          ]
+        });
+
+        updateFields.profileImage = result.secure_url;
+
+        // Delete old image from Cloudinary if exists
+        const currentUser = await User.findById(userId);
+        if (currentUser?.profileImage) {
+          const publicId = currentUser.profileImage.split('/').pop().split('.')[0];
+          await cloudinary.uploader.destroy(`profile_images/${publicId}`).catch(err =>
+            console.log('Error deleting old image:', err)
+          );
+        }
+
+        // Delete local file
+        fs.unlinkSync(req.file.path);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        if (req.file?.path) fs.unlinkSync(req.file.path);
+        return res.status(500).json({
+          status: 'error',
+          message: 'Failed to upload profile image',
+          code: 'IMAGE_UPLOAD_ERROR'
+        });
+      }
     }
 
     const user = await User.findOneAndUpdate(

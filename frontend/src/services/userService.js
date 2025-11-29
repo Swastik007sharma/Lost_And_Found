@@ -5,7 +5,7 @@ export const getUserProfile = () => api.get('/users/me');
 export const updateUserProfile = (data) => {
   const config = {
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': data instanceof FormData ? 'multipart/form-data' : 'application/json',
       Authorization: `${localStorage.getItem('token')}`,
     },
   };

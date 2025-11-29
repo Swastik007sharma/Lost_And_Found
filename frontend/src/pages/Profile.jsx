@@ -18,7 +18,8 @@ import {
   FiHome,
   FiTrash2,
   FiCheck,
-  FiX
+  FiX,
+  FiCamera
 } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import { useTheme } from '../context/ThemeContext';
@@ -54,6 +55,11 @@ function Profile() {
   // Toggle states for forms
   const [isFormOpen, setIsFormOpen] = useState(null);
 
+  // Profile image states
+  const [profileImage, setProfileImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(user?.profileImage || null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   // Derive displayData directly from user
   const displayData = {
     name: user?.name || '',
@@ -62,6 +68,7 @@ function Profile() {
     location: user?.location || '',
     department: user?.department || '',
     description: user?.description || '',
+    profileImage: user?.profileImage || '',
   };
 
   useEffect(() => {
@@ -69,6 +76,9 @@ function Profile() {
     if (!user && !token) {
       console.log('No user or token, redirecting to login');
       navigate('/login');
+    }
+    if (user?.profileImage) {
+      setImagePreview(user.profileImage);
     }
   }, [user, token, navigate]);
 
@@ -87,6 +97,74 @@ function Profile() {
       ...prev,
       [field]: !prev[field],
     }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB', {
+          toastId: 'image-size-error',
+          position: 'top-center'
+        });
+        return;
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Only JPG, JPEG, and PNG images are allowed', {
+          toastId: 'image-type-error',
+          position: 'top-center'
+        });
+        return;
+      }
+
+      setProfileImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!profileImage) {
+      toast.error('Please select an image first', {
+        toastId: 'no-image-error',
+        position: 'top-center'
+      });
+      return;
+    }
+
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append('image', profileImage);
+    formData.append('name', user.name);
+
+    try {
+      const response = await updateUserProfile(formData);
+      setUser(response.data.user);
+      setProfileImage(null);
+      toast.success('Profile image updated successfully!', {
+        toastId: 'image-upload-success',
+        position: 'top-center'
+      });
+    } catch (err) {
+      console.error('Image upload error:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to upload image';
+      toast.error(errorMessage, {
+        toastId: 'image-upload-error',
+        position: 'top-center'
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setProfileImage(null);
+    setImagePreview(user?.profileImage || null);
   };
 
   const handlePasswordUpdate = async (e) => {
@@ -248,11 +326,42 @@ function Profile() {
               : 'bg-gradient-to-r from-blue-500 to-purple-500'
               }`}>
               <div className="absolute -bottom-16 left-8">
-                <div className={`w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold shadow-xl ${theme === 'dark'
-                  ? 'bg-gray-700 text-white border-4 border-gray-800'
-                  : 'bg-white text-blue-600 border-4 border-white'
-                  }`}>
-                  {displayData.name ? displayData.name[0].toUpperCase() : <FiUser />}
+                <div className="relative group">
+                  {imagePreview ? (
+                    <img
+                      src={imagePreview}
+                      alt={displayData.name}
+                      className={`w-32 h-32 rounded-full object-cover shadow-xl ${theme === 'dark'
+                        ? 'border-4 border-gray-800'
+                        : 'border-4 border-white'
+                        }`}
+                    />
+                  ) : (
+                    <div className={`w-32 h-32 rounded-full flex items-center justify-center text-4xl font-bold shadow-xl ${theme === 'dark'
+                      ? 'bg-gray-700 text-white border-4 border-gray-800'
+                      : 'bg-white text-blue-600 border-4 border-white'
+                      }`}>
+                      {displayData.name ? displayData.name[0].toUpperCase() : <FiUser />}
+                    </div>
+                  )}
+
+                  {/* Edit Image Button */}
+                  <label
+                    htmlFor="profile-image-upload"
+                    className={`absolute bottom-0 right-0 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-all duration-200 ${theme === 'dark'
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-blue-500 hover:bg-blue-600 text-white'
+                      }`}
+                  >
+                    <FiEdit className="text-lg" />
+                  </label>
+                  <input
+                    id="profile-image-upload"
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
                 </div>
               </div>
             </div>
@@ -278,6 +387,75 @@ function Profile() {
                   </div>
                 </div>
               </div>
+
+              {/* Profile Image Upload Controls */}
+              {profileImage && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className={`mb-6 p-4 rounded-lg border-2 ${theme === 'dark'
+                      ? 'bg-gray-700/50 border-blue-600'
+                      : 'bg-blue-50 border-blue-200'
+                    }`}
+                >
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-blue-600/20' : 'bg-blue-100'
+                        }`}>
+                        <FiUser className={`text-xl ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                          }`} />
+                      </div>
+                      <div>
+                        <p className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                          }`}>
+                          New Profile Image Selected
+                        </p>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                          }`}>
+                          {profileImage.name} ({(profileImage.size / 1024).toFixed(2)} KB)
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleImageUpload}
+                        disabled={uploadingImage}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${uploadingImage
+                            ? 'opacity-50 cursor-not-allowed'
+                            : ''
+                          } ${theme === 'dark'
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                            : 'bg-blue-500 hover:bg-blue-600 text-white'
+                          }`}
+                      >
+                        {uploadingImage ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <FiCheck className="text-lg" />
+                            Upload
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={handleRemoveImage}
+                        disabled={uploadingImage}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${theme === 'dark'
+                            ? 'bg-gray-600 hover:bg-gray-700 text-white'
+                            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                          }`}
+                      >
+                        <FiX className="text-lg" />
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
               {/* Information Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

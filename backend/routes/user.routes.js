@@ -5,6 +5,7 @@ const userController = require('../controllers/user.controller');
 const { validate } = require('../middlewares/validate.middleware');
 const { updateUserSchema, updatePasswordSchema } = require('../schema/user.schema');
 const { idSchema } = require('../schema/common.schema.js');
+const { uploadFile } = require('../middlewares/fileUpload.middleware');
 
 /**
  * @swagger
@@ -121,7 +122,7 @@ router.get('/me/items', authMiddleware.authenticate, userController.getItems);
  *       500:
  *         description: Server error
  */
-router.put('/me', authMiddleware.authenticate, validate(updateUserSchema), userController.updateProfile);
+router.put('/me', authMiddleware.authenticate, uploadFile, validate(updateUserSchema), userController.updateProfile);
 
 /**
  * @swagger
