@@ -3,6 +3,9 @@ const User = require('../models/user.model');
 const Item = require('../models/item.model');
 const cloudinary = require('../config/cloudinary');
 const fs = require('fs');
+const path = require('path');
+// Define the uploads directory (adjust path as needed)
+const UPLOAD_DIR = path.resolve(__dirname, '../../uploads');
 
 // Get current user's profile
 exports.getProfile = async (req, res) => {
@@ -114,11 +117,23 @@ exports.updateProfile = async (req, res) => {
           );
         }
 
-        // Delete local file
-        fs.unlinkSync(req.file.path);
+        // Delete local file safely
+        const resolvedPath = path.resolve(req.file.path);
+        if (resolvedPath.startsWith(UPLOAD_DIR)) {
+          fs.unlinkSync(resolvedPath);
+        } else {
+          console.error('Attempted to delete file outside of upload directory:', resolvedPath);
+        }
       } catch (error) {
         console.error('Error uploading image:', error);
-        if (req.file?.path) fs.unlinkSync(req.file.path);
+        if (req.file?.path) {
+          const resolvedPath = path.resolve(req.file.path);
+          if (resolvedPath.startsWith(UPLOAD_DIR)) {
+            fs.unlinkSync(resolvedPath);
+          } else {
+            console.error('Attempted to delete file outside of upload directory:', resolvedPath);
+          }
+        }
         return res.status(500).json({
           status: 'error',
           message: 'Failed to upload profile image',
