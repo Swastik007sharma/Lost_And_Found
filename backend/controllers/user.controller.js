@@ -82,7 +82,7 @@ exports.updateProfile = async (req, res) => {
 
     // Build update fields - only name can be updated for all users
     const updateFields = {};
-    if (name) updateFields.name = name;
+    if (typeof name === 'string') updateFields.name = name;
 
     // Only allow keeper-specific fields if user is a keeper
     if (req.user.role === 'keeper') {
