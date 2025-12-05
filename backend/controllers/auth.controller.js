@@ -6,7 +6,7 @@ const { cancelScheduledUserDeletion } = require('../services/cleanupService');
 require('dotenv').config();
 const crypto = require('crypto');
 // Register a new user or reactivate a deactivated account
-exports.register = async (req, res) => {
+exports.register = async (req, res, next) => {
   try {
     // Use validated body from middleware
     const { name, email, password, role = 'user' } = req.validatedBody;
@@ -97,7 +97,7 @@ exports.register = async (req, res) => {
 };
 
 // Authenticate a user
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
   try {
     // Use validated body from middleware
     const { email, password } = req.validatedBody;
@@ -131,13 +131,13 @@ exports.login = async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
-    console.error('Login Error:', error.message);
+    console.error('Login Error:', error.message, error);
     res.status(500).json({ message: 'Failed to login', code: 'SERVER_ERROR' });
   }
 };
 
 // Forgot Password - Generate and send OTP
-exports.forgotPassword = async (req, res) => {
+exports.forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.validatedBody;
 
@@ -177,7 +177,7 @@ exports.forgotPassword = async (req, res) => {
 };
 
 // Verify OTP
-exports.verifyOtp = async (req, res) => {
+exports.verifyOtp = async (req, res, next) => {
   try {
     const { email, otp } = req.validatedBody;
 
@@ -221,7 +221,7 @@ exports.verifyOtp = async (req, res) => {
 };
 
 // Reset Password
-exports.resetPassword = async (req, res) => {
+exports.resetPassword = async (req, res, next) => {
   try {
     const { email, newPassword } = req.validatedBody;
 

@@ -45,7 +45,7 @@ const getDateRange = (reportType, customStartDate, customEndDate) => {
 };
 
 // Generate comprehensive report
-exports.generateReport = async (req, res) => {
+exports.generateReport = async (req, res, next) => {
   try {
     const { reportType, startDate: customStartDate, endDate: customEndDate } = req.query;
 
@@ -235,7 +235,7 @@ exports.generateReport = async (req, res) => {
 };
 
 // Get summary statistics for dashboard
-exports.getReportSummary = async (req, res) => {
+exports.getReportSummary = async (req, res, next) => {
   try {
     const now = new Date();
     const startOfToday = new Date(now.setHours(0, 0, 0, 0));
@@ -265,3 +265,4 @@ exports.getReportSummary = async (req, res) => {
 };
 
 module.exports = exports;
+

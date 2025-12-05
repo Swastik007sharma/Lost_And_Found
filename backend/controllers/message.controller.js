@@ -2,7 +2,7 @@ const Message = require('../models/message.model');
 const Conversation = require('../models/conversation.model');
 const { idSchema } = require('../schema/common.schema');
 
-exports.getMessages = async (req, res) => {
+exports.getMessages = async (req, res, next) => {
   try {
     const { id } = req.params;
     console.log('Raw params id:', id, typeof id);
@@ -42,7 +42,7 @@ exports.getMessages = async (req, res) => {
   }
 };
 
-exports.sendMessage = async (req, res) => {
+exports.sendMessage = async (req, res, next) => {
   try {
     const { id } = req.params;
     console.log('Received request body:', req.body, typeof req.body);
@@ -108,7 +108,7 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
-exports.markMessagesAsRead = async (req, res) => {
+exports.markMessagesAsRead = async (req, res, next) => {
   try {
     const { id } = req.params; // conversation ID
     const validatedId = idSchema.shape.id.parse(id);

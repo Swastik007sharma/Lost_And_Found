@@ -3,7 +3,7 @@ const Item = require('../models/item.model');
 const mongoose = require('mongoose');
 
 // Get a list of available keepers
-exports.getKeepers = async (req, res) => {
+exports.getKeepers = async (req, res, next) => {
   try {
     const keepers = await User.find({ role: 'keeper' }, 'name email createdAt'); // Select only necessary fields
     res.status(200).json({ keepers });
@@ -14,7 +14,7 @@ exports.getKeepers = async (req, res) => {
 };
 
 // Assign a found item to a keeper
-exports.assignKeeper = async (req, res) => {
+exports.assignKeeper = async (req, res, next) => {
   try {
     const { id } = req.params; // Item ID
     const { keeperId } = req.body; // Keeper's user ID
@@ -51,7 +51,7 @@ exports.assignKeeper = async (req, res) => {
 };
 
 // Search for items with optional filters
-exports.searchItems = async (req, res) => {
+exports.searchItems = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search = '', status, category } = req.query;
     const skip = (page - 1) * limit;

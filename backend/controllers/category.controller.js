@@ -1,7 +1,7 @@
 const Category = require('../models/category.model');
 
 // Get all categories (public, only active categories)
-exports.getCategories = async (req, res) => {
+exports.getCategories = async (req, res, next) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const categories = await Category.find({ isActive: true })
@@ -22,7 +22,7 @@ exports.getCategories = async (req, res) => {
 };
 
 // Get all categories for admin (both active and inactive, admin-only)
-exports.getAllCategoriesForAdmin = async (req, res) => {
+exports.getAllCategoriesForAdmin = async (req, res, next) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const categories = await Category.find() // Fetch all categories, regardless of isActive
@@ -42,7 +42,7 @@ exports.getAllCategoriesForAdmin = async (req, res) => {
 };
 
 // Add a new category (admin-only)
-exports.addCategory = async (req, res) => {
+exports.addCategory = async (req, res, next) => {
   try {
     // Check if user is authorized (admin role is already checked by middleware)
     // Validate request body using middleware (req.validatedBody)
@@ -68,7 +68,7 @@ exports.addCategory = async (req, res) => {
 };
 
 // Update a category (admin-only)
-exports.updateCategory = async (req, res) => {
+exports.updateCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, description, isActive } = req.validatedBody;
@@ -108,7 +108,7 @@ exports.updateCategory = async (req, res) => {
 };
 
 // Delete a category (admin-only, soft delete)
-exports.deleteCategory = async (req, res) => {
+exports.deleteCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
 
