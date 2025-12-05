@@ -34,7 +34,7 @@ exports.getAllSubCategoriesForAdmin = async (req, res) => {
 
     // Filter by category if categoryId is provided
     if (categoryId) {
-      query.category = categoryId;
+      query.category = { $eq: categoryId };
     }
 
     // Search in name and description if search query is provided
