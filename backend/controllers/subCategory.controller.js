@@ -34,7 +34,10 @@ exports.getAllSubCategoriesForAdmin = async (req, res) => {
 
     // Filter by category if categoryId is provided
     if (categoryId) {
-      query.category = categoryId;
+      if (typeof categoryId !== 'string') {
+        return res.status(400).json({ message: 'Invalid categoryId type', code: 'INVALID_CATEGORY_ID' });
+      }
+      query.category = { $eq: categoryId };
     }
 
     // Search in name and description if search query is provided
