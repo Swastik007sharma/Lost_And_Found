@@ -3,7 +3,10 @@ const User = require('../models/user.model');
 const Item = require('../models/item.model');
 const cloudinary = require('../config/cloudinary');
 const fs = require('fs');
+const path = require('path');
 
+// Define the uploads directory used by file upload middleware (adjust as needed)
+const UPLOADS_DIR = path.resolve(__dirname, '../../uploads');
 // Get current user's profile
 exports.getProfile = async (req, res) => {
   try {
@@ -115,10 +118,27 @@ exports.updateProfile = async (req, res) => {
         }
 
         // Delete local file
-        fs.unlinkSync(req.file.path);
+        // Ensure that the file path is under the designated uploads directory before deleting
+        const resolvedPath = fs.realpathSync(path.resolve(req.file.path));
+        if (resolvedPath.startsWith(UPLOADS_DIR)) {
+          fs.unlinkSync(resolvedPath);
+        } else {
+          console.error('Unsafe file path detected, not deleting:', resolvedPath);
+        }
       } catch (error) {
         console.error('Error uploading image:', error);
-        if (req.file?.path) fs.unlinkSync(req.file.path);
+        if (req.file?.path) {
+          try {
+            const resolvedPath = fs.realpathSync(path.resolve(req.file.path));
+            if (resolvedPath.startsWith(UPLOADS_DIR)) {
+              fs.unlinkSync(resolvedPath);
+            } else {
+              console.error('Unsafe file path detected, not deleting:', resolvedPath);
+            }
+          } catch (err) {
+            console.error('Error checking/deleting file:', err);
+          }
+        }
         return res.status(500).json({
           status: 'error',
           message: 'Failed to upload profile image',
