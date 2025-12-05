@@ -131,7 +131,7 @@ exports.login = async (req, res, next) => {
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
-    console.error('Login Error:', error.message);
+    console.error('Login Error:', error.message, error);
     res.status(500).json({ message: 'Failed to login', code: 'SERVER_ERROR' });
   }
 };
