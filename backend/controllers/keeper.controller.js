@@ -3,7 +3,7 @@ const Item = require('../models/item.model');
 const mongoose = require('mongoose');
 
 // Get a list of available keepers
-exports.getKeepers = async (req, res) => {
+exports.getKeepers = async (req, res, next) => {
   try {
     const keepers = await User.find(
       { role: 'keeper', isActive: true },
@@ -17,7 +17,7 @@ exports.getKeepers = async (req, res) => {
 };
 
 // Assign a found item to a keeper
-exports.assignKeeper = async (req, res) => {
+exports.assignKeeper = async (req, res, next) => {
   try {
     const { id } = req.params; // Item ID
     const { keeperId } = req.body; // Keeper's user ID

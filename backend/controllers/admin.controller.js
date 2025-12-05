@@ -5,7 +5,7 @@ const Conversation = require('../models/conversation.model');
 const Message = require('../models/message.model');
 
 // Get a list of all users (admin-only)
-exports.getAllUsers = async (req, res) => {
+exports.getAllUsers = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, search = '', sortBy = 'createdAt', order = 'desc', isActive } = req.query;
     const skip = (page - 1) * limit;
@@ -48,7 +48,7 @@ exports.getAllUsers = async (req, res) => {
 };
 
 // Toggle user activation status (admin-only)
-exports.toggleUserActivation = async (req, res) => {
+exports.toggleUserActivation = async (req, res, next) => {
   try {
     const { id } = req.params;
     const user = await User.findByIdAndUpdate(id, [{ $set: { isActive: { $eq: [false, '$isActive'] } } }], { new: true });
@@ -63,7 +63,7 @@ exports.toggleUserActivation = async (req, res) => {
 };
 
 // Get a single user by ID (admin-only)
-exports.getUserById = async (req, res) => {
+exports.getUserById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const user = await User.findById(id, 'name email role createdAt isActive profileImage location department description').lean();
@@ -78,7 +78,7 @@ exports.getUserById = async (req, res) => {
 };
 
 // Get all items posted or claimed by a user (admin-only)
-exports.getUserItems = async (req, res) => {
+exports.getUserItems = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { page = 1, limit = 10 } = req.query;
@@ -115,7 +115,7 @@ exports.getUserItems = async (req, res) => {
 };
 
 // Delete a user (admin-only) - Kept as is for now
-exports.deleteUser = async (req, res) => {
+exports.deleteUser = async (req, res, next) => {
   try {
     const { id } = req.params;
     const user = await User.findByIdAndUpdate(id, { isActive: false }, { new: true });
@@ -132,7 +132,7 @@ exports.deleteUser = async (req, res) => {
 
 // Get a list of all items (admin-only)
 // Get all items (with optional filters) - Updated to include extra details
-exports.getItems = async (req, res) => {
+exports.getItems = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search = '' } = req.query;
 
@@ -184,7 +184,7 @@ exports.getItems = async (req, res) => {
 };
 
 // New route handler for /admin/items (can reuse getItems logic or add admin-specific filters)
-exports.getAllItems = async (req, res) => {
+exports.getAllItems = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search = '' } = req.query;
 
@@ -236,7 +236,7 @@ exports.getAllItems = async (req, res) => {
 };
 
 // Toggle item activation status (admin-only)
-exports.toggleItemActivation = async (req, res) => {
+exports.toggleItemActivation = async (req, res, next) => {
   try {
     const { id } = req.params;
     const item = await Item.findByIdAndUpdate(id, [{ $set: { isActive: { $eq: [false, '$isActive'] } } }], { new: true });
@@ -251,7 +251,7 @@ exports.toggleItemActivation = async (req, res) => {
 };
 
 // Get a single item by ID (admin-only)
-exports.getItemById = async (req, res) => {
+exports.getItemById = async (req, res, next) => {
   try {
     const { id } = req.params;
     const item = await Item.findOne({ _id: id, isActive: true })
@@ -269,7 +269,7 @@ exports.getItemById = async (req, res) => {
 };
 
 // Delete an item (admin-only) - Kept as is for now
-exports.deleteItem = async (req, res) => {
+exports.deleteItem = async (req, res, next) => {
   try {
     const { id } = req.params;
     const item = await Item.findByIdAndUpdate(id, { isActive: false }, { new: true });
@@ -284,7 +284,7 @@ exports.deleteItem = async (req, res) => {
 };
 
 // Get admin dashboard statistics
-exports.getAdminDashboardStats = async (req, res) => {
+exports.getAdminDashboardStats = async (req, res, next) => {
   try {
     const totalItems = await Item.countDocuments({ isActive: true });
     const claimedItems = await Item.countDocuments({ isClaimed: true, isActive: true });
@@ -335,7 +335,7 @@ exports.getAdminDashboardStats = async (req, res) => {
 };
 
 // Get conversations and messages (admin-only)
-exports.getConversationsAndMessages = async (req, res) => {
+exports.getConversationsAndMessages = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, sortOrder = 'desc' } = req.query;
     const sortValue = sortOrder === 'asc' ? 1 : -1;
@@ -379,7 +379,7 @@ const cleanupService = require('../services/cleanupService');
 /**
  * Get items scheduled for deletion
  */
-exports.getScheduledDeletions = async (req, res) => {
+exports.getScheduledDeletions = async (req, res, next) => {
   try {
     const items = await cleanupService.getScheduledDeletions();
     res.status(200).json({
@@ -401,7 +401,7 @@ exports.getScheduledDeletions = async (req, res) => {
 /**
  * Cancel scheduled deletion for an item
  */
-exports.cancelScheduledDeletion = async (req, res) => {
+exports.cancelScheduledDeletion = async (req, res, next) => {
   try {
     const { id } = req.params;
     const item = await cleanupService.cancelScheduledDeletion(id);
@@ -423,7 +423,7 @@ exports.cancelScheduledDeletion = async (req, res) => {
 /**
  * Manual trigger for cleanup (testing purposes)
  */
-exports.triggerCleanup = async (req, res) => {
+exports.triggerCleanup = async (req, res, next) => {
   try {
     console.log('🔧 Manual cleanup triggered by admin');
     const markResults = await cleanupService.markInactiveItemsForDeletion();
@@ -453,7 +453,7 @@ exports.triggerCleanup = async (req, res) => {
 /**
  * Get users scheduled for deletion
  */
-exports.getScheduledUserDeletions = async (req, res) => {
+exports.getScheduledUserDeletions = async (req, res, next) => {
   try {
     const users = await cleanupService.getScheduledUserDeletions();
     res.status(200).json({
@@ -475,7 +475,7 @@ exports.getScheduledUserDeletions = async (req, res) => {
 /**
  * Cancel scheduled deletion for a user
  */
-exports.cancelScheduledUserDeletion = async (req, res) => {
+exports.cancelScheduledUserDeletion = async (req, res, next) => {
   try {
     const { id } = req.params;
     const user = await cleanupService.cancelScheduledUserDeletion(id);
@@ -497,7 +497,7 @@ exports.cancelScheduledUserDeletion = async (req, res) => {
 /**
  * Get cleanup configuration
  */
-exports.getCleanupConfig = async (req, res) => {
+exports.getCleanupConfig = async (req, res, next) => {
   try {
     const config = {
       userDeletionStrategy: process.env.USER_DELETION_STRATEGY || 'deactivation',
@@ -535,7 +535,7 @@ exports.getCleanupConfig = async (req, res) => {
 /**
  * Update cleanup configuration
  */
-exports.updateCleanupConfig = async (req, res) => {
+exports.updateCleanupConfig = async (req, res, next) => {
   try {
     const { userDeletionStrategy, inactivityDays, gracePeriodDays } = req.body;
 
@@ -591,7 +591,7 @@ exports.updateCleanupConfig = async (req, res) => {
 };
 
 // Get report of items scheduled for deletion
-exports.getScheduledItemsReport = async (req, res) => {
+exports.getScheduledItemsReport = async (req, res, next) => {
   try {
     const scheduledItems = await Item.find({
       scheduledForDeletion: true,
@@ -653,7 +653,7 @@ exports.getScheduledItemsReport = async (req, res) => {
 };
 
 // Get report of users scheduled for deletion
-exports.getScheduledUsersReport = async (req, res) => {
+exports.getScheduledUsersReport = async (req, res, next) => {
   try {
     const scheduledUsers = await User.find({
       scheduledForDeletion: true,
@@ -713,7 +713,7 @@ exports.getScheduledUsersReport = async (req, res) => {
 };
 
 // Get report of successfully deleted data (from logs/tracking)
-exports.getDeletionSuccessReport = async (req, res) => {
+exports.getDeletionSuccessReport = async (req, res, next) => {
   try {
     const { days = 30, type = 'all' } = req.query; // type: 'all', 'items', 'users'
 

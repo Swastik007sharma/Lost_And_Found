@@ -1,5 +1,5 @@
 // Batch mark notifications as read
-exports.markAllAsRead = async (req, res) => {
+exports.markAllAsRead = async (req, res, next) => {
   try {
     if (!req.user?.id) {
       return res.status(401).json({
@@ -37,7 +37,7 @@ exports.markAllAsRead = async (req, res) => {
 const Notification = require('../models/notification.model');
 
 // Get all notifications for the current user with pagination
-exports.getNotifications = async (req, res) => {
+exports.getNotifications = async (req, res, next) => {
   try {
     // Verify user exists in request
     if (!req.user?.id) {
@@ -117,7 +117,7 @@ exports.getNotifications = async (req, res) => {
 };
 
 // Mark a notification as read
-exports.markAsRead = async (req, res) => {
+exports.markAsRead = async (req, res, next) => {
   try {
     // Validate inputs
     if (!req.user?.id) {

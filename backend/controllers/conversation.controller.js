@@ -2,7 +2,7 @@ const Conversation = require('../models/conversation.model');
 const Item = require('../models/item.model');
 const User = require('../models/user.model');
 
-exports.createConversation = async (req, res) => {
+exports.createConversation = async (req, res, next) => {
   try {
     const { itemId, participants } = req.validatedBody;
     console.log('Received request with itemId:', itemId, 'and participants:', participants);
@@ -54,7 +54,7 @@ exports.createConversation = async (req, res) => {
 };
 
 // Get all conversations for the authenticated user
-exports.getConversations = async (req, res) => {
+exports.getConversations = async (req, res, next) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 

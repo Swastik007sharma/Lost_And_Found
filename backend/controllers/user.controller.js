@@ -8,7 +8,7 @@ const path = require('path');
 // Define the uploads directory used by file upload middleware (adjust as needed)
 const UPLOADS_DIR = path.resolve(__dirname, '../../uploads');
 // Get current user's profile
-exports.getProfile = async (req, res) => {
+exports.getProfile = async (req, res, next) => {
   try {
     const userId = req.user.id; // Use req.user.id instead of req.user._id
     console.log('Fetching profile for user ID:', userId);
@@ -26,7 +26,7 @@ exports.getProfile = async (req, res) => {
 };
 
 // Get current user's items (posted or claimed)
-exports.getItems = async (req, res) => {
+exports.getItems = async (req, res, next) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 
@@ -75,7 +75,7 @@ exports.getItems = async (req, res) => {
 };
 
 // Update current user's profile
-exports.updateProfile = async (req, res) => {
+exports.updateProfile = async (req, res, next) => {
   try {
     const userId = req.user.id; // Use req.user.id instead of req.user._id
     console.log('Updating profile for user ID:', userId);
@@ -166,7 +166,7 @@ exports.updateProfile = async (req, res) => {
 };
 
 // Delete current user's account
-exports.deleteAccount = async (req, res) => {
+exports.deleteAccount = async (req, res, next) => {
   try {
     const userId = req.user.id; // Use req.user.id instead of req.user._id
     console.log('Deleting account for user ID:', userId);
@@ -189,7 +189,7 @@ exports.deleteAccount = async (req, res) => {
   }
 };
 
-exports.updatePassword = async (req, res) => {
+exports.updatePassword = async (req, res, next) => {
   try {
     const userId = req.user.id;
     console.log('Updating password for user ID:', userId);

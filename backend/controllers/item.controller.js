@@ -57,7 +57,7 @@ const sendNotificationAndEmail = async (userId, emailSubject, emailTemplate, tem
 };
 
 // Create a new item
-exports.createItem = async (req, res) => {
+exports.createItem = async (req, res, next) => {
   try {
     console.log('Request body:', req.body);
     console.log('Request file:', req.file);
@@ -233,7 +233,7 @@ JSON Schema:
 };
 
 // Get all items (with optional filters)
-exports.getItems = async (req, res) => {
+exports.getItems = async (req, res, next) => {
   try {
     const validatedQuery = querySchema.parse(req.query);
     const { page, limit, sortBy, order, search } = validatedQuery;
@@ -304,7 +304,7 @@ exports.getItems = async (req, res) => {
 };
 
 // Get details of a specific item
-exports.getItemById = async (req, res) => {
+exports.getItemById = async (req, res, next) => {
   try {
     const { id } = z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/) }).parse(req.params);
 
@@ -338,7 +338,7 @@ exports.getItemById = async (req, res) => {
 };
 
 // Update an item
-exports.updateItem = async (req, res) => {
+exports.updateItem = async (req, res, next) => {
   try {
     const { id } = z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/) }).parse(req.params);
     const updateData = updateItemSchema.parse(req.body);
@@ -410,7 +410,7 @@ exports.updateItem = async (req, res) => {
 };
 
 // Generate a QR Code for an item
-exports.generateQRCode = async (req, res) => {
+exports.generateQRCode = async (req, res, next) => {
   try {
     const { id } = z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/) }).parse(req.params);
     const item = await Item.findOne({ _id: id, isActive: true });
@@ -428,7 +428,7 @@ exports.generateQRCode = async (req, res) => {
 };
 
 // Scan a QR Code to verify ownership or status
-exports.scanQRCode = async (req, res) => {
+exports.scanQRCode = async (req, res, next) => {
   try {
     const { qrData } = z.object({ qrData: z.string().min(1) }).parse(req.body);
     const parsedData = JSON.parse(qrData);
@@ -450,7 +450,7 @@ exports.scanQRCode = async (req, res) => {
 };
 
 // Generate an OTP for claiming an item
-exports.generateOTP = async (req, res) => {
+exports.generateOTP = async (req, res, next) => {
   try {
     const { id } = z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/) }).parse(req.params);
     const item = await Item.findOne({ _id: id, isActive: true }).populate('postedBy claimedBy', 'name email _id');
@@ -531,7 +531,7 @@ exports.generateOTP = async (req, res) => {
 };
 
 // Verify an OTP for claiming an item
-exports.verifyOTP = async (req, res) => {
+exports.verifyOTP = async (req, res, next) => {
   try {
     const { id } = z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/) }).parse(req.params);
     const { otp } = z.object({ otp: z.string().length(6).regex(/^\d+$/) }).parse(req.body);
@@ -588,7 +588,7 @@ exports.verifyOTP = async (req, res) => {
 };
 
 // Claim an item
-exports.claimItem = async (req, res) => {
+exports.claimItem = async (req, res, next) => {
   try {
     const { id } = z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/) }).parse(req.params);
 
@@ -648,7 +648,7 @@ exports.claimItem = async (req, res) => {
 };
 
 // Delete an item
-exports.deleteItem = async (req, res) => {
+exports.deleteItem = async (req, res, next) => {
   try {
     const { id } = z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/) }).parse(req.params);
 
@@ -675,7 +675,7 @@ exports.deleteItem = async (req, res) => {
 };
 
 // Assign a keeper to an item
-exports.assignKeeper = async (req, res) => {
+exports.assignKeeper = async (req, res, next) => {
   try {
     const { id } = z.object({ id: z.string().regex(/^[0-9a-fA-F]{24}$/) }).parse(req.params);
     const { keeperId, keeperName } = assignKeeperSchema.parse(req.body);

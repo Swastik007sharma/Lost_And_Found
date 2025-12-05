@@ -2,7 +2,7 @@ const SubCategory = require('../models/subCategory.model');
 const Category = require('../models/category.model');
 
 // Get all subcategories for a specific category (public, only active)
-exports.getSubCategories = async (req, res) => {
+exports.getSubCategories = async (req, res, next) => {
   try {
     const { categoryId } = req.params;
     const { page = 1, limit = 10 } = req.query;
@@ -25,7 +25,7 @@ exports.getSubCategories = async (req, res) => {
 };
 
 // Get all subcategories for admin (both active and inactive)
-exports.getAllSubCategoriesForAdmin = async (req, res) => {
+exports.getAllSubCategoriesForAdmin = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, categoryId, search } = req.query;
 
@@ -68,7 +68,7 @@ exports.getAllSubCategoriesForAdmin = async (req, res) => {
 };
 
 // Add a new subcategory (admin-only)
-exports.addSubCategory = async (req, res) => {
+exports.addSubCategory = async (req, res, next) => {
   try {
     const { name, description, categoryId } = req.validatedBody;
 
@@ -102,7 +102,7 @@ exports.addSubCategory = async (req, res) => {
 };
 
 // Update a subcategory (admin-only)
-exports.updateSubCategory = async (req, res) => {
+exports.updateSubCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, description, isActive } = req.validatedBody;
@@ -143,7 +143,7 @@ exports.updateSubCategory = async (req, res) => {
 };
 
 // Delete a subcategory (admin-only, soft delete)
-exports.deleteSubCategory = async (req, res) => {
+exports.deleteSubCategory = async (req, res, next) => {
   try {
     const { id } = req.params;
 
