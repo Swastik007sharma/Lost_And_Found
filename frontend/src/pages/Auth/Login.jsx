@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from '../../context/AuthContext';
@@ -20,6 +20,12 @@ function Login() {
   const [forgotEmail, setForgotEmail] = useState('');
   const { login: setAuth } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    toast.info('⏳ Please wait, the server may take some time to start.', {
+      position: 'top-center',
+    });
+  }, []);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);

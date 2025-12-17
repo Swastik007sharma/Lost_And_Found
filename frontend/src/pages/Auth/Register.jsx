@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { register } from '../../services/authService';
@@ -20,6 +20,17 @@ function Register() {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const navigate = useNavigate();
+
+  useEffect(() => {
+    toast.info('⚠️ Please use a valid email address to receive OTP for verification.', {
+      position: 'top-center',
+    });
+    setTimeout(() => {
+      toast.info('⏳ Please wait, the server may take some time to start.', {
+        position: 'top-center',
+      });
+    }, 500);
+  }, []);
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
   const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
