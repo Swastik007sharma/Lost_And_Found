@@ -23,7 +23,7 @@ function Login() {
 
   useEffect(() => {
     toast.info('⏳ Please wait, the server may take some time to start.', {
-      position: 'top-center',
+      toastId: 'server-wait-message'
     });
   }, []);
 

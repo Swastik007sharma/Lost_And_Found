@@ -22,14 +22,9 @@ function Register() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    toast.info('⚠️ Please use a valid email address to receive OTP for verification.', {
-      position: 'top-center',
+    toast.info('⏳ Please wait, the server may take some time to start.', {
+      toastId: 'server-wait-message'
     });
-    setTimeout(() => {
-      toast.info('⏳ Please wait, the server may take some time to start.', {
-        position: 'top-center',
-      });
-    }, 500);
   }, []);
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
