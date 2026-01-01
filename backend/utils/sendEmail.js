@@ -171,6 +171,8 @@ const {
 // };
 // ========== END OF OLD NODEMAILER IMPLEMENTATION ==========
 
+const axios = require('axios');
+
 async function sendEmail(to, subject, templateName, templateData) {
   // Escape all string values in templateData to prevent HTML injection
   const escapedTemplateData = {};
