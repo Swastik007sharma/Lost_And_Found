@@ -36,5 +36,10 @@
     "globals": "^17.4.0",
     "tailwindcss": "^4.2.2",
     "vite": "^8.0.3"
+  },
+  "overrides": {
+    "eslint-plugin-react-hooks": {
+      "eslint": "^10.2.0"
+    }
   }
 }
