@@ -14,6 +14,65 @@ const Category = require('../models/category.model');
 const SubCategory = require('../models/subCategory.model');
 const { GoogleGenAI } = require("@google/genai");
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isEnvFlagEnabled = (value, defaultValue = false) => {
+  if (value === undefined || value === null || value === '') {
+    return defaultValue;
+  }
+
+  return ['1', 'true', 'yes', 'on'].includes(String(value).trim().toLowerCase());
+};
+
+const IS_GEMINI_ANALYSIS_ENABLED = isEnvFlagEnabled(process.env.ENABLE_GEMINI_ANALYSIS, false);
+
+const extractErrorMessage = (error) => {
+  if (!error) return '';
+  if (typeof error === 'string') return error;
+  if (error.message) return error.message;
+  if (error.error && error.error.message) return error.error.message;
+  try {
+    return JSON.stringify(error);
+  } catch (_e) {
+    return String(error);
+  }
+};
+
+const isGeminiTemporarilyUnavailable = (error) => {
+  const message = extractErrorMessage(error).toLowerCase();
+  const status = String(error?.status || error?.error?.status || '').toLowerCase();
+  const code = Number(error?.code || error?.error?.code);
+
+  return (
+    code === 503 ||
+    status === 'unavailable' ||
+    message.includes('high demand') ||
+    message.includes('temporarily unavailable') ||
+    message.includes('status":"unavailable')
+  );
+};
+
+const generateGeminiContentWithRetry = async (genAI, payload, options = {}) => {
+  const maxRetries = Number.isInteger(options.maxRetries) ? options.maxRetries : 2;
+  const baseDelayMs = Number.isInteger(options.baseDelayMs) ? options.baseDelayMs : 700;
+
+  let attempt = 0;
+  while (attempt <= maxRetries) {
+    try {
+      return await genAI.models.generateContent(payload);
+    } catch (error) {
+      if (!isGeminiTemporarilyUnavailable(error) || attempt === maxRetries) {
+        throw error;
+      }
+
+      const delayMs = baseDelayMs * Math.pow(2, attempt);
+      console.warn(`Gemini temporarily unavailable, retrying in ${delayMs}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
+      await sleep(delayMs);
+      attempt += 1;
+    }
+  }
+};
+
 // Validation schemas for query parameters and body
 const querySchema = z.object({
   page: z.string().regex(/^\d+$/).default('1').transform(Number),
@@ -97,7 +156,14 @@ exports.createItem = async (req, res, next) => {
 
       console.log('Processing file:', filePath);
 
-      try {
+      if (IS_GEMINI_ANALYSIS_ENABLED) {
+        if (!process.env.GEMINI_API_KEY) {
+          return res.status(500).json({
+            message: 'Gemini analysis is enabled but GEMINI_API_KEY is missing.',
+            code: 'GEMINI_CONFIG_ERROR'
+          });
+        }
+
         // Initialize Google Gemini API
         const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
 
@@ -127,10 +193,30 @@ JSON Schema:
           { text: prompt },
         ];
 
-        const resultGemini = await genAI.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: contents,
-        });
+        let resultGemini;
+        try {
+          resultGemini = await generateGeminiContentWithRetry(genAI, {
+            model: "gemini-2.5-flash",
+            contents: contents,
+          });
+        } catch (error) {
+          if (isGeminiTemporarilyUnavailable(error)) {
+            console.error('Gemini API temporarily unavailable:', extractErrorMessage(error));
+            return res.status(503).json({
+              message: 'Image verification service is temporarily busy. Please try again in a moment.',
+              code: 'GEMINI_UNAVAILABLE',
+              details: extractErrorMessage(error)
+            });
+          }
+
+          const errorMessage = extractErrorMessage(error);
+          console.error('Gemini API connectivity/model error:', errorMessage);
+          return res.status(500).json({
+            message: 'Failed to connect to the Gemini API or model not found. Check model name and API key.',
+            code: 'GEMINI_API_FAILURE',
+            details: errorMessage
+          });
+        }
 
         let geminiResponse;
         try {
@@ -145,7 +231,11 @@ JSON Schema:
           geminiResponse = JSON.parse(jsonText);
         } catch (parseError) {
           console.error('Failed to parse Gemini JSON response (raw):', resultGemini.text);
-          throw new Error('Gemini returned invalid JSON or an unexpected format.');
+          return res.status(500).json({
+            message: 'Failed to verify image: AI response format error. Please try again.',
+            code: 'GEMINI_RESPONSE_FORMAT_ERROR',
+            details: parseError.message
+          });
         }
 
         console.log('Gemini verification result:', geminiResponse);
@@ -157,35 +247,23 @@ JSON Schema:
             details: geminiResponse.reason
           });
         }
+      } else {
+        console.log('Gemini analysis disabled via ENABLE_GEMINI_ANALYSIS; skipping AI verification.');
+      }
 
-        // Upload to Cloudinary after verification
+      // Upload to Cloudinary after verification
+      try {
         console.log('Uploading file to Cloudinary:', filePath);
         const result = await cloudinary.uploader.upload(filePath, { folder: 'lost-and-found' });
         imageUrl = result.secure_url;
         console.log('Cloudinary upload success:', imageUrl);
-      } catch (error) {
-        if (error.message.includes('Gemini returned invalid JSON') || error.message.includes('AI returned an empty or unparsable response')) {
-          console.error('Gemini API parse error:', error.message);
-          return res.status(500).json({
-            message: 'Failed to verify image: AI response format error. Please try again.',
-            code: 'GEMINI_RESPONSE_FORMAT_ERROR', // Changed code
-            details: error.message
-          });
-        }
-        if (error.message.includes('Error fetching from')) {
-          // Catch general API errors, including 404 for model not found
-          console.error('Gemini API connectivity/model error:', error.message);
-          return res.status(500).json({
-            message: 'Failed to connect to the Gemini API or model not found. Check model name and API key.',
-            code: 'GEMINI_API_FAILURE',
-            details: error.message
-          });
-        }
-        console.error('Cloudinary upload error:', error.message);
+      } catch (cloudinaryError) {
+        const errorMessage = extractErrorMessage(cloudinaryError);
+        console.error('Cloudinary upload error:', errorMessage);
         return res.status(500).json({
           message: 'Failed to upload image to Cloudinary',
           code: 'CLOUDINARY_ERROR',
-          details: error.message
+          details: errorMessage
         });
       } finally {
         // Only delete files within the upload directory
